@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;700&display=swap');
+
+@import "tailwindcss";
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+
+@theme {
+  /* Colors */
+  --color-primary: #233E97;
+  --color-secondary: #A16AD4;
+  --color-accent-1: #5977D9;
+  --color-accent-2: #539EF0;
+  --color-accent-3: #6192AE;
+  --color-accent-4: #D46A6A;
+  --color-info: #539EF0;
+  --color-success: #27AE60;
+  --color-warning: #D46A6A;
+  --color-danger: #FC3833;
+  --color-heading: #030229;
+  --color-body30: #030229B2;
+  --color-body: #030229;
+  --color-gray500: #667085;
+  --color-gray5: #E5E5EA;
+  --color-gray6: #F2F2F7;
+  --color-light-green-40: #93D1B5;
+  --color-light-blue: #D1DAF4;
+  --color-black: #1B223C;
+  --color-stroke-grey: #CCCCCC;
+  --color-white: #FFFFFF;
+
+  /* Spacing */
+  --spacing-0: 0px;
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-7: 28px;
+  --spacing-8: 32px;
+  --spacing-9: 36px;
+  --spacing-10: 40px;
+
+  /* Border Radius */
+  --radius-none: 0px;
+  --radius-xs: 8px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 24px;
+  --radius-full: 9999px;
+
+  /* Font Family */
+  --font-sans: "Public Sans", sans-serif;
+
+  /* Font Size */
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+}
