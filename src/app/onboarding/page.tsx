@@ -56,21 +56,6 @@ interface ContactLocationStepProps extends StepProps {
   onSaveForLater: () => void;
 }
 
-interface BrandingStepProps extends StepProps {
-  logo: File | null;
-  setLogo: Setter<File | null>;
-  primaryColor: string;
-  setPrimaryColor: Setter<string>;
-  accentColor: string;
-  setAccentColor: Setter<string>;
-  tagline: string;
-  setTagline: Setter<string>;
-  fileInputRef: React.RefObject<HTMLInputElement>;
-  onContinue: () => void;
-  onBack: () => void;
-  onSaveForLater: () => void;
-}
-
 interface SubscriptionStepProps extends StepProps {
   billing: "monthly" | "yearly";
   setBilling: Setter<"monthly" | "yearly">;
@@ -191,11 +176,6 @@ const Onboarding: React.FC = () => {
   const [step, setStep] = useState(0);
 
   // State for all steps
-  const [logo, setLogo] = useState<File | null>(null);
-  const [primaryColor, setPrimaryColor] = useState("");
-  const [accentColor, setAccentColor] = useState("");
-  const [tagline, setTagline] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [businessName, setBusinessName] = useState("");
   const [category, setCategory] = useState("");
   const [businessType, setBusinessType] = useState("");
@@ -238,22 +218,6 @@ const Onboarding: React.FC = () => {
       onSaveForLater={() => router.push("/business/dashboard")}
       stepIndex={1}
     />,
-    <BrandingStep
-      key="branding"
-      logo={logo}
-      setLogo={setLogo}
-      primaryColor={primaryColor}
-      setPrimaryColor={setPrimaryColor}
-      accentColor={accentColor}
-      setAccentColor={setAccentColor}
-      tagline={tagline}
-      setTagline={setTagline}
-      fileInputRef={fileInputRef as React.RefObject<HTMLInputElement>}
-      onContinue={() => setStep(3)}
-      onBack={() => setStep(1)}
-      onSaveForLater={() => router.push("/business/dashboard")}
-      stepIndex={2}
-    />,
     <SubscriptionStep
       key="subscription"
       billing={billing}
@@ -262,8 +226,8 @@ const Onboarding: React.FC = () => {
       setSelectedPlan={setSelectedPlan}
       showModal={showModal}
       setShowModal={setShowModal}
-      onBack={() => setStep(2)}
-      stepIndex={3}
+      onBack={() => setStep(1)}
+      stepIndex={2}
     />,
   ];
 
@@ -473,142 +437,6 @@ const ContactLocationStep: React.FC<ContactLocationStepProps> = ({
               type="submit"
               className="bg-primary text-white hover:bg-primary/90 inline-flex w-[110px] h-[44px] items-center justify-center rounded-md text-sm font-medium cursor-pointer disabled:opacity-30"
               disabled={!canContinue}
-            >
-              Continue
-            </button>
-          </div>
-        </form>
-      </Card>
-    </OnboardingLayout>
-  );
-};
-
-const BrandingStep: React.FC<BrandingStepProps> = ({
-  logo,
-  setLogo,
-  primaryColor,
-  setPrimaryColor,
-  accentColor,
-  setAccentColor,
-  tagline,
-  setTagline,
-  fileInputRef,
-  onContinue,
-  onBack,
-  onSaveForLater,
-  stepIndex,
-}) => {
-  const handleLogoClick = () => fileInputRef.current?.click();
-  const handleLogoChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) setLogo(e.target.files[0]);
-  };
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    onContinue();
-  };
-  return (
-    <OnboardingLayout stepIndex={stepIndex}>
-      <Card>
-        <h2 className="text-2xl font-semibold mb-1 text-heading">
-          Let’s set up your business profile
-        </h2>
-        <p className="text-gray-600 mb-7 text-sm">
-          We’ll use this info to personalize your dashboard and help you launch
-          campaigns faster.
-        </p>
-        <div className="mb-7 flex items-center gap-2">
-          <span className="font-semibold text-primary text-[16px]">
-            Branding
-          </span>
-          <span className="text-gray-400 text-[16px]">(Optional)</span>
-        </div>
-        <form className="space-y-7" onSubmit={handleSubmit}>
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-4">
-              <div className="flex flex-col items-center gap-2">
-                <div
-                  className="w-[82px] h-[82px] rounded-full border flex flex-col justify-center items-center cursor-pointer"
-                  onClick={handleLogoClick}
-                >
-                  {logo ? (
-                    <img
-                      src={URL.createObjectURL(logo)}
-                      alt="Logo preview"
-                      className="w-[80px] h-[80px] rounded-full object-cover"
-                    />
-                  ) : (
-                    <FiCamera className="text-gray-400 w-7 h-7" />
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    ref={fileInputRef}
-                    onChange={handleLogoChange}
-                    className="hidden"
-                  />
-                </div>
-              </div>
-              <span
-                onClick={handleLogoClick}
-                className="text-base text-heading font-medium cursor-pointer"
-              >
-                Upload logo
-              </span>
-            </div>
-            <button
-              type="button"
-              className="bg-[#F4F7FF] text-primary font-medium px-7 h-9 rounded-md"
-              onClick={handleLogoClick}
-            >
-              Add image
-            </button>
-          </div>
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <Label htmlFor="primary-color" className="block mb-2 text-sm">
-                Brand Colors
-              </Label>
-              <Input
-                id="primary-color"
-                placeholder="Primary color  e.g. #0047AB"
-                value={primaryColor}
-                onChange={(e) => setPrimaryColor(e.target.value)}
-                className="w-full"
-              />
-            </div>
-            <div className="flex-1 flex items-end">
-              <Input
-                id="accent-color"
-                placeholder="Accent color  e.g. #0047AB"
-                value={accentColor}
-                onChange={(e) => setAccentColor(e.target.value)}
-                className="w-full"
-              />
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="tagline" className="block mb-2 text-sm">
-              Brand Tagline
-            </Label>
-            <Input
-              id="tagline"
-              placeholder="e.g. “Fresh groceries delivered in under 30 minutes.”"
-              value={tagline}
-              onChange={(e) => setTagline(e.target.value)}
-              className="w-full"
-            />
-          </div>
-          <div className="flex justify-between pt-28">
-            <button
-              type="button"
-              className="border border-gray5 text-heading inline-flex w-[110px] h-[44px] items-center justify-center rounded-md text-sm font-medium cursor-pointer text-primary"
-              onClick={onBack}
-            >
-              Back
-            </button>
-            <button
-              type="submit"
-              className="bg-primary text-white hover:bg-primary/90 inline-flex w-[110px] h-[44px] items-center justify-center rounded-md text-sm font-medium cursor-pointer"
             >
               Continue
             </button>

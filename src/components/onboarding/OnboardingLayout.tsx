@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 const steps = [
   { label: "Business Info" },
   { label: "Contact & Location Info" },
-  { label: "Branding" },
+  // { label: "Branding" },
   { label: "Subscription Plan" },
 ];
 
