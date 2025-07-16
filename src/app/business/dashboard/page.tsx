@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import { HeartIcon, Users } from "lucide-react";
+import { Flame, HeartIcon, MessageCircleReply, Users } from "lucide-react";
 
 // Demo stat icons—replace with your real icons
 const StatIcon = ({ color }: { color: string }) => (
@@ -50,7 +50,9 @@ export default function Dashboard() {
           {/* Card 3: Total Referrals */}
           <div className="flex flex-col bg-[#fff] rounded-md p-6 items-start min-h-[100px] justify-center">
             <div className="flex justify-evenly">
-              <div className="rounded-full bg-[#FF8F6B]/10 w-[63px] h-[63px] flex items-center justify-center"></div>
+              <div className="rounded-full bg-[#FF8F6B]/10 w-[63px] h-[63px] flex items-center justify-center">
+                <Flame className="text-[#FF8F6B]" fill="#FF8F6B" />
+              </div>
               <div className="ml-4">
                 <div className="text-lg font-bold">30K</div>
                 <div className="text-xs text-gray-500">Total Referrals</div>
@@ -63,7 +65,9 @@ export default function Dashboard() {
           {/* Card 4: Conversion Rate */}
           <div className="flex flex-col bg-[#fff] rounded-md p-6 items-start min-h-[100px] justify-center">
             <div className="flex justify-evenly">
-              <div className="rounded-full bg-[#605BFF]/10 opacity-30 w-[63px] h-[63px] flex items-center justify-center"></div>
+              <div className="rounded-full bg-[#605BFF]/10 opacity-30 w-[63px] h-[63px] flex items-center justify-center">
+                <MessageCircleReply className="text-[#605BFF]" fill="#605BFF" />
+              </div>
               <div className="ml-4">
                 <div className="text-lg font-bold">32.03%</div>
                 <div className="text-xs text-gray-500">Conversion Rate</div>

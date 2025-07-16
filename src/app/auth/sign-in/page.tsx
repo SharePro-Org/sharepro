@@ -20,16 +20,55 @@ export default function SignIn() {
   const [password, setPassword] = useState('');
   const router = useRouter();
 
+  // Validation state
+  const [errors, setErrors] = useState({ email: '', phone: '', password: '' });
+  const [touched, setTouched] = useState({ email: false, phone: false, password: false });
+
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidPhone = (phone: string) => /^[0-9]{8,15}$/.test(phone);
+
   // Only enable if (email && password) or (phone && password)
   const canContinue =
     tab === 'email'
       ? email.trim() && password.trim()
       : phone.trim() && password.trim();
 
+  const validate = () => {
+    if (tab === 'email') {
+      return {
+        email: isValidEmail(email) ? '' : 'Enter a valid email',
+        phone: '',
+        password: password ? '' : 'Password is required',
+      };
+    } else {
+      return {
+        email: '',
+        phone: isValidPhone(phone) ? '' : 'Enter a valid phone number',
+        password: password ? '' : 'Password is required',
+      };
+    }
+  };
+
+  const handleBlur = (field: 'email' | 'phone' | 'password') => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    setErrors(validate());
+  };
+
+  const handleChange = (field: 'email' | 'phone' | 'password', value: string) => {
+    if (field === 'email') setEmail(value);
+    if (field === 'phone') setPhone(value);
+    if (field === 'password') setPassword(value);
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: '' }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (canContinue) {
-      router.push('/onboarding/business-info');
+    setTouched({ email: true, phone: true, password: true });
+    const newErrors = validate();
+    setErrors(newErrors);
+    const hasError = Object.values(newErrors).some(Boolean);
+    if (!hasError && canContinue) {
+      router.push('/onboarding');
     }
   };
 
@@ -67,7 +106,7 @@ export default function SignIn() {
           </button>
         </div>
 
-        <form className="w-full max-w-xl space-y-4 " onSubmit={handleSubmit}>
+        <form className="w-full max-w-xl space-y-4 " onSubmit={handleSubmit} noValidate>
           {tab === 'email' ? (
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
@@ -77,10 +116,15 @@ export default function SignIn() {
                   type="email"
                   placeholder="e.g johndoe@email.com"
                   value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  onChange={e => handleChange('email', e.target.value)}
+                  onBlur={() => handleBlur('email')}
+                  className={errors.email && touched.email ? 'border !border-danger' : ''}
                 />
                 <HiOutlineMail size={20}  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray5" />
               </div>
+              {errors.email && touched.email && (
+                <p className="text-xs text-danger mt-1">{errors.email}</p>
+              )}
             </div>
           ) : (
             <div className="space-y-2">
@@ -91,10 +135,15 @@ export default function SignIn() {
                   type="tel"
                   placeholder="e.g 0123456789"
                   value={phone}
-                  onChange={e => setPhone(e.target.value)}
+                  onChange={e => handleChange('phone', e.target.value)}
+                  onBlur={() => handleBlur('phone')}
+                  className={errors.phone && touched.phone ? 'border !border-danger' : ''}
                 />
                 <FiPhone className="absolute right-3 top-1/2 -translate-y-1/2 text-gray5" />
               </div>
+              {errors.phone && touched.phone && (
+                <p className="text-xs text-danger mt-1">{errors.phone}</p>
+              )}
             </div>
           )}
 
@@ -107,10 +156,15 @@ export default function SignIn() {
                 type="password"
                 placeholder="Enter your password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={e => handleChange('password', e.target.value)}
+                onBlur={() => handleBlur('password')}
+                className={errors.password && touched.password ? 'border !border-danger' : ''}
               />
               <MdOutlineLock className="absolute right-3 top-1/2 -translate-y-1/2 text-gray5" />
             </div>
+            {errors.password && touched.password && (
+              <p className="text-xs text-danger mt-1">{errors.password}</p>
+            )}
           </div>
 
           {/* Forgot Password */}

@@ -1,10 +1,10 @@
-'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import AuthLayout from '@/components/AuthLayout';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import AuthLayout from "@/components/AuthLayout";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { MdOutlineLock } from "react-icons/md";
 import { FaChevronLeft } from "react-icons/fa6";
 
@@ -14,23 +14,48 @@ function isStrongPassword(pw: string) {
 }
 
 export default function ResetPassword() {
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [touched, setTouched] = useState(false);
   const router = useRouter();
 
   const canContinue = isStrongPassword(password);
 
+  const handleBlur = () => {
+    setTouched(true);
+    setError(
+      isStrongPassword(password)
+        ? ""
+        : "Password must be at least 8 characters, include uppercase, lowercase, and a number."
+    );
+  };
+
+  const handleChange = (value: string) => {
+    setPassword(value);
+    if (error) setError("");
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (canContinue) {
-      // Handle actual reset here or just alert for now
-      alert('Password reset! (Frontend only)');
-      // router.push('/sign-in');
+    setTouched(true);
+    if (!isStrongPassword(password)) {
+      setError(
+        "Password must be at least 8 characters, include uppercase, lowercase, and a number."
+      );
+      return;
     }
+    setError("");
+    alert("Password reset! (Frontend only)");
+    // router.push('/sign-in');
   };
 
   return (
     <AuthLayout>
-      <form className="w-full max-w-md mt-12 md:mt-20" onSubmit={handleSubmit}>
+      <form
+        className="w-full max-w-md mt-12 md:mt-20"
+        onSubmit={handleSubmit}
+        noValidate
+      >
         {/* Back Button */}
         <button
           type="button"
@@ -41,7 +66,9 @@ export default function ResetPassword() {
           <FaChevronLeft className="w-5 h-5 text-primary" />
         </button>
 
-        <h2 className="text-[22px] font-semibold mb-1 text-heading">Reset your password</h2>
+        <h2 className="text-[22px] font-semibold mb-1 text-heading">
+          Reset your password
+        </h2>
         <p className="text-sm text-body mb-7">
           Create a new password for your account
         </p>
@@ -53,10 +80,15 @@ export default function ResetPassword() {
               type="password"
               placeholder="Create a password"
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e) => handleChange(e.target.value)}
+              onBlur={handleBlur}
+              className={error && touched ? "border !border-danger" : ""}
             />
             <MdOutlineLock className="absolute right-3 top-1/2 -translate-y-1/2 text-gray5" />
           </div>
+          {error && touched && (
+            <p className="text-xs text-danger mt-1">{error}</p>
+          )}
         </div>
         <Button className="w-full" type="submit" disabled={!canContinue}>
           Reset Password

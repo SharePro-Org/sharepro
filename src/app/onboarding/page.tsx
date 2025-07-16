@@ -17,6 +17,9 @@ import { Card } from "@/components/ui/card";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { FiCamera, FiCheck } from "react-icons/fi";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import Image from "next/image";
+import userCheck from "../../../public/assets/userCheck.svg";
 
 // Shared types
 interface StepProps {
@@ -351,16 +354,17 @@ const BusinessInfoStep: React.FC<BusinessInfoStepProps> = ({
             />
           </div>
           <div className="flex justify-between pt-28">
-            <button
+            <div></div>
+            {/* <button
               type="button"
               className="border border-gray5 text-heading inline-flex w-[150px] h-[59px] items-center justify-center rounded-md text-sm font-medium cursor-pointer"
               onClick={onSaveForLater}
             >
               Save for later
-            </button>
+            </button> */}
             <button
               type="submit"
-              className="bg-primary text-white hover:bg-primary/90 inline-flex w-[150px] h-[59px] items-center justify-center rounded-md text-sm font-medium cursor-pointer disabled:opacity-30"
+              className="bg-primary text-white hover:bg-primary/90 inline-flex w-[110px] h-[44px] items-center justify-center rounded-md text-sm font-medium cursor-pointer disabled:opacity-30"
               disabled={!canContinue}
             >
               Continue
@@ -460,27 +464,18 @@ const ContactLocationStep: React.FC<ContactLocationStepProps> = ({
           <div className="flex justify-between pt-28">
             <button
               type="button"
-              className="border border-gray5 text-heading inline-flex w-[150px] h-[59px] items-center justify-center rounded-md text-sm font-medium cursor-pointer"
-              onClick={onSaveForLater}
+              className="border border-gray5 text-heading inline-flex w-[110px] h-[44px] items-center justify-center rounded-md text-primary text-sm font-medium cursor-pointer"
+              onClick={onBack}
             >
-              Save for later
+              Back
             </button>
-            <div className="flex items-center gap-28">
-              <button
-                type="button"
-                className="text-primary font-medium"
-                onClick={onBack}
-              >
-                Back
-              </button>
-              <button
-                type="submit"
-                className="bg-primary text-white hover:bg-primary/90 inline-flex w-[110px] h-[44px] items-center justify-center rounded-md text-sm font-medium cursor-pointer disabled:opacity-30"
-                disabled={!canContinue}
-              >
-                Continue
-              </button>
-            </div>
+            <button
+              type="submit"
+              className="bg-primary text-white hover:bg-primary/90 inline-flex w-[110px] h-[44px] items-center justify-center rounded-md text-sm font-medium cursor-pointer disabled:opacity-30"
+              disabled={!canContinue}
+            >
+              Continue
+            </button>
           </div>
         </form>
       </Card>
@@ -606,26 +601,17 @@ const BrandingStep: React.FC<BrandingStepProps> = ({
           <div className="flex justify-between pt-28">
             <button
               type="button"
-              className="border border-gray5 text-heading inline-flex w-[150px] h-[59px] items-center justify-center rounded-md text-sm font-medium cursor-pointer"
-              onClick={onSaveForLater}
+              className="border border-gray5 text-heading inline-flex w-[110px] h-[44px] items-center justify-center rounded-md text-sm font-medium cursor-pointer text-primary"
+              onClick={onBack}
             >
-              Save for later
+              Back
             </button>
-            <div className="flex items-center gap-10">
-              <button
-                type="button"
-                className="text-primary font-medium"
-                onClick={onBack}
-              >
-                Back
-              </button>
-              <button
-                type="submit"
-                className="bg-primary text-white hover:bg-primary/90 inline-flex w-[110px] h-[44px] items-center justify-center rounded-md text-sm font-medium cursor-pointer"
-              >
-                Continue
-              </button>
-            </div>
+            <button
+              type="submit"
+              className="bg-primary text-white hover:bg-primary/90 inline-flex w-[110px] h-[44px] items-center justify-center rounded-md text-sm font-medium cursor-pointer"
+            >
+              Continue
+            </button>
           </div>
         </form>
       </Card>
@@ -644,6 +630,8 @@ const SubscriptionStep: React.FC<SubscriptionStepProps> = ({
   stepIndex,
 }) => {
   const activePlans = plans[billing];
+  const router = useRouter();
+
   return (
     <OnboardingLayout stepIndex={stepIndex}>
       <Card>
@@ -783,14 +771,64 @@ const SubscriptionStep: React.FC<SubscriptionStepProps> = ({
             </div>
           ))}
         </div>
-        <div className="flex items-center gap-10">
+        <div className="flex justify-between gap-10">
           <button
             type="button"
-            className="text-primary font-medium"
+            className="border border-gray5 text-heading inline-flex w-[110px] h-[44px] items-center justify-center rounded-md text-sm text-primary font-medium cursor-pointer"
             onClick={onBack}
           >
             Back
           </button>
+
+          <Dialog open={showModal} onOpenChange={setShowModal}>
+            <DialogTrigger asChild>
+              <button
+                type="button"
+                disabled={!selectedPlan}
+                className={cn(
+                  "bg-primary text-white hover:bg-primary/90 inline-flex w-[110px] h-[44px] items-center justify-center rounded-md text-sm font-medium",
+                  !selectedPlan && "opacity-30 cursor-not-allowed"
+                )}
+                onClick={() => {
+                  if (selectedPlan) setShowModal(true);
+                }}
+              >
+                Continue
+              </button>
+            </DialogTrigger>
+
+            <DialogContent className="max-w-md w-full flex flex-col items-center justify-center gap-6 py-12">
+              {/* Success Icon */}
+
+              <div className="flex justify-center">
+                <div className="  flex items-center justify-center">
+                  <Image
+                    src={userCheck}
+                    alt="userchecker"
+                    width={110}
+                    height={21}
+                  />
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-heading text-[20px] font-bold mb-2">
+                  You're all set!
+                </div>
+                <div className="text-body text-base mb-2">
+                  Your profile is ready. Start rewarding your customers and
+                  growing your business.
+                </div>
+              </div>
+              <div className="flex justify-center items-center">
+                <Button
+                  className="w-4/5 "
+                  onClick={() => router.push("/business/dashboard")}
+                >
+                  Go to Dashboard
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </Card>
     </OnboardingLayout>

@@ -17,20 +17,36 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const router = useRouter();
 
+  const [error, setError] = useState('');
+  const [touched, setTouched] = useState(false);
+
   const canContinue = isValidEmail(email);
+
+  const handleBlur = () => {
+    setTouched(true);
+    setError(isValidEmail(email) ? '' : 'Enter a valid email');
+  };
+
+  const handleChange = (value: string) => {
+    setEmail(value);
+    if (error) setError('');
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (canContinue) {
-      // For now, just show a message or route
-      alert("Reset link sent to your email (frontend only)");
-      // router.push('/reset-password');
+    setTouched(true);
+    if (!isValidEmail(email)) {
+      setError('Enter a valid email');
+      return;
     }
+    setError('');
+    alert("Reset link sent to your email (frontend only)");
+    // router.push('/reset-password');
   };
 
   return (
     <AuthLayout>
-      <form className="w-full max-w-md mt-12 md:mt-20 mx-auto" onSubmit={handleSubmit}>
+      <form className="w-full max-w-md mt-12 md:mt-20 mx-auto" onSubmit={handleSubmit} noValidate>
         {/* Back button */}
         <button
           type="button"
@@ -52,10 +68,15 @@ export default function ForgotPassword() {
               type="email"
               placeholder="Enter your email"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={e => handleChange(e.target.value)}
+              onBlur={handleBlur}
+              className={error && touched ? 'border !border-danger' : ''}
             />
             <HiOutlineMail className="absolute right-3 top-1/2 -translate-y-1/2 text-gray5" />
           </div>
+          {error && touched && (
+            <p className="text-xs text-danger mt-1">{error}</p>
+          )}
         </div>
         <Button className="w-full mb-3" type="submit" disabled={!canContinue}>
           Continue
