@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import AuthLayout from "@/components/AuthLayout";
 import { HiOutlineMail } from "react-icons/hi";
 import { FiPhone } from "react-icons/fi";
-import { MdOutlineLock } from "react-icons/md";
+import { MdOutlineLock, MdOutlineVisibility, MdOutlineVisibilityOff } from "react-icons/md";
 import { FcGoogle } from "react-icons/fc";
 import { cn } from "@/lib/utils";
 import { useMutation } from "@apollo/client";
@@ -19,6 +19,7 @@ export default function SignIn() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   // Validation state
@@ -213,7 +214,7 @@ export default function SignIn() {
             <div className="relative flex justify-between">
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => handleChange("password", e.target.value)}
@@ -224,7 +225,19 @@ export default function SignIn() {
                     : ""
                 }
               />
-              <MdOutlineLock className="absolute right-3 top-1/2 -translate-y-1/2 text-gray5" />
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 cursor-pointer -translate-y-1/2 text-gray5 focus:outline-none"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <MdOutlineVisibilityOff />
+                ) : (
+                  <MdOutlineVisibility />
+                )}
+              </button>
             </div>
             {errors.password && touched.password && (
               <p className="text-xs text-danger mt-1">{errors.password}</p>

@@ -33,3 +33,17 @@ export const LOGIN_PHONE = gql`
     }
   }
 `;
+
+
+// BUSINESS_TYPES = [
+//   ('retail', 'Retail'),
+//   ('wholesale', 'Wholesale'),
+//   ('service', 'Service'),
+// ]
+
+// BUSINESS_CATEGORIES = [
+//   ('food', 'Food'),
+//   ('retail', 'Retail'),
+//   ('technology', 'Technology'),
+//   ('health', 'Health'),
+// ]

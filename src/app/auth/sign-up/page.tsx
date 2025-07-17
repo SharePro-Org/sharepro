@@ -9,7 +9,11 @@ import { useRouter } from "next/navigation";
 import { RiBriefcase4Line } from "react-icons/ri";
 import { HiOutlineMail } from "react-icons/hi";
 import { FiPhone } from "react-icons/fi";
-import { MdOutlineLock } from "react-icons/md";
+import {
+  MdOutlineLock,
+  MdOutlineVisibility,
+  MdOutlineVisibilityOff,
+} from "react-icons/md";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 
@@ -27,6 +31,8 @@ export default function BusinessSignUp() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [touched, setTouched] = useState({
     businessName: false,
     businessEmail: false,
@@ -175,7 +181,7 @@ export default function BusinessSignUp() {
             <div className="relative flex justify-between">
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Create a password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -186,7 +192,19 @@ export default function BusinessSignUp() {
                     : ""
                 }
               />
-              <MdOutlineLock className="absolute right-3 top-1/2 -translate-y-1/2 text-gray5" />
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 cursor-pointer -translate-y-1/2 text-gray5 focus:outline-none"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <MdOutlineVisibilityOff />
+                ) : (
+                  <MdOutlineVisibility />
+                )}
+              </button>
             </div>
             {errors.password && touched.password && (
               <p className="text-xs text-danger mt-1">{errors.password}</p>
@@ -197,7 +215,7 @@ export default function BusinessSignUp() {
             <div className="relative flex justify-between">
               <Input
                 id="confirm-password"
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirm password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -208,7 +226,21 @@ export default function BusinessSignUp() {
                     : ""
                 }
               />
-              <MdOutlineLock className="absolute right-3 top-1/2 -translate-y-1/2 text-gray5" />
+              <button
+                type="button"
+                tabIndex={-1}
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 cursor-pointer -translate-y-1/2 text-gray5 focus:outline-none"
+                aria-label={
+                  showConfirmPassword ? "Hide password" : "Show password"
+                }
+              >
+                {showConfirmPassword ? (
+                  <MdOutlineVisibilityOff />
+                ) : (
+                  <MdOutlineVisibility />
+                )}
+              </button>
             </div>
             {errors.confirmPassword && touched.confirmPassword && (
               <p className="text-xs text-danger mt-1">
@@ -224,7 +256,7 @@ export default function BusinessSignUp() {
           >
             <FcGoogle /> Sign in with Google
           </Button>
-          <div className="w-fit mx-auto flex justify-center items-center text-body md:text-sm pt-4 text-xs border rounded-sm py-2 px-4 mt-2">
+          <div className="w-fit flex text-body md:text-sm pt-4 text-xs py-2 mt-2">
             Already have an account?
             <Link
               href="/auth/sign-in"
@@ -233,7 +265,7 @@ export default function BusinessSignUp() {
               Sign In
             </Link>
           </div>
-          <p className="text-center text-body md:text-sm pt-4 text-xs">
+          <p className=" text-body md:text-sm pt-4 text-xs">
             By Signing up, you agree to the
             <Link href="/policy" className="hover:underline ml-2 font-semibold">
               Terms of Use{" "}
