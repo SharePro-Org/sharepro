@@ -16,10 +16,10 @@ export const setToken = (token: string): void => {
   localStorage.setItem('accessToken', token);
 };
 
-const API_BASE_URL = "https://api.mysharepro.com/graphql";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/graphql/";
 if (!API_BASE_URL) {
   throw new Error(
-    'NEXT_PUBLIC_API_BASE_URL is not set in environment variables.'
+    'NEXT_PUBLIC_API_URL is not set in environment variables.'
   );
 }
 
@@ -59,7 +59,7 @@ const handleTokenRefresh = async (
   operation: any,
   forward: any
 ): Promise<Observable<any>> => {
-  const refreshToken = localStorage.getItem('proxi-refreshToken');
+  const refreshToken = localStorage.getItem('refreshToken');
   if (!refreshToken) {
     throw new Error('Authentication required');
   }
@@ -90,8 +90,8 @@ const handleTokenRefresh = async (
     const newRefreshToken = res.data?.refreshToken?.refreshToken;
 
     if (newRefreshToken && newAccessToken) {
-      localStorage.setItem('proxi-accessToken', newAccessToken);
-      localStorage.setItem('proxi-refreshToken', newRefreshToken);
+      localStorage.setItem('accessToken', newAccessToken);
+      localStorage.setItem('refreshToken', newRefreshToken);
     }
 
     if (newAccessToken) {
