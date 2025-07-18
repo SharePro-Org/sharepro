@@ -72,15 +72,15 @@ const handleTokenRefresh = async (
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
-        mutation refreshUserToken($refreshToken: String!) {
-          refreshUserToken(refreshToken: $refreshToken) {
+        mutation refreshToken($refreshToken: String!) {
+          refreshToken(refreshToken: $refreshToken) {
             token
             refreshToken
           }
         }
         `,
         variables: { refreshToken },
-        operationName: "refreshUserToken"
+        operationName: "refreshToken"
       }),
     });
 

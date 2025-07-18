@@ -5,10 +5,12 @@ export const LOGIN = gql`
     login(email: $email, password: $password) {
       message
       token
+      refreshToken
       success
       user {
         id
         email
+        phone
         businessName
         business {
           onBoardingComplete
@@ -23,9 +25,13 @@ export const LOGIN_PHONE = gql`
     loginPhone(phone: $phone, password: $password) {
       success
       token
+      refreshToken
       message
       user {
         id
+        businessName
+        email
+        phone
         business {
           onBoardingComplete
         }
@@ -72,6 +78,15 @@ export const FORGOT_PASSWORD = gql`
 export const RESET_PASSWORD = gql`
   mutation ResetPassword($newPassword: String!, $token: String!) {
     resetPassword(newPassword: $newPassword, token: $token) {
+      message
+      success
+    }
+  }
+`;
+
+export const ONBOARDING_BUSINESS = gql`
+  mutation OnboardingBusiness($input: OnboardingBusinessInput!) {
+    onboardingBusiness(input: $input) {
       message
       success
     }

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -8,13 +8,27 @@ import { Label } from "@/components/ui/label";
 import AuthLayout from "@/components/AuthLayout";
 import { HiOutlineMail } from "react-icons/hi";
 import { FiPhone } from "react-icons/fi";
-import { MdOutlineLock, MdOutlineVisibility, MdOutlineVisibilityOff } from "react-icons/md";
+import {
+  MdOutlineLock,
+  MdOutlineVisibility,
+  MdOutlineVisibilityOff,
+} from "react-icons/md";
 import { FcGoogle } from "react-icons/fc";
 import { cn } from "@/lib/utils";
 import { useMutation } from "@apollo/client";
 import { LOGIN, LOGIN_PHONE } from "@/apollo/mutations/auth";
 
+// Utility function to remove tokens from localStorage
+export function clearAuthTokens() {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+}
+
 export default function SignIn() {
+  useEffect(() => {
+    clearAuthTokens();
+  }, []);
+
   const [tab, setTab] = useState<"email" | "phone">("email");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -36,8 +50,6 @@ export default function SignIn() {
   const isValidEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isValidPhone = (phone: string) => /^[0-9]{8,15}$/.test(phone);
-
-  
 
   // Only enable if (email && password) or (phone && password)
   const canContinue =
@@ -88,10 +100,25 @@ export default function SignIn() {
       if (tab === "email") {
         const { data } = await login({ variables: { email, password } });
         if (data?.login?.success) {
+          if (data.login.token) {
+            localStorage.setItem("accessToken", data.login.token);
+          }
+          if (data.login.refreshToken) {
+            localStorage.setItem("refreshToken", data.login.refreshToken);
+          }
           const onBoardingComplete =
             data.login.user?.business?.[0]?.onBoardingComplete;
+          const businessName = data.login.user?.businessName || "";
+          const emailToSend = data.login.user?.email || email;
+          const phoneToSend = data.login.user?.phone || phone;
           router.push(
-            onBoardingComplete ? "/business/dashboard" : "/onboarding"
+            onBoardingComplete
+              ? "/business/dashboard"
+              : `/onboarding?email=${encodeURIComponent(
+                  emailToSend
+                )}&businessName=${encodeURIComponent(
+                  businessName
+                )}&phone=${encodeURIComponent(phoneToSend)}`
           );
         } else {
           setGeneralError(data?.login?.message || "Invalid credentials");
@@ -99,10 +126,25 @@ export default function SignIn() {
       } else {
         const { data } = await loginPhone({ variables: { phone, password } });
         if (data?.loginPhone?.success) {
+          if (data.loginPhone.token) {
+            localStorage.setItem("accessToken", data.loginPhone.token);
+          }
+          if (data.loginPhone.refreshToken) {
+            localStorage.setItem("refreshToken", data.loginPhone.refreshToken);
+          }
           const onBoardingComplete =
             data.loginPhone.user?.business?.[0]?.onBoardingComplete;
+          const businessName = data.loginPhone.user?.businessName || "";
+          const emailToSend = data.loginPhone.user?.email || "";
+          const phoneToSend = data.loginPhone.user?.phone || phone;
           router.push(
-            onBoardingComplete ? "/business/dashboard" : "/onboarding"
+            onBoardingComplete
+              ? "/business/dashboard"
+              : `/onboarding?email=${encodeURIComponent(
+                  emailToSend
+                )}&businessName=${encodeURIComponent(
+                  businessName
+                )}&phone=${encodeURIComponent(phoneToSend)}`
           );
         } else {
           setGeneralError(data?.loginPhone?.message || "Invalid credentials");

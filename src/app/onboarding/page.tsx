@@ -7,6 +7,8 @@ import React, {
   Dispatch,
   SetStateAction,
   ReactNode,
+  useEffect,
+  Suspense,
 } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -20,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import Image from "next/image";
 import userCheck from "../../../public/assets/userCheck.svg";
+import { useSearchParams } from "next/navigation";
 
 // Shared types
 interface StepProps {
@@ -175,6 +178,12 @@ const Onboarding: React.FC = () => {
   const router = useRouter();
   const [step, setStep] = useState(0);
 
+  // Read email and businessName from query params
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : undefined;
+  const emailFromQuery = searchParams?.get('email') || "";
+  const businessNameFromQuery = searchParams?.get('businessName') || "";
+  const phoneFromQuery = searchParams?.get('phone') || "";
+
   // State for all steps
   const [businessName, setBusinessName] = useState("");
   const [category, setCategory] = useState("");
@@ -187,6 +196,12 @@ const Onboarding: React.FC = () => {
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
   const [selectedPlan, setSelectedPlan] = useState<string | null>("pro");
   const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    if (businessNameFromQuery) setBusinessName(businessNameFromQuery);
+    if (emailFromQuery) setEmail(emailFromQuery);
+    if (phoneFromQuery) setPhone(phoneFromQuery);
+  }, [businessNameFromQuery, emailFromQuery, phoneFromQuery]);
 
   const steps = [
     <BusinessInfoStep
@@ -279,6 +294,7 @@ const BusinessInfoStep: React.FC<BusinessInfoStepProps> = ({
               value={businessName}
               onChange={(e) => setBusinessName(e.target.value)}
               className="w-full"
+              disabled
             />
           </div>
           <div>
@@ -387,6 +403,7 @@ const ContactLocationStep: React.FC<ContactLocationStepProps> = ({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full"
+              disabled
             />
           </div>
           <div>
@@ -400,6 +417,7 @@ const ContactLocationStep: React.FC<ContactLocationStepProps> = ({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               className="w-full"
+              disabled
             />
           </div>
           <div>
@@ -663,4 +681,12 @@ const SubscriptionStep: React.FC<SubscriptionStepProps> = ({
   );
 };
 
-export default Onboarding;
+function OnboardingPage() {
+  return (
+    <Suspense fallback={<div className="w-full max-w-xl mx-auto mt-20 text-center text-lg">Loading...</div>}>
+      <Onboarding />
+    </Suspense>
+  );
+}
+
+export default OnboardingPage;
