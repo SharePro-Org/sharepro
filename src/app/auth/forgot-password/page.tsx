@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import AuthLayout from '@/components/AuthLayout';
 import { HiOutlineMail } from "react-icons/hi";
 import { FaChevronLeft } from "react-icons/fa6";
+import { useMutation } from '@apollo/client';
+import { FORGOT_PASSWORD } from '@/apollo/mutations/auth';
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -19,6 +21,8 @@ export default function ForgotPassword() {
 
   const [error, setError] = useState('');
   const [touched, setTouched] = useState(false);
+  const [success, setSuccess] = useState('');
+  const [forgotPassword, { loading }] = useMutation(FORGOT_PASSWORD);
 
   const canContinue = isValidEmail(email);
 
@@ -30,18 +34,28 @@ export default function ForgotPassword() {
   const handleChange = (value: string) => {
     setEmail(value);
     if (error) setError('');
+    if (success) setSuccess('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched(true);
+    setError('');
+    setSuccess('');
     if (!isValidEmail(email)) {
       setError('Enter a valid email');
       return;
     }
-    setError('');
-    alert("Reset link sent to your email (frontend only)");
-    // router.push('/reset-password');
+    try {
+      const { data } = await forgotPassword({ variables: { email } });
+      if (data?.forgotPassword?.success) {
+        setSuccess(data.forgotPassword.message || 'Reset link sent to your email');
+      } else {
+        setError(data?.forgotPassword?.message || 'Failed to send reset link');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to send reset link');
+    }
   };
 
   return (
@@ -78,8 +92,11 @@ export default function ForgotPassword() {
             <p className="text-xs text-danger mt-1">{error}</p>
           )}
         </div>
-        <Button className="w-full mb-3" type="submit" disabled={!canContinue}>
-          Continue
+        {success && (
+          <p className="text-success text-sm text-center font-medium mb-2">{success}</p>
+        )}
+        <Button className="w-full mb-3" type="submit" disabled={!canContinue || loading}>
+          {loading ? 'Sending...' : 'Continue'}
         </Button>
         <div className="flex justify-start text-sm lg:text-base text-body">
           <span>Remember your Password?&nbsp;</span>

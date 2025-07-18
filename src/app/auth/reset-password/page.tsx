@@ -7,6 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { MdOutlineLock } from "react-icons/md";
 import { FaChevronLeft } from "react-icons/fa6";
+import { useMutation } from "@apollo/client";
+import { RESET_PASSWORD } from "@/apollo/mutations/auth";
+import { useSearchParams } from "next/navigation";
 
 function isStrongPassword(pw: string) {
   // At least 8 chars, 1 uppercase, 1 lowercase, 1 number (tweak as needed)
@@ -18,6 +21,9 @@ export default function ResetPassword() {
   const [error, setError] = useState("");
   const [touched, setTouched] = useState(false);
   const router = useRouter();
+  const [resetPassword, { loading }] = useMutation(RESET_PASSWORD);
+  const [success, setSuccess] = useState("");
+  const params = useSearchParams().get("token");
 
   const canContinue = isStrongPassword(password);
 
@@ -33,20 +39,38 @@ export default function ResetPassword() {
   const handleChange = (value: string) => {
     setPassword(value);
     if (error) setError("");
+    if (success) setSuccess("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched(true);
+    setError("");
+    setSuccess("");
     if (!isStrongPassword(password)) {
       setError(
         "Password must be at least 8 characters, include uppercase, lowercase, and a number."
       );
       return;
     }
-    setError("");
-    alert("Password reset! (Frontend only)");
-    // router.push('/sign-in');
+    const token = params;
+    if (!token) {
+      setError("Invalid or missing reset token.");
+      return;
+    }
+    try {
+      const { data } = await resetPassword({
+        variables: { newPassword: password, token },
+      });
+      if (data?.resetPassword?.success) {
+        setSuccess(data.resetPassword.message || "Password reset!");
+        setTimeout(() => router.push("/auth/sign-in"), 1500);
+      } else {
+        setError(data?.resetPassword?.message || "Failed to reset password");
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to reset password");
+    }
   };
 
   return (
@@ -90,8 +114,17 @@ export default function ResetPassword() {
             <p className="text-xs text-danger mt-1">{error}</p>
           )}
         </div>
-        <Button className="w-full" type="submit" disabled={!canContinue}>
-          Reset Password
+        {success && (
+          <p className="text-success text-sm text-center font-medium mb-2">
+            {success}
+          </p>
+        )}
+        <Button
+          className="w-full"
+          type="submit"
+          disabled={!canContinue || loading}
+        >
+          {loading ? "Resetting..." : "Reset Password"}
         </Button>
       </form>
     </AuthLayout>

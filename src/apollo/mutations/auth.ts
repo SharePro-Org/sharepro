@@ -60,6 +60,24 @@ export const REGISTER = gql`
   }
 `;
 
+export const FORGOT_PASSWORD = gql`
+  mutation ForgotPassword($email: String!) {
+    forgotPassword(email: $email) {
+      message
+      success
+    }
+  }
+`;
+
+export const RESET_PASSWORD = gql`
+  mutation ResetPassword($newPassword: String!, $token: String!) {
+    resetPassword(newPassword: $newPassword, token: $token) {
+      message
+      success
+    }
+  }
+`;
+
 
 // BUSINESS_TYPES = [
 //   ('retail', 'Retail'),
