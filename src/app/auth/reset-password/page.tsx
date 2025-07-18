@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import AuthLayout from "@/components/AuthLayout";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ function isStrongPassword(pw: string) {
   return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(pw);
 }
 
-export default function ResetPassword() {
+function ResetPasswordContent() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [touched, setTouched] = useState(false);
@@ -24,6 +24,11 @@ export default function ResetPassword() {
   const [resetPassword, { loading }] = useMutation(RESET_PASSWORD);
   const [success, setSuccess] = useState("");
   const params = useSearchParams().get("token");
+
+  // Only render form if token is present
+  if (!params) {
+    return <div className="w-full max-w-md mx-auto mt-20 text-center text-lg">Loading...</div>;
+  }
 
   const canContinue = isStrongPassword(password);
 
@@ -128,5 +133,13 @@ export default function ResetPassword() {
         </Button>
       </form>
     </AuthLayout>
+  );
+}
+
+export default function ResetPassword() {
+  return (
+    <Suspense fallback={<div className="w-full max-w-md mx-auto mt-20 text-center text-lg">Loading...</div>}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }
