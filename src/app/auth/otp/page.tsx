@@ -5,12 +5,15 @@ import AuthLayout from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { FaChevronLeft } from "react-icons/fa6";
+import { useMutation } from "@apollo/client";
+import { VERIFY_EMAIL } from "@/apollo/mutations/auth";
 
 export default function OtpPage() {
   const router = useRouter();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(59);
   const [otpError, setOtpError] = useState("");
+  const [verifyEmail, { loading }] = useMutation(VERIFY_EMAIL);
   const inputRefs = Array.from({ length: 6 }, () =>
     useRef<HTMLInputElement>(null)
   );
@@ -48,15 +51,20 @@ export default function OtpPage() {
   const isOtpComplete = otpValue.length === 6 && otp.every((d) => d !== "");
 
   // Form submit
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isOtpComplete) return;
-    if (otpValue !== "123456") {
-      setOtpError("The code you entered is incorrect.");
-      return;
-    }
     setOtpError("");
-    router.push("/auth/sign-in");
+    try {
+      const { data } = await verifyEmail({ variables: { code: otpValue } });
+      if (data?.verifyEmail?.success) {
+        router.push("/onboarding");
+      } else {
+        setOtpError(data?.verifyEmail?.message || "The code you entered is incorrect.");
+      }
+    } catch (err: any) {
+      setOtpError(err.message || "Verification failed");
+    }
   };
 
   return (
@@ -109,9 +117,9 @@ export default function OtpPage() {
         <Button
           className="w-full mb-2"
           type="submit"
-          disabled={otpValue.length < 6}
+          disabled={otpValue.length < 6 || loading}
         >
-          Verify email
+          {loading ? "Verifying..." : "Verify email"}
         </Button>
 
         {/* Resend Link */}

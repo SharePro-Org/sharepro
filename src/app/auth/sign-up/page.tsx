@@ -29,6 +29,8 @@ export default function BusinessSignUp() {
   const [register, { loading }] = useMutation(REGISTER);
   const [generalError, setGeneralError] = useState("");
 
+ 
+
   // State for each field
   const [businessName, setBusinessName] = useState("");
   const [businessEmail, setBusinessEmail] = useState("");
@@ -109,7 +111,9 @@ export default function BusinessSignUp() {
         },
       });
       if (data?.register?.success) {
-        router.push(`/auth/verify-email?email=${encodeURIComponent(businessEmail)}`);
+        router.push(
+          `/auth/verify-email?email=${encodeURIComponent(businessEmail)}`
+        );
       } else {
         setGeneralError(data?.register?.message || "Registration failed");
       }
@@ -136,7 +140,9 @@ export default function BusinessSignUp() {
           noValidate
         >
           {generalError && (
-            <p className="text-danger text-sm text-center font-medium">{generalError}</p>
+            <p className="text-danger text-sm text-center font-medium">
+              {generalError}
+            </p>
           )}
           <div className="space-y-2">
             <Label htmlFor="business-name">Business Name</Label>
@@ -275,7 +281,9 @@ export default function BusinessSignUp() {
               </p>
             )}
           </div>
-          <Button disabled={!isFormValid || loading}>{loading ? "Signing up..." : "Continue"}</Button>
+          <Button disabled={!isFormValid || loading}>
+            {loading ? "Signing up..." : "Continue"}
+          </Button>
           <Button
             variant="outline"
             className="flex w-full items-center justify-center gap-2"

@@ -4,22 +4,26 @@ import { useRouter } from "next/navigation";
 import AuthLayout from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { FaChevronLeft } from "react-icons/fa6";
-import { useEffect, useState } from "react";
-import { useMutation } from "@apollo/client";
-import { VERIFY_EMAIL } from "@/apollo/mutations/auth";
+import { useEffect, useState, Suspense } from "react";
 
-export default function VerifyEmail() {
+function VerifyEmailContent() {
   const router = useRouter();
-  const [email, setEmail] = useState<string>("your email");
+  const [email, setEmail] = useState<string>("");
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      setEmail(params.get("email") || "your email");
+      setEmail(params.get("email") || "");
     }
   }, []);
-  const [code, setCode] = useState("");
-  const [verifyEmail, { loading }] = useMutation(VERIFY_EMAIL);
-  const [error, setError] = useState("");
+
+  // Mask email for privacy (e.g., a***b@domain.com)
+  function maskEmail(email: string) {
+    if (!email) return "your email";
+    const [user, domain] = email.split("@");
+    if (!user || !domain) return email;
+    if (user.length <= 2) return user[0] + "***@" + domain;
+    return user[0] + "***" + user.slice(-1) + "@" + domain;
+  }
 
   return (
     <AuthLayout>
@@ -38,44 +42,32 @@ export default function VerifyEmail() {
             Verify Your Email
           </h2>
           <p className="text-body text-base ">
-            We've sent a verification code to your email <span className="font-semibold">{email}</span>.<br/>
-            Please enter the code below to continue.
+            We've sent a verification link to your email{" "}
+            <span className="font-semibold">{maskEmail(email)}</span>. Please
+            check your inbox and click the link to continue.
           </p>
-          <form
-            className="space-y-4"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              setError("");
-              try {
-                const { data } = await verifyEmail({ variables: { code } });
-                if (data?.verifyEmail?.success) {
-                  router.push("/onboarding");
-                } else {
-                  setError(data?.verifyEmail?.message || "Verification failed");
-                }
-              } catch (err: any) {
-                setError(err.message || "Verification failed");
-              }
-            }}
-          >
-            <input
-              type="text"
-              placeholder="Enter verification code"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className="w-full border rounded px-3 py-2 text-base"
-              required
-            />
-            {error && <p className="text-danger text-sm text-center font-medium">{error}</p>}
-            <Button className="w-full" type="submit" disabled={loading || !code}>
-              {loading ? "Verifying..." : "Continue"}
-            </Button>
-          </form>
+          <Button className="w-full " onClick={() => router.push("/auth/otp")}>
+            Continue
+          </Button>
           <Button variant="outline" className="w-full">
             Resend Verification Email
           </Button>
         </div>
       </div>
     </AuthLayout>
+  );
+}
+
+export default function VerifyEmail() {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full max-w-xl mx-auto mt-16 md:mt-28 text-center text-lg">
+          Loading...
+        </div>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
