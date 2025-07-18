@@ -4,15 +4,19 @@ import { useRouter } from "next/navigation";
 import AuthLayout from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { FaChevronLeft } from "react-icons/fa6";
-import { useSearchParams, useRouter as useNextRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "@apollo/client";
 import { VERIFY_EMAIL } from "@/apollo/mutations/auth";
 
 export default function VerifyEmail() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "your email";
+  const [email, setEmail] = useState<string>("your email");
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      setEmail(params.get("email") || "your email");
+    }
+  }, []);
   const [code, setCode] = useState("");
   const [verifyEmail, { loading }] = useMutation(VERIFY_EMAIL);
   const [error, setError] = useState("");
