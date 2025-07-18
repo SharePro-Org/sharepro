@@ -16,6 +16,8 @@ import {
 } from "react-icons/md";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
+import { useMutation } from "@apollo/client";
+import { REGISTER } from "@/apollo/mutations/auth";
 
 const isValidEmail = (email: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -24,6 +26,8 @@ const isValidPassword = (password: string) => password.length >= 6;
 
 export default function BusinessSignUp() {
   const router = useRouter();
+  const [register, { loading }] = useMutation(REGISTER);
+  const [generalError, setGeneralError] = useState("");
 
   // State for each field
   const [businessName, setBusinessName] = useState("");
@@ -79,7 +83,7 @@ export default function BusinessSignUp() {
     setErrors(validate());
   };
 
-  const handleSignUp = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setTouched({
       businessName: true,
@@ -88,10 +92,30 @@ export default function BusinessSignUp() {
       password: true,
       confirmPassword: true,
     });
+    setGeneralError("");
     const newErrors = validate();
     setErrors(newErrors);
     const hasError = Object.values(newErrors).some(Boolean);
-    if (!hasError) router.push("/auth/verify-email");
+    if (hasError) return;
+    try {
+      const { data } = await register({
+        variables: {
+          input: {
+            email: businessEmail,
+            phone: phoneNumber,
+            businessName,
+            password,
+          },
+        },
+      });
+      if (data?.register?.success) {
+        router.push(`/auth/verify-email?email=${encodeURIComponent(businessEmail)}`);
+      } else {
+        setGeneralError(data?.register?.message || "Registration failed");
+      }
+    } catch (err: any) {
+      setGeneralError(err.message || "Registration failed");
+    }
   };
 
   return (
@@ -111,6 +135,9 @@ export default function BusinessSignUp() {
           onSubmit={handleSignUp}
           noValidate
         >
+          {generalError && (
+            <p className="text-danger text-sm text-center font-medium">{generalError}</p>
+          )}
           <div className="space-y-2">
             <Label htmlFor="business-name">Business Name</Label>
             <div className="relative flex justify-between">
@@ -248,7 +275,7 @@ export default function BusinessSignUp() {
               </p>
             )}
           </div>
-          <Button disabled={!isFormValid}>Continue</Button>
+          <Button disabled={!isFormValid || loading}>{loading ? "Signing up..." : "Continue"}</Button>
           <Button
             variant="outline"
             className="flex w-full items-center justify-center gap-2"

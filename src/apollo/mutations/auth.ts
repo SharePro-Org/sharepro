@@ -34,6 +34,32 @@ export const LOGIN_PHONE = gql`
   }
 `;
 
+export const VERIFY_EMAIL = gql`
+  mutation VerifyEmail($code: String!) {
+    verifyEmail(code: $code) {
+      message
+      success
+      user {
+        email
+        id
+      }
+    }
+  }
+`;
+
+export const REGISTER = gql`
+  mutation Register($input: RegisterInput!) {
+    register(input: $input) {
+      message
+      success
+      user {
+        id
+        email
+      }
+    }
+  }
+`;
+
 
 // BUSINESS_TYPES = [
 //   ('retail', 'Retail'),

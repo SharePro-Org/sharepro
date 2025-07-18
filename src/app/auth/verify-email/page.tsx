@@ -4,9 +4,18 @@ import { useRouter } from "next/navigation";
 import AuthLayout from "@/components/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { FaChevronLeft } from "react-icons/fa6";
+import { useSearchParams, useRouter as useNextRouter } from "next/navigation";
+import { useState } from "react";
+import { useMutation } from "@apollo/client";
+import { VERIFY_EMAIL } from "@/apollo/mutations/auth";
 
 export default function VerifyEmail() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email") || "your email";
+  const [code, setCode] = useState("");
+  const [verifyEmail, { loading }] = useMutation(VERIFY_EMAIL);
+  const [error, setError] = useState("");
 
   return (
     <AuthLayout>
@@ -25,12 +34,39 @@ export default function VerifyEmail() {
             Verify Your Email
           </h2>
           <p className="text-body text-base ">
-            We've sent a verification link to your email anga*******@gmail.com.
-            Please check your inbox and click the link to continue.
+            We've sent a verification code to your email <span className="font-semibold">{email}</span>.<br/>
+            Please enter the code below to continue.
           </p>
-          <Button className="w-full " onClick={() => router.push("/auth/otp")}>
-            Continue
-          </Button>
+          <form
+            className="space-y-4"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setError("");
+              try {
+                const { data } = await verifyEmail({ variables: { code } });
+                if (data?.verifyEmail?.success) {
+                  router.push("/onboarding");
+                } else {
+                  setError(data?.verifyEmail?.message || "Verification failed");
+                }
+              } catch (err: any) {
+                setError(err.message || "Verification failed");
+              }
+            }}
+          >
+            <input
+              type="text"
+              placeholder="Enter verification code"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              className="w-full border rounded px-3 py-2 text-base"
+              required
+            />
+            {error && <p className="text-danger text-sm text-center font-medium">{error}</p>}
+            <Button className="w-full" type="submit" disabled={loading || !code}>
+              {loading ? "Verifying..." : "Continue"}
+            </Button>
+          </form>
           <Button variant="outline" className="w-full">
             Resend Verification Email
           </Button>
