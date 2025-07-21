@@ -367,7 +367,7 @@ export default function Dashboard() {
         </div>
 
         {/* Campaigns table */}
-        <Card className="w-full">
+        <div className="w-full border border-[#E4E7EC] bg-white rounded-md p-6">
           <div className="flex flex-col gap-4">
             {/* Table header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -480,7 +480,7 @@ export default function Dashboard() {
               </table>
             </div>
           </div>
-        </Card>
+        </div>
       </div>
     </DashboardLayout>
   );

@@ -18,15 +18,9 @@ import { cn } from "@/lib/utils";
 import { useMutation } from "@apollo/client";
 import { LOGIN, LOGIN_PHONE } from "@/apollo/mutations/auth";
 
-// Utility function to remove tokens from localStorage
-export function clearAuthTokens() {
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
-}
-
 export default function SignIn() {
   useEffect(() => {
-    clearAuthTokens();
+    localStorage.removeItem("userData");
   }, []);
 
   const [tab, setTab] = useState<"email" | "phone">("email");
