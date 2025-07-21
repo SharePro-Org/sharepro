@@ -217,7 +217,7 @@ const Onboarding: React.FC = () => {
         address,
         country,
         billing: "monthly",
-        selectedPlan: "free",
+        selectedPlan: "FREE",
         website,
       };
       const { data } = await onboardingBusiness({ variables: { input } });
