@@ -14,6 +14,7 @@ export const LOGIN = gql`
         businessName
         business {
           onBoardingComplete
+          id
         }
       }
     }
@@ -34,6 +35,7 @@ export const LOGIN_PHONE = gql`
         phone
         business {
           onBoardingComplete
+          id
         }
       }
     }
@@ -76,8 +78,8 @@ export const FORGOT_PASSWORD = gql`
 `;
 
 export const RESET_PASSWORD = gql`
-  mutation ResetPassword($newPassword: String!, $token: String!) {
-    resetPassword(newPassword: $newPassword, token: $token) {
+  mutation ResetPassword($newPassword: String!, $restToken: String!) {
+    resetPassword(newPassword: $newPassword, restToken: $restToken) {
       message
       success
     }
@@ -85,7 +87,7 @@ export const RESET_PASSWORD = gql`
 `;
 
 export const ONBOARDING_BUSINESS = gql`
-  mutation OnboardingBusiness($input: OnboardingBusinessInput!) {
+  mutation OnboardingBusiness($input: OnboardingInput!) {
     onboardingBusiness(input: $input) {
       message
       success

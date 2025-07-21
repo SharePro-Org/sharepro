@@ -9,11 +9,20 @@ import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
 
 // Utility Functions
-export const getAuthToken = (): string | null =>
-  localStorage.getItem('accessToken');
+export const getUserData = (): any | null => {
+  const userData = localStorage.getItem('userData');
+  return userData ? JSON.parse(userData) : null;
+};
+
+export const getAuthToken = (): string | null => {
+  const userData = getUserData();
+  return userData?.accessToken || null;
+};
 
 export const setToken = (token: string): void => {
-  localStorage.setItem('accessToken', token);
+  const userData = getUserData() || {};
+  userData.accessToken = token;
+  localStorage.setItem('userData', JSON.stringify(userData));
 };
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.mysharepro.com/graphql/";
@@ -59,7 +68,8 @@ const handleTokenRefresh = async (
   operation: any,
   forward: any
 ): Promise<Observable<any>> => {
-  const refreshToken = localStorage.getItem('refreshToken');
+  const userData = getUserData();
+  const refreshToken = userData?.refreshToken;
   if (!refreshToken) {
     throw new Error('Authentication required');
   }
@@ -90,8 +100,10 @@ const handleTokenRefresh = async (
     const newRefreshToken = res.data?.refreshToken?.refreshToken;
 
     if (newRefreshToken && newAccessToken) {
-      localStorage.setItem('accessToken', newAccessToken);
-      localStorage.setItem('refreshToken', newRefreshToken);
+      const userData = getUserData() || {};
+      userData.accessToken = newAccessToken;
+      userData.refreshToken = newRefreshToken;
+      localStorage.setItem('userData', JSON.stringify(userData));
     }
 
     if (newAccessToken) {

@@ -8,7 +8,7 @@ const steps = [
   { label: "Business Info" },
   { label: "Contact & Location Info" },
   // { label: "Branding" },
-  { label: "Subscription Plan" },
+  // { label: "Subscription Plan" },
 ];
 
 const SIDEBAR_WIDTH = 271;

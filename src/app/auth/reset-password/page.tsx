@@ -27,7 +27,11 @@ function ResetPasswordContent() {
 
   // Only render form if token is present
   if (!params) {
-    return <div className="w-full max-w-md mx-auto mt-20 text-center text-lg">Loading...</div>;
+    return (
+      <div className="w-full max-w-md mx-auto mt-20 text-center text-lg">
+        Loading...
+      </div>
+    );
   }
 
   const canContinue = isStrongPassword(password);
@@ -65,7 +69,7 @@ function ResetPasswordContent() {
     }
     try {
       const { data } = await resetPassword({
-        variables: { newPassword: password, token },
+        variables: { newPassword: password, restToken: token },
       });
       if (data?.resetPassword?.success) {
         setSuccess(data.resetPassword.message || "Password reset!");
@@ -138,7 +142,13 @@ function ResetPasswordContent() {
 
 export default function ResetPassword() {
   return (
-    <Suspense fallback={<div className="w-full max-w-md mx-auto mt-20 text-center text-lg">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="w-full max-w-md mx-auto mt-20 text-center text-lg">
+          Loading...
+        </div>
+      }
+    >
       <ResetPasswordContent />
     </Suspense>
   );

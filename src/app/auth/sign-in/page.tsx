@@ -100,25 +100,22 @@ export default function SignIn() {
       if (tab === "email") {
         const { data } = await login({ variables: { email, password } });
         if (data?.login?.success) {
-          if (data.login.token) {
-            localStorage.setItem("accessToken", data.login.token);
-          }
-          if (data.login.refreshToken) {
-            localStorage.setItem("refreshToken", data.login.refreshToken);
-          }
-          const onBoardingComplete =
-            data.login.user?.business?.[0]?.onBoardingComplete;
-          const businessName = data.login.user?.businessName || "";
-          const emailToSend = data.login.user?.email || email;
-          const phoneToSend = data.login.user?.phone || phone;
+          const user = data.login.user;
+          const onBoardingComplete = user?.business?.[0]?.onBoardingComplete;
+
+          const userData = {
+            accessToken: data.login.token,
+            refreshToken: data.login.refreshToken,
+            userId: user?.id,
+            email: user?.email || email,
+            businessName: user?.businessName,
+            businessId: user.business.id,
+            phone: user?.phone || phone,
+            onBoardingComplete,
+          };
+          localStorage.setItem("userData", JSON.stringify(userData));
           router.push(
-            onBoardingComplete
-              ? "/business/dashboard"
-              : `/onboarding?email=${encodeURIComponent(
-                  emailToSend
-                )}&businessName=${encodeURIComponent(
-                  businessName
-                )}&phone=${encodeURIComponent(phoneToSend)}`
+            onBoardingComplete ? "/business/dashboard" : "/onboarding"
           );
         } else {
           setGeneralError(data?.login?.message || "Invalid credentials");
@@ -126,25 +123,23 @@ export default function SignIn() {
       } else {
         const { data } = await loginPhone({ variables: { phone, password } });
         if (data?.loginPhone?.success) {
-          if (data.loginPhone.token) {
-            localStorage.setItem("accessToken", data.loginPhone.token);
-          }
-          if (data.loginPhone.refreshToken) {
-            localStorage.setItem("refreshToken", data.loginPhone.refreshToken);
-          }
-          const onBoardingComplete =
-            data.loginPhone.user?.business?.[0]?.onBoardingComplete;
-          const businessName = data.loginPhone.user?.businessName || "";
-          const emailToSend = data.loginPhone.user?.email || "";
-          const phoneToSend = data.loginPhone.user?.phone || phone;
+          const user = data.loginPhone.user;
+          const onBoardingComplete = user?.business?.[0]?.onBoardingComplete;
+
+          const userData = {
+            accessToken: data.loginPhone.token,
+            refreshToken: data.loginPhone.refreshToken,
+            userId: user?.id,
+            email: user?.email,
+            businessName: user?.businessName,
+            businessId: user.business.id,
+            phone: user?.phone || phone,
+            onBoardingComplete,
+          };
+          localStorage.setItem("userData", JSON.stringify(userData));
+
           router.push(
-            onBoardingComplete
-              ? "/business/dashboard"
-              : `/onboarding?email=${encodeURIComponent(
-                  emailToSend
-                )}&businessName=${encodeURIComponent(
-                  businessName
-                )}&phone=${encodeURIComponent(phoneToSend)}`
+            onBoardingComplete ? "/business/dashboard" : "/onboarding"
           );
         } else {
           setGeneralError(data?.loginPhone?.message || "Invalid credentials");

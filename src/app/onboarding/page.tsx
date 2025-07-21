@@ -22,7 +22,8 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import Image from "next/image";
 import userCheck from "../../../public/assets/userCheck.svg";
-import { useSearchParams } from "next/navigation";
+import { useMutation } from "@apollo/client";
+import { ONBOARDING_BUSINESS } from "@/apollo/mutations/auth";
 
 // Shared types
 interface StepProps {
@@ -43,6 +44,7 @@ interface BusinessInfoStepProps extends StepProps {
   setWebsite: Setter<string>;
   onContinue: () => void;
   onSaveForLater: () => void;
+  loading: boolean;
 }
 
 interface ContactLocationStepProps extends StepProps {
@@ -57,6 +59,8 @@ interface ContactLocationStepProps extends StepProps {
   onContinue: () => void;
   onBack: () => void;
   onSaveForLater: () => void;
+  loading: boolean;
+  router: ReturnType<typeof useRouter>;
 }
 
 interface SubscriptionStepProps extends StepProps {
@@ -67,6 +71,8 @@ interface SubscriptionStepProps extends StepProps {
   showModal: boolean;
   setShowModal: Setter<boolean>;
   onBack: () => void;
+  onSubmit: () => void;
+  loading: boolean;
 }
 
 interface Plan {
@@ -82,9 +88,14 @@ interface Plan {
 // Data
 const categories = [
   { value: "retail", label: "Retail" },
-  { value: "education", label: "Education" },
-  { value: "services", label: "Services" },
-  { value: "tech", label: "Tech" },
+  { value: "food", label: "Food" },
+  { value: "health", label: "Health" },
+  { value: "technology", label: "Technology" },
+];
+const businessTypes = [
+  { value: "retail", label: "Retail" },
+  { value: "wholesale", label: "Wholesale" },
+  { value: "service", label: "Service" },
 ];
 const countries = [
   { value: "my", label: "Malaysia" },
@@ -178,12 +189,6 @@ const Onboarding: React.FC = () => {
   const router = useRouter();
   const [step, setStep] = useState(0);
 
-  // Read email and businessName from query params
-  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : undefined;
-  const emailFromQuery = searchParams?.get('email') || "";
-  const businessNameFromQuery = searchParams?.get('businessName') || "";
-  const phoneFromQuery = searchParams?.get('phone') || "";
-
   // State for all steps
   const [businessName, setBusinessName] = useState("");
   const [category, setCategory] = useState("");
@@ -193,15 +198,51 @@ const Onboarding: React.FC = () => {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [country, setCountry] = useState("");
+  const [businessId, setBusinessId] = useState("");
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
   const [selectedPlan, setSelectedPlan] = useState<string | null>("pro");
   const [showModal, setShowModal] = useState(false);
 
+  const [onboardingBusiness, { loading }] = useMutation(ONBOARDING_BUSINESS);
+
+  const handleSubmit = async () => {
+    try {
+      const input = {
+        businessId,
+        businessName,
+        businessCategory: category,
+        businessType,
+        email,
+        phone,
+        address,
+        country,
+        billing: "monthly",
+        selectedPlan: "free",
+        website,
+      };
+      const { data } = await onboardingBusiness({ variables: { input } });
+      if (data?.onboardingBusiness?.success) {
+        setShowModal(true);
+      } else {
+        console.error(
+          "Onboarding API call failed:",
+          data?.onboardingBusiness?.message
+        );
+        // You can add user-facing error handling here
+      }
+    } catch (err) {
+      console.error("Onboarding submission failed:", err);
+      // Optionally show an error to the user
+    }
+  };
+
   useEffect(() => {
-    if (businessNameFromQuery) setBusinessName(businessNameFromQuery);
-    if (emailFromQuery) setEmail(emailFromQuery);
-    if (phoneFromQuery) setPhone(phoneFromQuery);
-  }, [businessNameFromQuery, emailFromQuery, phoneFromQuery]);
+    const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+    setBusinessName(userData.businessName || "");
+    setEmail(userData.email || "");
+    setPhone(userData.phone || "");
+    setBusinessId(userData.businessId || "");
+  }, []);
 
   const steps = [
     <BusinessInfoStep
@@ -217,6 +258,7 @@ const Onboarding: React.FC = () => {
       onContinue={() => setStep(1)}
       onSaveForLater={() => router.push("/business/dashboard")}
       stepIndex={0}
+      loading={loading}
     />,
     <ContactLocationStep
       key="contact-location"
@@ -228,25 +270,65 @@ const Onboarding: React.FC = () => {
       setAddress={setAddress}
       country={country}
       setCountry={setCountry}
-      onContinue={() => setStep(2)}
+      onContinue={handleSubmit}
       onBack={() => setStep(0)}
       onSaveForLater={() => router.push("/business/dashboard")}
       stepIndex={1}
+      loading={loading}
+      router={router}
     />,
-    <SubscriptionStep
-      key="subscription"
-      billing={billing}
-      setBilling={setBilling}
-      selectedPlan={selectedPlan}
-      setSelectedPlan={setSelectedPlan}
-      showModal={showModal}
-      setShowModal={setShowModal}
-      onBack={() => setStep(1)}
-      stepIndex={2}
-    />,
+    // <SubscriptionStep
+    //   key="subscription"
+    //   billing={billing}
+    //   setBilling={setBilling}
+    //   selectedPlan={selectedPlan}
+    //   setSelectedPlan={setSelectedPlan}
+    //   showModal={showModal}
+    //   setShowModal={setShowModal}
+    //   onBack={() => setStep(1)}
+    //   stepIndex={2}
+    //   onSubmit={handleSubmit}
+    // />,
   ];
 
-  return <>{steps[step]}</>;
+  return (
+    <>
+      {steps[step]}
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent className="max-w-md w-full flex flex-col items-center justify-center gap-6 py-12">
+          {/* Success Icon */}
+
+          <div className="flex justify-center">
+            <div className="  flex items-center justify-center">
+              <Image
+                src={userCheck}
+                alt="userchecker"
+                width={110}
+                height={21}
+              />
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-heading text-[20px] font-bold mb-2">
+              You're all set!
+            </div>
+            <div className="text-body text-base mb-2">
+              Your profile is ready. Start rewarding your customers and growing
+              your business.
+            </div>
+          </div>
+          <div className="flex justify-center items-center">
+            <Button
+              className="w-4/5 "
+              onClick={() => router.push("/business/dashboard")}
+            >
+              Go to Dashboard
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
 };
 
 const BusinessInfoStep: React.FC<BusinessInfoStepProps> = ({
@@ -261,6 +343,7 @@ const BusinessInfoStep: React.FC<BusinessInfoStepProps> = ({
   onContinue,
   onSaveForLater,
   stepIndex,
+  loading,
 }) => {
   const canContinue =
     businessName.trim() && category.trim() && businessType.trim();
@@ -313,12 +396,11 @@ const BusinessInfoStep: React.FC<BusinessInfoStepProps> = ({
             <Label htmlFor="business-type" className="block mb-2 text-sm">
               Business type
             </Label>
-            <Input
-              id="business-type"
-              placeholder="e.g. Sole Proprietor, Ltd, Online, Physical"
+            <CustomSelect
+              options={businessTypes}
               value={businessType}
-              onChange={(e) => setBusinessType(e.target.value)}
-              className="w-full"
+              onChange={setBusinessType}
+              placeholder="Select a business type"
             />
           </div>
           <div>
@@ -345,9 +427,9 @@ const BusinessInfoStep: React.FC<BusinessInfoStepProps> = ({
             <button
               type="submit"
               className="bg-primary text-white hover:bg-primary/90 inline-flex w-[110px] h-[44px] items-center justify-center rounded-md text-sm font-medium cursor-pointer disabled:opacity-30"
-              disabled={!canContinue}
+              disabled={!canContinue || loading}
             >
-              Continue
+              {loading ? "Saving..." : "Continue"}
             </button>
           </div>
         </form>
@@ -369,6 +451,8 @@ const ContactLocationStep: React.FC<ContactLocationStepProps> = ({
   onBack,
   onSaveForLater,
   stepIndex,
+  loading,
+  router,
 }) => {
   const canContinue =
     email.trim() && phone.trim() && address.trim() && country.trim();
@@ -454,9 +538,9 @@ const ContactLocationStep: React.FC<ContactLocationStepProps> = ({
             <button
               type="submit"
               className="bg-primary text-white hover:bg-primary/90 inline-flex w-[110px] h-[44px] items-center justify-center rounded-md text-sm font-medium cursor-pointer disabled:opacity-30"
-              disabled={!canContinue}
+              disabled={!canContinue || loading}
             >
-              Continue
+              {loading ? "Saving..." : "Continue"}
             </button>
           </div>
         </form>
@@ -474,6 +558,8 @@ const SubscriptionStep: React.FC<SubscriptionStepProps> = ({
   setShowModal,
   onBack,
   stepIndex,
+  onSubmit,
+  loading,
 }) => {
   const activePlans = plans[billing];
   const router = useRouter();
@@ -630,14 +716,12 @@ const SubscriptionStep: React.FC<SubscriptionStepProps> = ({
             <DialogTrigger asChild>
               <button
                 type="button"
-                disabled={!selectedPlan}
+                disabled={!selectedPlan || loading}
                 className={cn(
                   "bg-primary text-white hover:bg-primary/90 inline-flex w-[110px] h-[44px] items-center justify-center rounded-md text-sm font-medium",
                   !selectedPlan && "opacity-30 cursor-not-allowed"
                 )}
-                onClick={() => {
-                  if (selectedPlan) setShowModal(true);
-                }}
+                onClick={onSubmit}
               >
                 Continue
               </button>
@@ -683,7 +767,13 @@ const SubscriptionStep: React.FC<SubscriptionStepProps> = ({
 
 function OnboardingPage() {
   return (
-    <Suspense fallback={<div className="w-full max-w-xl mx-auto mt-20 text-center text-lg">Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="w-full max-w-xl mx-auto mt-20 text-center text-lg">
+          Loading...
+        </div>
+      }
+    >
       <Onboarding />
     </Suspense>
   );
