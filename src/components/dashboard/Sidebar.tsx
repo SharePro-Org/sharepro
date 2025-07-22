@@ -38,16 +38,26 @@ export default function Sidebar({ open }: { open: boolean }) {
   return (
      <aside
       className={cn(
-        "hidden md:flex flex-col fixed top-24 left-6 z-20", 
-        "bg-white border border-gray-200 rounded-2xl shadow-sm h-[80vh] w-64  transition-all px-2 py-1",
-        open ? "opacity-100" : "opacity-0 pointer-events-none"
+        "flex flex-col fixed top-24 left-1/2 md:left-6 z-20 transform -translate-x-1/2 md:translate-x-0 mx-auto",
+        "bg-white border border-gray-200 rounded-2xl shadow-sm h-[80vh] w-[95vw] max-w-sm md:w-64 transition-all px-2 py-1",
+        !open && "hidden"
       )}
     >
       <nav className="flex-1 overflow-y-auto pt-4 pb-4 hide-scrollbar">
         <ul className="space-y-2">
           {links.map((item) => {
             const Icon = item.icon;
-            const active = pathname === item.href;
+            let active = false;
+            if (item.href === '/') {
+              active = pathname === '/';
+            } else if (item.href.startsWith('/business/')) {
+              // Get the first segment after /business/
+              const pathSeg = pathname.split('/')[2];
+              const linkSeg = item.href.split('/')[2];
+              active = pathSeg === linkSeg;
+            } else {
+              active = pathname === item.href;
+            }
             return (
               <li key={item.href}>
                 <Link

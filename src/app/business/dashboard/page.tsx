@@ -2,9 +2,13 @@
 
 import { Card } from "@/components/ui/card";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import { Flame, HeartIcon, MessageCircleReply, Users } from "lucide-react";
+import { ArrowRight, Flame, HeartIcon, MessageCircleReply, Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
+import { Dropdown, Button } from "antd";
+import { MoreOutlined } from '@ant-design/icons';
+import { Filter } from "../campaigns/page";
+import Link from "next/link";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -348,7 +352,7 @@ export default function Dashboard() {
             )}
           </div>
           <div className="w-full border border-[#E4E7EC] bg-white rounded-md p-6">
-            <div className="font-semibold w-32 text-base mb-6">
+            <div className="font-semibold text-black w-32 text-base mb-6">
               Cash Flow in Numbers
             </div>
             <div className="flex items-center justify-center min-h-[400px] w-full">
@@ -367,120 +371,124 @@ export default function Dashboard() {
         </div>
 
         {/* Campaigns table */}
-        <div className="w-full border border-[#E4E7EC] bg-white rounded-md p-6">
-          <div className="flex flex-col gap-4">
-            {/* Table header */}
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-              <div className="font-semibold text-[16px]">My Campaigns</div>
-              <div className="flex gap-2 items-center mt-2 md:mt-0">
-                {/* Calendar filter (placeholder) */}
-                <div className="flex items-center bg-[#F7F9FB] px-4 py-2 rounded-md border border-gray-200 text-sm font-medium">
-                  <span className="mr-2">🗓</span>
-                  05 Feb - 06 March
-                </div>
-                {/* Search (placeholder) */}
-                <input
-                  className="border border-gray-200 rounded-md px-3 py-2 w-48 text-sm bg-[#F7F9FB] focus:outline-none"
-                  placeholder="Search campaign name"
-                />
-                {/* Filters (placeholder) */}
-                <button className="border border-gray-200 rounded-md px-3 py-2 text-sm bg-[#F7F9FB]">
-                  Filters
-                </button>
-                <a className="text-primary font-medium text-sm ml-2 cursor-pointer hover:underline">
-                  View All &rarr;
-                </a>
-              </div>
-            </div>
-            {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full mt-4 text-sm">
-                <thead>
-                  <tr className="bg-[#EFF1FA] text-[#233E97] font-semibold">
-                    <th className="px-4 py-3 text-left">Campaign Name</th>
-                    <th className="px-4 py-3 text-left">Type</th>
-                    <th className="px-4 py-3 text-left">Referrals</th>
-                    <th className="px-4 py-3 text-left">Conversions</th>
-                    <th className="px-4 py-3 text-left">Rewards</th>
-                    <th className="px-4 py-3 text-left">Status</th>
-                    <th className="px-4 py-3 text-left">Date</th>
-                    <th className="px-4 py-3 text-left">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* Example rows */}
-                  {[
-                    {
-                      type: "Referral",
-                      status: "Active",
-                      statusColor: "bg-green-500",
-                      tagColor: "bg-[#4C8AFF]",
-                    },
-                    {
-                      type: "Loyalty",
-                      status: "Completed",
-                      statusColor: "bg-blue-500",
-                      tagColor: "bg-[#B96AFF]",
-                    },
-                    {
-                      type: "Combo",
-                      status: "Scheduled",
-                      statusColor: "bg-red-500",
-                      tagColor: "bg-[#6AB0B9]",
-                    },
-                    {
-                      type: "Referral",
-                      status: "Active",
-                      statusColor: "bg-green-500",
-                      tagColor: "bg-[#4C8AFF]",
-                    },
-                    {
-                      type: "Referral",
-                      status: "Completed",
-                      statusColor: "bg-blue-500",
-                      tagColor: "bg-[#4C8AFF]",
-                    },
-                    {
-                      type: "Loyalty",
-                      status: "Active",
-                      statusColor: "bg-green-500",
-                      tagColor: "bg-[#B96AFF]",
-                    },
-                    {
-                      type: "Loyalty",
-                      status: "Active",
-                      statusColor: "bg-green-500",
-                      tagColor: "bg-[#B96AFF]",
-                    },
-                  ].map((row, i) => (
-                    <tr key={i} className="border-b last:border-0">
-                      <td className="px-4 py-3">Pro Gain</td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-block px-4 py-1 rounded-lg text-white text-xs font-semibold ${row.tagColor}`}
-                        >
-                          {row.type}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">6K</td>
-                      <td className="px-4 py-3">3K</td>
-                      <td className="px-4 py-3">Airtime</td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-block px-3 py-1 rounded-lg text-white text-xs font-semibold ${row.statusColor}`}
-                        >
-                          {row.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">10-04-2025</td>
-                      <td className="px-4 py-3">...</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <section className='bg-white p-4 rounded-md'>
+          <div className='lg:flex justify-between'>
+            <p className='text-black font-semibold text-base'>My Campaigns</p>
+            <div className='flex gap-4'>
+              {/* <RangePicker /> */}
+
+              <Filter />
+              <Link href={'/business/campaigns'} className="my-auto cursor-pointer">
+                <button className='flex my-auto gap-2 text-sm text-primary cursor-pointer'>
+                  <span className="my-auto">View All </span>
+                  <ArrowRight size={15} className="my-auto" /></button>
+              </Link>
             </div>
           </div>
-        </div>
+          {/* Filter component */}
+          <div className="overflow-x-auto">
+            <table className="w-full mt-4 text-sm">
+              <thead>
+                <tr className="bg-[#D1DAF4] text-black">
+                  <th className="px-4 py-3 font-medium text-left">Campaign Name</th>
+                  <th className="px-4 py-3 font-medium text-left">Type</th>
+                  <th className="px-4 py-3 font-medium text-left">Referrals</th>
+                  <th className="px-4 py-3 font-medium text-left">Conversions</th>
+                  <th className="px-4 py-3 font-medium text-left">Rewards</th>
+                  <th className="px-4 py-3 font-medium text-left">Status</th>
+                  <th className="px-4 py-3 font-medium text-left">Date</th>
+                  <th className="px-4 py-3 font-medium text-left">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Example rows */}
+                {[
+                  {
+                    type: "Referral",
+                    status: "Active",
+                    statusColor: "bg-green-500",
+                    tagColor: "bg-[#4C8AFF]",
+                  },
+                  {
+                    type: "Loyalty",
+                    status: "Completed",
+                    statusColor: "bg-blue-500",
+                    tagColor: "bg-[#B96AFF]",
+                  },
+                  {
+                    type: "Combo",
+                    status: "Scheduled",
+                    statusColor: "bg-red-500",
+                    tagColor: "bg-[#6AB0B9]",
+                  },
+                  {
+                    type: "Referral",
+                    status: "Active",
+                    statusColor: "bg-green-500",
+                    tagColor: "bg-[#4C8AFF]",
+                  },
+                  {
+                    type: "Referral",
+                    status: "Completed",
+                    statusColor: "bg-blue-500",
+                    tagColor: "bg-[#4C8AFF]",
+                  },
+                  {
+                    type: "Loyalty",
+                    status: "Active",
+                    statusColor: "bg-green-500",
+                    tagColor: "bg-[#B96AFF]",
+                  },
+                  {
+                    type: "Loyalty",
+                    status: "Active",
+                    statusColor: "bg-green-500",
+                    tagColor: "bg-[#B96AFF]",
+                  },
+                ].map((row, i) => (
+                  <tr key={i} className="border-b border-[#E2E8F0] py-2 last:border-0">
+                    <td className="px-4 font-black font-normal py-3">Pro Gain</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs ${row.tagColor}`}
+                      >
+                        {row.type}
+                      </span>
+                    </td>
+                    <td className="px-4 black font-normal py-3">6K</td>
+                    <td className="px-4 black font-normal py-3">3K</td>
+                    <td className="px-4 black font-normal py-3">Airtime</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-block px-3 py-1 rounded-[5px] text-white text-xs ${row.statusColor}`}
+                      >
+                        {row.status}
+                      </span>
+                    </td>
+                    <td className="px-4 black font-normal py-3">10-04-2025</td>
+                    <td className="px-4 py-3">
+                      <Dropdown
+                        menu={{
+                          items: [
+                            { key: 'pause', label: 'Pause Campaign' },
+                            { key: 'edit', label: 'Edit Campaign' },
+                            { key: 'end', label: 'End Campaign' },
+                            { key: 'settings', label: 'Campaign Settings' },
+                            { key: 'payouts', label: 'Vew Payouts' },
+                            { key: 'download', label: 'Download Report' },
+                          ],
+                        }}
+                        trigger={["click"]}
+                      >
+                        <Button type="text"><MoreOutlined /> </Button>
+                      </Dropdown>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
     </DashboardLayout>
   );
