@@ -373,7 +373,7 @@ export default function Dashboard() {
         {/* Campaigns table */}
         <section className='bg-white p-4 rounded-md'>
           <div className='lg:flex justify-between'>
-            <p className='text-black font-semibold text-base'>My Campaigns</p>
+            <p className='text-black font-semibold my-auto text-base'>My Campaigns</p>
             <div className='flex gap-4'>
               {/* <RangePicker /> */}
 

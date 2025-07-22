@@ -61,6 +61,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // Redirect if userData is not in localStorage
+      const userData = localStorage.getItem('userData');
+      if (!userData) {
+        window.location.replace('/auth/sign-in');
+        return;
+      }
       if (window.innerWidth >= 768) {
         setSidebarOpen(true);
       }
