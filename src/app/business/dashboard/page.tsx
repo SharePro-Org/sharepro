@@ -7,8 +7,8 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Dropdown, Button } from "antd";
 import { MoreOutlined } from '@ant-design/icons';
-import { Filter } from "../campaigns/page";
 import Link from "next/link";
+import { Filter } from "@/components/Filter";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,

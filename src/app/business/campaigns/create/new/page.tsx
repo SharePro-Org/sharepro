@@ -87,9 +87,11 @@ const newCampaign = () => {
             </div>
 
             <div className='flex md:w-[40%] justify-between'>
-              <button disabled={schedule} className='bg-primary cursor-pointer text-sm text-white py-2 px-4 rounded-sm'>Launch Campaign</button>
+              <button disabled={schedule}
+                className={`bg-primary text-sm text-white py-2 px-4 rounded-sm ${schedule ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>Launch Campaign</button>
+
               <button type="button"
-                onClick={() => setSchedule(true)}
+                onClick={() => setSchedule(!schedule)}
                 className='bg-secondary cursor-pointer text-sm text-white py-2 px-4 rounded-sm'>Schedule for later</button>
             </div>
 
@@ -125,7 +127,7 @@ const newCampaign = () => {
                 </div>
               </div>
 
-              <button disabled={schedule} className='bg-primary my-4 md:w-32 w-full cursor-pointer text-sm text-white py-2 px-4 rounded-sm'>Schedule</button>
+              <button className='bg-primary my-4 md:w-32 w-full cursor-pointer text-sm text-white py-2 px-4 rounded-sm'>Schedule</button>
             </>}
 
           </form>

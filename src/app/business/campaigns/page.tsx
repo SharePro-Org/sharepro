@@ -1,52 +1,16 @@
 'use client'
 
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { ListFilter, SearchIcon } from 'lucide-react';
+import { SearchIcon } from 'lucide-react';
 import React from 'react';
-import { DatePicker, Select, Dropdown, Button } from 'antd';
+import { Dropdown, Button } from 'antd';
 import { MoreOutlined } from "@ant-design/icons";
 import Link from 'next/link';
+import { Filter } from '@/components/Filter';
 
 
-const { RangePicker } = DatePicker;
 
 // Filter component
-export const Filter = ({ onChange }: { onChange?: (filters: any) => void }) => {
-  const [dateRange, setDateRange] = React.useState<any>(null);
-  const [status, setStatus] = React.useState<string | undefined>(undefined);
-
-  const handleDateChange = (dates: any) => {
-    setDateRange(dates);
-    if (onChange) onChange({ status, dateRange: dates });
-  };
-
-  const handleStatusChange = (value: string) => {
-    setStatus(value);
-    if (onChange) onChange({ status: value, dateRange });
-  };
-
-  return (
-    <div className="flex gap-4 items-center md:my-0 my-2">
-      <div className="p-1 my-auto border border-[#CCCCCC] rounded">
-        <Select
-          allowClear
-          placeholder="Filter"
-          style={{ width: 140, border: 'none', boxShadow: 'none' }}
-          value={status}
-          onChange={handleStatusChange}
-          suffixIcon={<ListFilter />}
-          options={[
-            { value: 'active', label: 'Active' },
-            { value: 'completed', label: 'Completed' },
-            { value: 'scheduled', label: 'Scheduled' },
-          ]}
-          bordered={false}
-        />
-      </div>
-      <RangePicker style={{ padding: 10, border: '1px solid #CCCCCC' }} value={dateRange} onChange={handleDateChange} />
-    </div>
-  );
-};
 
 
 const campaigns = () => {
