@@ -95,8 +95,7 @@ export default function SignIn() {
         const { data } = await login({ variables: { email, password } });
         if (data?.login?.success) {
           const user = data.login.user;
-          const onBoardingComplete = user?.business?.[0]?.onBoardingComplete;
-
+          const onBoardingComplete = user?.business?.onBoardingComplete;
           const userData = {
             accessToken: data.login.token,
             refreshToken: data.login.refreshToken,
@@ -118,7 +117,7 @@ export default function SignIn() {
         const { data } = await loginPhone({ variables: { phone, password } });
         if (data?.loginPhone?.success) {
           const user = data.loginPhone.user;
-          const onBoardingComplete = user?.business?.[0]?.onBoardingComplete;
+          const onBoardingComplete = user?.business?.onBoardingComplete;
 
           const userData = {
             accessToken: data.loginPhone.token,
