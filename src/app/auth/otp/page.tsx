@@ -58,7 +58,7 @@ export default function OtpPage() {
     try {
       const { data } = await verifyEmail({ variables: { code: otpValue } });
       if (data?.verifyEmail?.success) {
-        router.push("/onboarding");
+        router.push("/auth/login");
       } else {
         setOtpError(data?.verifyEmail?.message || "The code you entered is incorrect.");
       }
