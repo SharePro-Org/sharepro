@@ -7,13 +7,35 @@ import { Dropdown, Button } from 'antd';
 import { MoreOutlined } from "@ant-design/icons";
 import Link from 'next/link';
 import { Filter } from '@/components/Filter';
-
-
+import { useQuery } from '@apollo/client';
+import { GET_BUSINESS_CAMPAIGNS } from '@/apollo/queries/campaigns';
 
 // Filter component
 
 
 const campaigns = () => {
+  const [businessId, setBusinessId] = React.useState<string>("");
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const userData = localStorage.getItem("userData");
+      if (userData) {
+        try {
+          const parsed = JSON.parse(userData);
+          if (parsed.businessId) {
+            setBusinessId(parsed.businessId);
+          }
+        } catch (err) {
+          // handle error if needed
+        }
+      }
+    }
+  }, []);
+
+  const { data, loading, error } = useQuery(GET_BUSINESS_CAMPAIGNS, {
+    variables: { businessId },
+    skip: !businessId,
+  });
+
   return (
     <DashboardLayout>
       <>
@@ -43,106 +65,75 @@ const campaigns = () => {
           </div>
           {/* Filter component */}
           <div className="overflow-x-auto">
-            <table className="w-full mt-4 text-sm">
-              <thead>
-                <tr className="bg-[#D1DAF4] text-black">
-                  <th className="px-4 py-3 font-medium text-left">Campaign Name</th>
-                  <th className="px-4 py-3 font-medium text-left">Type</th>
-                  <th className="px-4 py-3 font-medium text-left">Referrals</th>
-                  <th className="px-4 py-3 font-medium text-left">Conversions</th>
-                  <th className="px-4 py-3 font-medium text-left">Rewards</th>
-                  <th className="px-4 py-3 font-medium text-left">Status</th>
-                  <th className="px-4 py-3 font-medium text-left">Date</th>
-                  <th className="px-4 py-3 font-medium text-left">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* Example rows */}
-                {[
-                  {
-                    type: "Referral",
-                    status: "Active",
-                    statusColor: "bg-green-500",
-                    tagColor: "bg-[#4C8AFF]",
-                  },
-                  {
-                    type: "Loyalty",
-                    status: "Completed",
-                    statusColor: "bg-blue-500",
-                    tagColor: "bg-[#B96AFF]",
-                  },
-                  {
-                    type: "Combo",
-                    status: "Scheduled",
-                    statusColor: "bg-red-500",
-                    tagColor: "bg-[#6AB0B9]",
-                  },
-                  {
-                    type: "Referral",
-                    status: "Active",
-                    statusColor: "bg-green-500",
-                    tagColor: "bg-[#4C8AFF]",
-                  },
-                  {
-                    type: "Referral",
-                    status: "Completed",
-                    statusColor: "bg-blue-500",
-                    tagColor: "bg-[#4C8AFF]",
-                  },
-                  {
-                    type: "Loyalty",
-                    status: "Active",
-                    statusColor: "bg-green-500",
-                    tagColor: "bg-[#B96AFF]",
-                  },
-                  {
-                    type: "Loyalty",
-                    status: "Active",
-                    statusColor: "bg-green-500",
-                    tagColor: "bg-[#B96AFF]",
-                  },
-                ].map((row, i) => (
-                  <tr key={i} className="border-b border-[#E2E8F0] py-2 last:border-0">
-                    <td className="px-4 font-black font-normal py-3">Pro Gain</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs ${row.tagColor}`}
-                      >
-                        {row.type}
-                      </span>
-                    </td>
-                    <td className="px-4 black font-normal py-3">6K</td>
-                    <td className="px-4 black font-normal py-3">3K</td>
-                    <td className="px-4 black font-normal py-3">Airtime</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-block px-3 py-1 rounded-[5px] text-white text-xs ${row.statusColor}`}
-                      >
-                        {row.status}
-                      </span>
-                    </td>
-                    <td className="px-4 black font-normal py-3">10-04-2025</td>
-                    <td className="px-4 py-3">
-                      <Dropdown
-                        menu={{
-                          items: [
-                            { key: 'pause', label: 'Pause Campaign' },
-                            { key: 'edit', label: 'Edit Campaign' },
-                            { key: 'end', label: 'End Campaign' },
-                            { key: 'settings', label: 'Campaign Settings' },
-                            { key: 'payouts', label: 'Vew Payouts' },
-                            { key: 'download', label: 'Download Report' },
-                          ],
-                        }}
-                        trigger={["click"]}
-                      >
-                        <Button type="text"><MoreOutlined /> </Button>
-                      </Dropdown>
-                    </td>
+            {loading ? (
+              <div className="p-8 text-center">Loading campaigns...</div>
+            ) : error ? (
+              <div className="p-8 text-center text-red-500">Error loading campaigns</div>
+            ) : (
+              <table className="w-full mt-4 text-sm">
+                <thead>
+                  <tr className="bg-[#D1DAF4] text-black">
+                    <th className="px-4 py-3 font-medium text-left">Campaign Name</th>
+                    <th className="px-4 py-3 font-medium text-left">Type</th>
+                    <th className="px-4 py-3 font-medium text-left">Referrals</th>
+                    <th className="px-4 py-3 font-medium text-left">Conversions</th>
+                    <th className="px-4 py-3 font-medium text-left">Rewards</th>
+                    <th className="px-4 py-3 font-medium text-left">Status</th>
+                    <th className="px-4 py-3 font-medium text-left">Date</th>
+                    <th className="px-4 py-3 font-medium text-left">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {(data?.businessCampaigns || []).map((row: any, i: number) => (
+                    <tr key={row.id || i} className="border-b border-[#E2E8F0] py-2 last:border-0">
+                      <td className="px-4 font-black font-normal py-3">{row.name}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs bg-[#4C8AFF]`}
+                        >
+                          {row.rewardType || row.campaignType || "-"}
+                        </span>
+                      </td>
+                      <td className="px-4 black font-normal py-3">{row.totalReferrals ?? '-'}</td>
+                      <td className="px-4 black font-normal py-3">{row.totalConversions ?? '-'}</td>
+                      <td className="px-4 black font-normal py-3">{row.rewardAmount ? `${row.rewardAmount} ${row.rewardCurrency}` : '-'}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-block px-3 py-1 rounded-[5px] text-white text-xs bg-green-500`}
+                        >
+                          {row.status}
+                        </span>
+                      </td>
+                      <td className="px-4 black font-normal py-3">{
+                        row.startDate ? new Date(row.startDate).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: '2-digit'
+                        }) : '-'
+                      }
+                      </td>
+                      <td className="px-4 py-3">
+                        <Dropdown
+                          menu={{
+                            items: [
+                              { key: 'pause', label: 'Pause Campaign' },
+                              { key: 'edit', label: 'Edit Campaign' },
+                              { key: 'end', label: 'End Campaign' },
+                              { key: 'settings', label: 'Campaign Settings' },
+                              { key: 'payouts', label: 'Vew Payouts' },
+                              { key: 'download', label: 'Download Report' },
+                            ],
+                          }}
+                          trigger={["click"]}
+                        >
+                          <Button type="text"><MoreOutlined /> </Button>
+                        </Dropdown>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </section>
       </>

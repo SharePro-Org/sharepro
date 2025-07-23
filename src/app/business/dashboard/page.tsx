@@ -9,6 +9,8 @@ import { Dropdown, Button } from "antd";
 import { MoreOutlined } from '@ant-design/icons';
 import Link from "next/link";
 import { Filter } from "@/components/Filter";
+import { useQuery } from '@apollo/client';
+import { GET_BUSINESS_CAMPAIGNS } from '@/apollo/queries/campaigns';
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -209,6 +211,27 @@ export default function Dashboard() {
       ],
     },
   });
+
+  const [businessId, setBusinessId] = useState("");
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const userData = localStorage.getItem("userData");
+      if (userData) {
+        try {
+          const parsed = JSON.parse(userData);
+          if (parsed.businessId) {
+            setBusinessId(parsed.businessId);
+          }
+        } catch (err) { }
+      }
+    }
+  }, []);
+
+  const { data: campaignsData, loading: campaignsLoading, error: campaignsError } = useQuery(GET_BUSINESS_CAMPAIGNS, {
+    variables: { businessId },
+    skip: !businessId,
+  });
+
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-8 w-full">
@@ -376,7 +399,6 @@ export default function Dashboard() {
             <p className='text-black font-semibold my-auto text-base'>My Campaigns</p>
             <div className='flex gap-4'>
               {/* <RangePicker /> */}
-
               <Filter />
               <Link href={'/business/campaigns'} className="my-auto cursor-pointer">
                 <button className='flex my-auto gap-2 text-sm text-primary cursor-pointer'>
@@ -401,90 +423,59 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {/* Example rows */}
-                {[
-                  {
-                    type: "Referral",
-                    status: "Active",
-                    statusColor: "bg-green-500",
-                    tagColor: "bg-[#4C8AFF]",
-                  },
-                  {
-                    type: "Loyalty",
-                    status: "Completed",
-                    statusColor: "bg-blue-500",
-                    tagColor: "bg-[#B96AFF]",
-                  },
-                  {
-                    type: "Combo",
-                    status: "Scheduled",
-                    statusColor: "bg-red-500",
-                    tagColor: "bg-[#6AB0B9]",
-                  },
-                  {
-                    type: "Referral",
-                    status: "Active",
-                    statusColor: "bg-green-500",
-                    tagColor: "bg-[#4C8AFF]",
-                  },
-                  {
-                    type: "Referral",
-                    status: "Completed",
-                    statusColor: "bg-blue-500",
-                    tagColor: "bg-[#4C8AFF]",
-                  },
-                  {
-                    type: "Loyalty",
-                    status: "Active",
-                    statusColor: "bg-green-500",
-                    tagColor: "bg-[#B96AFF]",
-                  },
-                  {
-                    type: "Loyalty",
-                    status: "Active",
-                    statusColor: "bg-green-500",
-                    tagColor: "bg-[#B96AFF]",
-                  },
-                ].map((row, i) => (
-                  <tr key={i} className="border-b border-[#E2E8F0] py-2 last:border-0">
-                    <td className="px-4 font-black font-normal py-3">Pro Gain</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs ${row.tagColor}`}
-                      >
-                        {row.type}
-                      </span>
-                    </td>
-                    <td className="px-4 black font-normal py-3">6K</td>
-                    <td className="px-4 black font-normal py-3">3K</td>
-                    <td className="px-4 black font-normal py-3">Airtime</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-block px-3 py-1 rounded-[5px] text-white text-xs ${row.statusColor}`}
-                      >
-                        {row.status}
-                      </span>
-                    </td>
-                    <td className="px-4 black font-normal py-3">10-04-2025</td>
-                    <td className="px-4 py-3">
-                      <Dropdown
-                        menu={{
-                          items: [
-                            { key: 'pause', label: 'Pause Campaign' },
-                            { key: 'edit', label: 'Edit Campaign' },
-                            { key: 'end', label: 'End Campaign' },
-                            { key: 'settings', label: 'Campaign Settings' },
-                            { key: 'payouts', label: 'Vew Payouts' },
-                            { key: 'download', label: 'Download Report' },
-                          ],
-                        }}
-                        trigger={["click"]}
-                      >
-                        <Button type="text"><MoreOutlined /> </Button>
-                      </Dropdown>
-                    </td>
-                  </tr>
-                ))}
+                {campaignsLoading ? (
+                  <tr><td colSpan={8} className="text-center py-8">Loading campaigns...</td></tr>
+                ) : campaignsError ? (
+                  <tr><td colSpan={8} className="text-center py-8 text-red-500">Error loading campaigns</td></tr>
+                ) : (
+                  (campaignsData?.businessCampaigns || []).slice(0, 6).map((row: any, i: number) => (
+                    <tr key={row.id || i} className="border-b border-[#E2E8F0] py-2 last:border-0">
+                      <td className="px-4 font-black font-normal py-3">{row.name}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs bg-[#4C8AFF]`}
+                        >
+                          {row.rewardType || row.campaignType || "-"}
+                        </span>
+                      </td>
+                      <td className="px-4 black font-normal py-3">{row.totalReferrals ?? '-'}</td>
+                      <td className="px-4 black font-normal py-3">{row.totalConversions ?? '-'}</td>
+                      <td className="px-4 black font-normal py-3">{row.rewardAmount ? `${row.rewardAmount} ${row.rewardCurrency}` : '-'}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-block px-3 py-1 rounded-[5px] text-white text-xs bg-green-500`}
+                        >
+                          {row.status}
+                        </span>
+                      </td>
+                      <td className="px-4 black font-normal py-3">{
+                        row.startDate ? new Date(row.startDate).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: '2-digit'
+                        }) : '-'
+                      }
+                      </td>
+                      <td className="px-4 py-3">
+                        <Dropdown
+                          menu={{
+                            items: [
+                              { key: 'pause', label: 'Pause Campaign' },
+                              { key: 'edit', label: 'Edit Campaign' },
+                              { key: 'end', label: 'End Campaign' },
+                              { key: 'settings', label: 'Campaign Settings' },
+                              { key: 'payouts', label: 'Vew Payouts' },
+                              { key: 'download', label: 'Download Report' },
+                            ],
+                          }}
+                          trigger={["click"]}
+                        >
+                          <Button type="text"><MoreOutlined /> </Button>
+                        </Dropdown>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
