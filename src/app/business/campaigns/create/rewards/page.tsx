@@ -1,17 +1,17 @@
 "use client";
 
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import React from "react";
+import React, { Suspense } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ReferralRewards from "@/components/rewards/referral";
 import LoyaltyRewards from "@/components/rewards/loyalty";
 
-const rewards = () => {
+const RewardsContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const campaignType = searchParams.get("type");
-  const campaignId = searchParams.get('id')
+  const campaignId = searchParams.get("id");
 
   return (
     <DashboardLayout>
@@ -35,6 +35,14 @@ const rewards = () => {
         )}
       </section>
     </DashboardLayout>
+  );
+};
+
+const rewards = () => {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+      <RewardsContent />
+    </Suspense>
   );
 };
 

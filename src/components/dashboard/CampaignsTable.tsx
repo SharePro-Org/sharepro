@@ -58,9 +58,9 @@ const CampaignsTable = () => {
                 <td className="px-4 font-black font-normal py-3">{row.name}</td>
                 <td className="px-4 py-3">
                   <span
-                    className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs bg-[#4C8AFF]`}
+                    className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs ${row.campaignType === 'LOYALTY' ? 'bg-[#A16AD4]' : row.campaignType === 'COMBO' ? "bg-[#6192AE]" : "bg-[#4C8AFF]"}`}
                   >
-                    {row.rewardType || row.campaignType || "-"}
+                    {row.campaignType || "-"}
                   </span>
                 </td>
                 <td className="px-4 black font-normal py-3">
