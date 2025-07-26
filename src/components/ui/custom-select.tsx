@@ -15,6 +15,7 @@ interface CustomSelectProps {
   placeholder?: string;
   className?: string;
   allowCustomInput?: boolean; // for "Enter a defined method"
+  prefix?: React.ReactNode; // optional prefix
 }
 
 export function CustomSelect({
@@ -24,19 +25,22 @@ export function CustomSelect({
   placeholder = "Select an option",
   className,
   allowCustomInput = false,
+  prefix,
 }: CustomSelectProps) {
   // Render placeholder as a non-selectable option
   // If allowCustomInput, show an Input at the end
 
   return (
     <Listbox value={value} onChange={onChange}>
-      <div className={cn("relative w-full", className)}>
+      <div className={cn("relative w-full flex items-center gap-2", className)}>
+        {/* Prefix inside bordered container */}
         <Listbox.Button
           className={cn(
-            "relative w-full h-[46px] rounded-md border border-gray5 bg-white px-3 pr-12 py-2 text-sm text-left focus:outline-none focus:ring-2 focus:ring-primary transition",
+            "relative w-full h-[55px] rounded-md border border-gray5 bg-white px-3 pr-12 py-2 text-sm text-left focus:outline-none focus:ring-2 focus:ring-primary transition flex items-center gap-2",
             !value ? "text-gray5" : "text-gray-900"
           )}
         >
+          {prefix && <span className="text-sm text-nowrap text-[#030229] mr-2">{prefix}</span>}
           <span>
             {value
               ? options.find((o) => o.value === value)?.label

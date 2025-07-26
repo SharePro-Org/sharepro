@@ -9,3 +9,5 @@ export const CREATE_CAMPAIGN = gql`
     }
   }
 `;
+
+export const CREATE_LOYALTY_REWARD = gql``

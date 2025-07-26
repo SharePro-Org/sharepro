@@ -17,6 +17,8 @@ import { FcGoogle } from "react-icons/fc";
 import { cn } from "@/lib/utils";
 import { useMutation } from "@apollo/client";
 import { LOGIN, LOGIN_PHONE } from "@/apollo/mutations/auth";
+import { useSetAtom } from "jotai";
+import { userAtom } from "@/store/User";
 
 export default function SignIn() {
   useEffect(() => {
@@ -40,6 +42,7 @@ export default function SignIn() {
   const [generalError, setGeneralError] = useState("");
   const [login, { loading: loadingEmail }] = useMutation(LOGIN);
   const [loginPhone, { loading: loadingPhone }] = useMutation(LOGIN_PHONE);
+  const setUser = useSetAtom(userAtom);
 
   const isValidEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -106,7 +109,9 @@ export default function SignIn() {
             phone: user?.phone || phone,
             onBoardingComplete,
           };
+
           localStorage.setItem("userData", JSON.stringify(userData));
+          setUser(userData);
           router.push(
             onBoardingComplete ? "/business/dashboard" : "/onboarding"
           );
@@ -130,6 +135,7 @@ export default function SignIn() {
             onBoardingComplete,
           };
           localStorage.setItem("userData", JSON.stringify(userData));
+          setUser(userData);
 
           router.push(
             onBoardingComplete ? "/business/dashboard" : "/onboarding"
