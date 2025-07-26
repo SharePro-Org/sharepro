@@ -512,7 +512,7 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
                   Points can be redeemed for {currency}
                   {rewardValue || "Z"} ({pointsRequired || "W"} pts)
                 </li>
-                {tiers.length > 1 && (
+                {tiers.length >= 1 && (
                   <li>
                     Users move from {tiers[0]?.name || "First Tier"} to{" "}
                     {tiers[1]?.name || "Second Tier"} at{" "}

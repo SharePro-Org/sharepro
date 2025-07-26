@@ -11,6 +11,7 @@ const rewards = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const campaignType = searchParams.get("type");
+  const campaignId = searchParams.get('id')
 
   return (
     <DashboardLayout>
@@ -26,9 +27,9 @@ const rewards = () => {
         </button>
         {/* Render component based on campaignType */}
         {campaignType === "referral" ? (
-          <ReferralRewards />
+          <ReferralRewards id={campaignId} />
         ) : campaignType === "loyalty" ? (
-          <LoyaltyRewards />
+          <LoyaltyRewards id={campaignId} />
         ) : (
           <div></div>
         )}

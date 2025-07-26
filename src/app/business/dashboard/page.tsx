@@ -2,15 +2,22 @@
 
 import { Card } from "@/components/ui/card";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import { ArrowRight, Flame, HeartIcon, MessageCircleReply, Users } from "lucide-react";
+import {
+  ArrowRight,
+  Flame,
+  HeartIcon,
+  MessageCircleReply,
+  Users,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Dropdown, Button } from "antd";
-import { MoreOutlined } from '@ant-design/icons';
+import { MoreOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import { Filter } from "@/components/Filter";
-import { useQuery } from '@apollo/client';
-import { GET_BUSINESS_CAMPAIGNS } from '@/apollo/queries/campaigns';
+import { useQuery } from "@apollo/client";
+import { GET_BUSINESS_CAMPAIGNS } from "@/apollo/queries/campaigns";
+import CampaignsTable from "@/components/dashboard/CampaignsTable";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -222,12 +229,16 @@ export default function Dashboard() {
           if (parsed.businessId) {
             setBusinessId(parsed.businessId);
           }
-        } catch (err) { }
+        } catch (err) {}
       }
     }
   }, []);
 
-  const { data: campaignsData, loading: campaignsLoading, error: campaignsError } = useQuery(GET_BUSINESS_CAMPAIGNS, {
+  const {
+    data: campaignsData,
+    loading: campaignsLoading,
+    error: campaignsError,
+  } = useQuery(GET_BUSINESS_CAMPAIGNS, {
     variables: { businessId },
     skip: !businessId,
   });
@@ -394,91 +405,27 @@ export default function Dashboard() {
         </div>
 
         {/* Campaigns table */}
-        <section className='bg-white p-4 rounded-md'>
-          <div className='lg:flex justify-between'>
-            <p className='text-black font-semibold my-auto text-base'>My Campaigns</p>
-            <div className='flex gap-4'>
+        <section className="bg-white p-4 rounded-md">
+          <div className="lg:flex justify-between">
+            <p className="text-black font-semibold my-auto text-base">
+              My Campaigns
+            </p>
+            <div className="flex gap-4">
               {/* <RangePicker /> */}
               <Filter />
-              <Link href={'/business/campaigns'} className="my-auto cursor-pointer">
-                <button className='flex my-auto gap-2 text-sm text-primary cursor-pointer'>
+              <Link
+                href={"/business/campaigns"}
+                className="my-auto cursor-pointer"
+              >
+                <button className="flex my-auto gap-2 text-sm text-primary cursor-pointer">
                   <span className="my-auto">View All </span>
-                  <ArrowRight size={15} className="my-auto" /></button>
+                  <ArrowRight size={15} className="my-auto" />
+                </button>
               </Link>
             </div>
           </div>
           {/* Filter component */}
-          <div className="overflow-x-auto">
-            <table className="w-full mt-4 text-sm">
-              <thead>
-                <tr className="bg-[#D1DAF4] text-black">
-                  <th className="px-4 py-3 font-medium text-left">Campaign Name</th>
-                  <th className="px-4 py-3 font-medium text-left">Type</th>
-                  <th className="px-4 py-3 font-medium text-left">Referrals</th>
-                  <th className="px-4 py-3 font-medium text-left">Conversions</th>
-                  <th className="px-4 py-3 font-medium text-left">Rewards</th>
-                  <th className="px-4 py-3 font-medium text-left">Status</th>
-                  <th className="px-4 py-3 font-medium text-left">Date</th>
-                  <th className="px-4 py-3 font-medium text-left">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {campaignsLoading ? (
-                  <tr><td colSpan={8} className="text-center py-8">Loading campaigns...</td></tr>
-                ) : campaignsError ? (
-                  <tr><td colSpan={8} className="text-center py-8 text-red-500">Error loading campaigns</td></tr>
-                ) : (
-                  (campaignsData?.businessCampaigns || []).slice(0, 6).map((row: any, i: number) => (
-                    <tr key={row.id || i} className="border-b border-[#E2E8F0] py-2 last:border-0">
-                      <td className="px-4 font-black font-normal py-3">{row.name}</td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs bg-[#4C8AFF]`}
-                        >
-                          {row.rewardType || row.campaignType || "-"}
-                        </span>
-                      </td>
-                      <td className="px-4 black font-normal py-3">{row.totalReferrals ?? '-'}</td>
-                      <td className="px-4 black font-normal py-3">{row.totalConversions ?? '-'}</td>
-                      <td className="px-4 black font-normal py-3">{row.rewardAmount ? `${row.rewardAmount} ${row.rewardCurrency}` : '-'}</td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-block px-3 py-1 rounded-[5px] text-white text-xs bg-green-500`}
-                        >
-                          {row.status}
-                        </span>
-                      </td>
-                      <td className="px-4 black font-normal py-3">{
-                        row.startDate ? new Date(row.startDate).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: '2-digit'
-                        }) : '-'
-                      }
-                      </td>
-                      <td className="px-4 py-3">
-                        <Dropdown
-                          menu={{
-                            items: [
-                              { key: 'pause', label: 'Pause Campaign' },
-                              { key: 'edit', label: 'Edit Campaign' },
-                              { key: 'end', label: 'End Campaign' },
-                              { key: 'settings', label: 'Campaign Settings' },
-                              { key: 'payouts', label: 'Vew Payouts' },
-                              { key: 'download', label: 'Download Report' },
-                            ],
-                          }}
-                          trigger={["click"]}
-                        >
-                          <Button type="text"><MoreOutlined /> </Button>
-                        </Dropdown>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <CampaignsTable />
         </section>
       </div>
     </DashboardLayout>

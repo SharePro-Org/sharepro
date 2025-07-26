@@ -95,9 +95,9 @@ const handleTokenRefresh = async (
     });
 
     const result = await response.json();
-    const res: RefreshTokenResponse = result?.data;
-    const newAccessToken = res.data?.refreshToken?.token;
-    const newRefreshToken = res.data?.refreshToken?.refreshToken;
+    const res: any = result?.data;
+    const newAccessToken = res?.refreshToken?.token;
+    const newRefreshToken = res?.refreshToken?.refreshToken;
 
     if (newRefreshToken && newAccessToken) {
       const userData = getUserData() || {};
