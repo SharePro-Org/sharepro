@@ -75,13 +75,15 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
   const [referrerRewardType, setReferrerRewardType] = useState("");
   const [referrerRewardValue, setReferrerRewardValue] = useState("");
   const [referralRewardLimit, setReferralRewardLimit] = useState("");
-  const [referralRewardLimitType, setReferralRewardLimitType] = useState("daily");
+  const [referralRewardLimitType, setReferralRewardLimitType] =
+    useState("daily");
 
   // Referee state
   const [refereeAction, setRefereeAction] = useState("");
   const [refereeRewardType, setRefereeRewardType] = useState("");
   const [refereeRewardValue, setRefereeRewardValue] = useState("");
-  const [refereeRewardChannels, setRefereeRewardChannels] = useState<string>("");
+  const [refereeRewardChannels, setRefereeRewardChannels] =
+    useState<string>("");
   const [refereeValidityPeriod, setRefereeValidityPeriod] = useState("");
 
   // Common state
@@ -107,7 +109,9 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
         referreeValidityPeriod: Number(refereeValidityPeriod),
         loyaltyPoints: 0, // Default value
         loyaltyName: tiers[0]?.name || "",
-        loyaltyTierBenefits: JSON.stringify({ benefits: tiers[0]?.benefits || "" }),
+        loyaltyTierBenefits: JSON.stringify({
+          benefits: tiers[0]?.benefits || "",
+        }),
       },
     };
     try {
@@ -405,8 +409,9 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
                       <BriefcaseIcon size={16} className="text-[#D4A207]" />
                       <span>
                         {
-                          RefreeBusinessTypes.find((b) => b.value === refereeAction)
-                            ?.label
+                          RefreeBusinessTypes.find(
+                            (b) => b.value === refereeAction
+                          )?.label
                         }
                       </span>
                     </button>
@@ -419,9 +424,7 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
                   <span className="h-12 w-[2px] bg-primary/30"></span>
                 </div>
                 <div className="flex w-full gap-3">
-                  <span className="font-medium text-sm">
-                    Then Referee gets
-                  </span>
+                  <span className="font-medium text-sm">Then Referee gets</span>
                   <div className="flex gap-2">
                     {refereeRewardType ? (
                       <button className="flex gap-2 px-2 py-1 text-xs rounded-sm bg-[#CBFBDC]">
@@ -438,9 +441,7 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
                   <span className="h-12 w-[2px] bg-primary/30"></span>
                 </div>
                 <div className="flex w-full gap-3">
-                  <span className="font-medium text-sm">
-                    Up to
-                  </span>
+                  <span className="font-medium text-sm">Up to</span>
                   <div className="flex gap-2">
                     {refereeRewardValue ? (
                       <button className="flex gap-2 px-2 py-1 text-xs rounded-sm bg-[#CBFBDC]">
@@ -457,9 +458,7 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
                   <span className="h-12 w-[2px] bg-primary/30"></span>
                 </div>
                 <div className="flex w-full gap-3">
-                  <span className="font-medium text-sm">
-                    Redeemed at
-                  </span>
+                  <span className="font-medium text-sm">Redeemed at</span>
                   <div className="flex gap-2">
                     {refereeRewardChannels ? (
                       <button className="flex gap-2 px-2 py-1 text-xs rounded-sm bg-[#FFE0D6]">
@@ -527,8 +526,8 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
                   for each successful referral
                 </li>
                 <li>
-                  Referee's must {refereeAction || "sign up"} for a
-                  referral to be successful
+                  Referee's must {refereeAction || "sign up"} for a referral to
+                  be successful
                 </li>
                 <li>
                   Referee's earn {currency}
@@ -543,7 +542,8 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
                   </li>
                 )}
                 <li>
-                  Rewards are redeemed at {refereeRewardChannels[0] || "checkout"}
+                  Rewards are redeemed at{" "}
+                  {refereeRewardChannels[0] || "checkout"}
                 </li>
               </ul>
             </div>
@@ -551,7 +551,10 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
           <div className="">
             <button
               className="w-full bg-primary p-4 text-white mb-3 rounded-sm"
-              onClick={() => setShareOpen(true)}
+              onClick={() => {
+                setSuccess(false);
+                setShareOpen(true);
+              }}
             >
               Proceed
             </button>

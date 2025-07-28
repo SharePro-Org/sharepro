@@ -56,3 +56,29 @@ export const CREATE_REFERRAL_REWARD = gql`
   }
 `;
 
+export const CREATE_COMBO_REWARD = gql`
+  mutation CreateComboReward($input: RewardCampaignInput!) {
+    createCampaignReward(input: $input) {
+      success
+      message
+      errors
+      campaign {
+        id
+        name
+        campaignType
+        loyaltyRewards {
+          id
+          earnRewardAmount
+          redeemRewardValue
+          loyaltyName
+        }
+        referralRewards {
+          id
+          referralRewardAmount
+          referreeRewardValue
+          referralRewardLimit
+        }
+      }
+    }
+  }
+`;

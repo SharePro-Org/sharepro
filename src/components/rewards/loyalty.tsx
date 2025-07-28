@@ -525,7 +525,10 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
           <div className="">
             <button
               className="w-full bg-primary p-4 text-white mb-3 rounded-sm"
-              onClick={() => setShareOpen(true)}
+              onClick={() => {
+                setSuccess(false);
+                setShareOpen(true);
+              }}
             >
               Proceed
             </button>
