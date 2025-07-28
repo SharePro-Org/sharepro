@@ -130,8 +130,8 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
 
   return (
     <div>
-      <div className="my-6 flex gap-8">
-        <div className="w-[70%]">
+      <div className="my-6 md:flex gap-8">
+        <div className="md:w-[70%]">
           <p className="text-base text-primary font-semibold">For Referrer</p>
           <p className="text-sm text-primary">
             Define how customers earn points.
@@ -229,7 +229,7 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
           </div>
         </div>
 
-        <div className="mt-auto w-[30%] px-3 py-10 border border-[#CCCCCC] rounded-md">
+        <div className="md:mt-auto mt-4 md:w-[30%] px-3 py-10 border border-[#CCCCCC] rounded-md">
           <div className="mb-4">
             <div className="flex flex-col gap-6">
               <div className="flex items-start gap-3">
@@ -290,8 +290,8 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
         </div>
       </div>
 
-      <div className="my-6 flex gap-8">
-        <div className="w-[70%]">
+      <div className="my-6 md:flex gap-8">
+        <div className="md:w-[70%]">
           <p className="text-base text-primary font-semibold">For Referee</p>
           <p className="text-sm text-primary">
             Define how customers earn points.
@@ -390,7 +390,7 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
           </div>
         </div>
 
-        <div className="mt-auto w-[30%] px-3 py-10 border border-[#CCCCCC] rounded-md">
+        <div className="md:mt-auto mt-4 md:w-[30%] px-3 py-10 border border-[#CCCCCC] rounded-md">
           <div className="mb-4">
             <div className="flex flex-col gap-6">
               <div className="flex items-start gap-3">

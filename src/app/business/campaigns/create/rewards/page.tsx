@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ReferralRewards from "@/components/rewards/referral";
 import LoyaltyRewards from "@/components/rewards/loyalty";
+import ComboRewards from "@/components/rewards/combo";
 
 const RewardsContent = () => {
   const router = useRouter();
@@ -31,7 +32,7 @@ const RewardsContent = () => {
         ) : campaignType === "loyalty" ? (
           <LoyaltyRewards id={campaignId} />
         ) : (
-          <div></div>
+          <ComboRewards id={campaignId} />
         )}
       </section>
     </DashboardLayout>

@@ -28,7 +28,7 @@ const Tiers = ({
         {tiers.map((tier: any, idx: any) => (
           <div
             key={idx}
-            className="grid grid-cols-3 gap-4 items-end py-4 rounded-md relative"
+            className="grid md:grid-cols-3 gap-4 items-end md:py-4 rounded-md relative"
           >
             <div>
               <Label

@@ -120,8 +120,8 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
 
   return (
     <div>
-      <div className="my-6 flex gap-8">
-        <div className="w-[70%]">
+      <div className="my-6 md:flex gap-8">
+        <div className="md:w-[70%]">
           <p className="text-base text-primary font-semibold">Earning Rules</p>
           <p className="text-sm text-primary">
             Define how customers earn points.
@@ -150,7 +150,7 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
 
             <div className="flex gap-3">
               <Select
-                style={{ minWidth: 120, height: 55, borderRadius: 30 }}
+                style={{ minWidth: 100, height: 55, borderRadius: 30 }}
                 options={currencyOptions.map((opt) => ({
                   value: opt.currency,
                   label: (
@@ -203,7 +203,7 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
           </div>
         </div>
 
-        <div className="mt-auto w-[30%] p-3 border border-[#CCCCCC] rounded-md">
+        <div className="md:mt-auto mt-4 md:w-[30%] p-3 border border-[#CCCCCC] rounded-md">
           <div className="mb-4">
             <div className="flex flex-col gap-6">
               <div className="flex items-start gap-3">
@@ -270,8 +270,8 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
         </div>
       </div>
 
-      <div className="my-6 flex gap-8">
-        <div className="w-[70%]">
+      <div className="my-6 md:flex gap-8">
+        <div className="md:w-[70%]">
           <p className="text-base text-primary font-semibold">
             Redemption Rules
           </p>
@@ -318,7 +318,7 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
               </Label>
               <div className="flex">
                 <Select
-                  style={{ minWidth: 120, height: 55, borderRadius: 30 }}
+                  style={{ minWidth: 100, height: 55, borderRadius: 30 }}
                   options={currencyOptions.map((opt) => ({
                     value: opt.currency,
                     label: (
@@ -381,7 +381,7 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
           </div>
         </div>
 
-        <div className="mt-auto w-[30%] p-3 border border-[#CCCCCC] rounded-md">
+        <div className="md:mt-auto mt-4 md:w-[30%] p-3 border border-[#CCCCCC] rounded-md">
           <div className="mb-4">
             <div className="flex flex-col gap-6">
               <div className="flex items-start gap-3">
