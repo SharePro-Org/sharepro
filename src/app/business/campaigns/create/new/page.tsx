@@ -10,7 +10,7 @@ import { useMutation } from "@apollo/client";
 import { CREATE_CAMPAIGN } from "@/apollo/mutations/campaigns";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import Image from "next/image";
-import userCheck from "../../../../../../public/assets/userCheck.svg";
+import userCheck from "../../../../../../public/assets/Check.svg";
 import { userAtom } from "@/store/User";
 import { useAtom } from "jotai";
 
@@ -221,7 +221,7 @@ const NewCampaignContent = () => {
           )}
         </form>
 
-        <Dialog open={success}>
+        <Dialog open={success} onOpenChange={() => router.push(`/business/campaigns`)}>
           <DialogContent className="max-w-md w-full flex flex-col items-center justify-center gap-6 py-12">
             {/* Success Icon */}
 

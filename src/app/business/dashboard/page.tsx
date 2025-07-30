@@ -425,7 +425,7 @@ export default function Dashboard() {
             </div>
           </div>
           {/* Filter component */}
-          <CampaignsTable />
+          <CampaignsTable num={6} />
         </section>
       </div>
     </DashboardLayout>

@@ -152,7 +152,7 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
                 options={businessTypes}
                 value={referrerAction}
                 onChange={setReferrerAction}
-                prefix="If Referee"
+                prefix="If Referrer"
               />
             </div>
           </div>
@@ -542,8 +542,8 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
                   </li>
                 )}
                 <li>
-                  Rewards are redeemed at{" "}
-                  {refereeRewardChannels[0] || "checkout"}
+                  Rewards are redeemed at
+                  {refereeRewardChannels || "checkout"}
                 </li>
               </ul>
             </div>

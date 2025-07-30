@@ -492,7 +492,7 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
         {loading ? "Creating..." : "Create Loyalty Reward"}
       </button>
 
-      <Dialog open={success}>
+      <Dialog open={success} onOpenChange={() => router.push(`/business/campaigns`)}>
         <DialogContent className="max-w-md w-full flex flex-col items-center justify-center gap-6 py-12">
           <div className="bg-[#009B541A] p-4 rounded-md">
             <div className="text-body text-base mb-2">

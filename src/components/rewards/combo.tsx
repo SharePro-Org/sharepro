@@ -65,6 +65,12 @@ const ComboRewards = ({ id }: { id: string | null }) => {
     setTiers((prev) => prev.filter((_, i) => i !== index));
   };
 
+
+    const loyaltyBusinessTypes = [
+    { label: "Make a Purchase", value: "purchase" },
+    { label: "Leave a Review", value: "review" },
+  ];
+
   const businessTypes = [
     { label: "Refers a friend", value: "refers" },
     { label: "Shares on social", value: "shares" },
@@ -183,7 +189,7 @@ const ComboRewards = ({ id }: { id: string | null }) => {
             <div className="flex gap-3">
               {/* <span className="my-auto w-20 text-sm"></span> */}
               <CustomSelect
-                options={businessTypes}
+                options={loyaltyBusinessTypes}
                 value={businessType}
                 onChange={setBusinessType}
                 prefix="If User"
@@ -539,7 +545,7 @@ const ComboRewards = ({ id }: { id: string | null }) => {
                 options={businessTypes}
                 value={referrerAction}
                 onChange={setReferrerAction}
-                prefix="If Referee"
+                prefix="If Referrer"
               />
             </div>
           </div>
@@ -898,7 +904,7 @@ const ComboRewards = ({ id }: { id: string | null }) => {
         {loading ? "Creating..." : "Create Combo Reward"}
       </button>
 
-      <Dialog open={success}>
+      <Dialog open={success} onOpenChange={() => router.push(`/business/campaigns`)}>
         <DialogContent className="max-w-md w-full flex flex-col items-center justify-center gap-6 py-12">
           <div className="bg-[#009B541A] p-4 rounded-md">
             <div className="text-body text-base mb-2">
