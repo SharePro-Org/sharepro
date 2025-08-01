@@ -2,6 +2,8 @@
 
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import React, { useEffect, useState } from "react";
+import { useQuery } from "@apollo/client";
+import { GET_CAMPAIGN_ANALYTICS_BY_CAMPAIGN } from "@/apollo/queries/campaigns";
 import { ArrowLeft, ArrowRight, RefreshCwIcon } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { Dropdown, Button } from "antd";
@@ -14,6 +16,38 @@ import { Filter } from "@/components/Filter";
 const singleCampaign = () => {
   const params = useParams();
   const campaignId = params.id;
+  type CampaignAnalyticsType = {
+    campaign?: {
+      name?: string;
+      campaignType?: string;
+      status?: string;
+      activeParticipants?: number;
+      activeReferrals?: number;
+      totalRewardsGiven?: number;
+      totalReferrals?: number;
+    };
+    date?: string;
+    conversionRate?: number;
+  };
+
+  const [campaignAnalytics, setCampaignAnalytics] =
+    useState<CampaignAnalyticsType | null>(null);
+
+  // Fetch campaign analytics
+  const {
+    data: analyticsData,
+    loading: analyticsLoading,
+    error: analyticsError,
+    refetch,
+  } = useQuery(GET_CAMPAIGN_ANALYTICS_BY_CAMPAIGN, {
+    variables: { campaignId },
+    skip: !campaignId,
+    onCompleted: (data) => {
+      // console.log("Analytics Data:", data.campaignAnalyticsByCampaign[0]);
+      setCampaignAnalytics(data.campaignAnalyticsByCampaign[0]);
+      // console.log("Campaign Analytics:", campaignAnalytics);
+    },
+  });
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
 
@@ -124,28 +158,43 @@ const singleCampaign = () => {
               </span>
             </button>
 
-            <button className="flex text-primary items-center gap-2">
+            <button
+              className="flex text-primary items-center gap-2"
+              onClick={() => refetch()}
+              disabled={analyticsLoading}
+            >
               <RefreshCwIcon size={15} />
-              <span className="text-sm">Refresh</span>
+              <span className="text-sm">
+                {analyticsLoading ? "Refreshing..." : "Refresh"}
+              </span>
             </button>
           </div>
           <div className="bg-[#D1DAF4] rounded-md flex justify-between">
             <div className="flex gap-4 justify-between">
               <div className="border-r m-3 pr-3 border-r-[#CCCCCC]">
                 <h2 className="text-xs mb-2">Campaign Name</h2>
-                <p className="text-sm"> Pro Gain</p>
+                <p className="text-sm">
+                  {campaignAnalytics?.campaign?.name || "-"}
+                </p>
               </div>
               <div className="border-r m-3 pr-3 border-r-[#CCCCCC]">
                 <h2 className="text-xs mb-2">Campaign Type</h2>
-                <p className="text-sm"> Pro Gain</p>
+                <p className="text-sm">
+                  {campaignAnalytics?.campaign?.campaignType || "-"}
+                </p>
               </div>
               <div className="border-r m-3 pr-3 border-r-[#CCCCCC]">
                 <h2 className="text-xs mb-2">Duration</h2>
-                <p className="text-sm"> Pro Gain</p>
+                <p className="text-sm">
+                  {/* You can format date range here if available */}
+                  {campaignAnalytics?.date || "-"}
+                </p>
               </div>
               <div className="m-3">
                 <h2 className="text-xs mb-2">Status</h2>
-                <p className="text-sm"> Pro Gain</p>
+                <p className="text-sm">
+                  {campaignAnalytics?.campaign?.status || "-"}
+                </p>
               </div>
             </div>
             <div className="w-44 flex justify-between">
@@ -171,27 +220,43 @@ const singleCampaign = () => {
               </Dropdown>
             </div>
           </div>
+          {analyticsError && (
+            <div className="text-red-500 mt-2">
+              Error loading analytics: {analyticsError.message}
+            </div>
+          )}
         </section>
         <section className="grid grid-cols-5 gap-4 mb-4">
           <div className="bg-white p-3 rounded-md text-center">
             <p className="text-sm">Total Participants</p>
-            <h2 className="font-bold mt-3 text-xl">4,400</h2>
+            <h2 className="font-bold mt-3 text-xl">
+              {campaignAnalytics?.campaign?.activeParticipants ?? "-"}
+            </h2>
           </div>
           <div className="bg-white p-3 rounded-md text-center">
             <p className="text-sm">New Signups</p>
-            <h2 className="font-bold mt-3 text-xl">4,400</h2>
+            <h2 className="font-bold mt-3 text-xl">
+              {campaignAnalytics?.campaign?.activeReferrals ?? "-"}
+            </h2>
           </div>
           <div className="bg-white p-3 rounded-md text-center">
             <p className="text-sm">Conversion Rate</p>
-            <h2 className="font-bold mt-3 text-xl">4,400</h2>
+            <h2 className="font-bold mt-3 text-xl">
+              {campaignAnalytics?.conversionRate ?? "-"}
+            </h2>
           </div>
           <div className="bg-white p-3 rounded-md text-center">
             <p className="text-sm">Rewards Redeemed</p>
-            <h2 className="font-bold mt-3 text-xl">4,400</h2>
+            <h2 className="font-bold mt-3 text-xl">
+              {campaignAnalytics?.campaign?.totalRewardsGiven ?? "-"}
+            </h2>
           </div>
           <div className="bg-white p-3 rounded-md text-center">
             <p className="text-sm">Points Shared</p>
-            <h2 className="font-bold mt-3 text-xl">4,400</h2>
+            <h2 className="font-bold mt-3 text-xl">
+              {campaignAnalytics?.campaign
+                ?.totalReferrals ?? "-"}
+            </h2>
           </div>
         </section>
         <section className="grid grid-cols-2 gap-5">

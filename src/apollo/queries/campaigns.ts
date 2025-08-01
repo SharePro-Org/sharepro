@@ -1,6 +1,6 @@
+
 import { gql } from "@apollo/client";
-// Query to get all campaigns
-// Query to get campaigns for a specific business
+
 export const GET_BUSINESS_CAMPAIGNS = gql`
   query GetBusinessCampaigns($businessId: UUID!) {
     businessCampaigns(businessId: $businessId) {
@@ -43,6 +43,50 @@ export const GET_BUSINESS_CAMPAIGNS = gql`
         referralRewardAmount
         referralRewardLimit
         loyaltyName
+      }
+    }
+  }
+`;
+
+export const GET_CAMPAIGN_ANALYTICS_BY_CAMPAIGN = gql`
+  query GetCampaignAnalyticsByCampaign($campaignId: UUID!) {
+    campaignAnalyticsByCampaign(campaignId: $campaignId) {
+      clickThroughRate
+      clicks
+      conversionRate
+      conversions
+      costPerConversion
+      emailClicks
+      directClicks
+      facebookClicks
+      smsClicks
+      twitterClicks
+      topStates
+      topCountries
+      views
+      whatsappClicks
+      tabletPercentage
+      topCities
+      shares
+      revenue
+      mobilePercentage
+      instagramClicks
+      desktopPercentage
+      date
+      campaign {
+        activeParticipants
+        activeReferrals
+        campaignType
+        name
+        referralLink
+        status
+        totalReferrals
+        totalRewardsGiven
+        totalViews
+        shareLinks
+        analyticsEvents {
+          referrer
+        }
       }
     }
   }
