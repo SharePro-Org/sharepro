@@ -18,6 +18,7 @@ const emptyTier = { name: "", pointsRequired: "", benefits: "" };
 const LoyaltyRewards = ({ id }: { id: string | null }) => {
   const [tiers, setTiers] = useState([{ ...emptyTier }]);
   const [success, setSuccess] = useState(false);
+  const [campaignData, setCampaignData] = useState<any>(null);
   const router = useRouter();
   const [shareOpen, setShareOpen] = useState(false);
 
@@ -103,6 +104,7 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
         },
       });
       if (data?.createCampaignReward?.success) {
+        setCampaignData(data.createCampaignReward.campaign);
         setSuccess(true);
         // message.success("Loyalty reward created successfully!");
       } else {
@@ -545,11 +547,7 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
       <ShareModal
         open={shareOpen}
         onClose={() => router.push(`/business/campaigns`)}
-        campaignUrl={
-          typeof window !== "undefined" && id
-            ? `${window.location.origin}/campaign/${id}`
-            : ""
-        }
+        campaignUrl={campaignData?.shareLinks || ""}
       />
     </div>
   );

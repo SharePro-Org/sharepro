@@ -25,6 +25,57 @@ const singleCampaign = () => {
       activeReferrals?: number;
       totalRewardsGiven?: number;
       totalReferrals?: number;
+      referralRewards?: {
+        referreeValidityPeriod?: number;
+        referreeRewardValue?: string;
+        referreeRewardType?: string;
+        referreeRewardChannels?: string;
+        referreeRewardAction?: string;
+        referralRewardType?: string;
+        referralRewardLimitType?: string;
+        referralRewardLimit?: number;
+        referralRewardAmount?: string;
+        referralRewardAction?: string;
+        loyaltyTierBenefits?: string;
+        loyaltyPoints?: number;
+        loyaltyName?: string;
+      };
+      loyaltyRewards?: {
+        redeemValidityPeriod?: number;
+        redeemRewardValue?: string;
+        redeemRewardPointRequired?: number;
+        redeemRewardChannels?: string;
+        redeemRewardAction?: string;
+        loyaltyTierBenefits?: string;
+        loyaltyPoints?: number;
+        loyaltyName?: string;
+        earnRewardPoints?: number;
+        earnRewardAmount?: string;
+        earnRewardAction?: string;
+      };
+      comboRewards?: {
+        loyaltyName?: string;
+        loyaltyPoints?: number;
+        loyaltyTierBenefits?: string;
+        redeemRewardAction?: string;
+        redeemRewardChannels?: string;
+        redeemRewardPointRequired?: number;
+        redeemRewardValue?: string;
+        redeemValidityPeriod?: number;
+        referralName?: string;
+        referralPoints?: number;
+        referralRewardAction?: string;
+        referralRewardAmount?: string;
+        referralRewardLimit?: number;
+        referralRewardLimitType?: string;
+        referralRewardType?: string;
+        referralTierBenefits?: string;
+        referreeRewardAction?: string;
+        referreeRewardChannels?: string;
+        referreeRewardType?: string;
+        referreeRewardValue?: string;
+        referreeValidityPeriod?: number;
+      };
     };
     date?: string;
     conversionRate?: number;
@@ -198,9 +249,14 @@ const singleCampaign = () => {
               </div>
             </div>
             <div className="w-44 flex justify-between">
-              <button className="p-3 my-auto text-sm bg-primary text-white rounded-md">
-                View Payouts
-              </button>
+              <Link
+                className="my-auto"
+                href={`/business/campaigns/${campaignId}/payouts`}
+              >
+                <button className="p-3 my-auto text-sm bg-primary text-white rounded-md">
+                  View Payouts
+                </button>
+              </Link>
               <Dropdown
                 menu={{
                   items: [
@@ -254,8 +310,7 @@ const singleCampaign = () => {
           <div className="bg-white p-3 rounded-md text-center">
             <p className="text-sm">Points Shared</p>
             <h2 className="font-bold mt-3 text-xl">
-              {campaignAnalytics?.campaign
-                ?.totalReferrals ?? "-"}
+              {campaignAnalytics?.campaign?.totalReferrals ?? "-"}
             </h2>
           </div>
         </section>
@@ -266,11 +321,148 @@ const singleCampaign = () => {
               <span role="img" aria-label="trophy" className="mr-2">
                 🏆
               </span>
-              Loyalty Program:
+              {campaignAnalytics?.campaign?.campaignType === "REFERRAL" &&
+                "Referral Program:"}
+              {campaignAnalytics?.campaign?.campaignType === "LOYALTY" &&
+                "Loyalty Program:"}
+              {campaignAnalytics?.campaign?.campaignType === "COMBO" &&
+                "Combo Program:"}
             </div>
-            <ul className="check-list text-sm">
-              <li>Customers earn points for every transaction spent</li>
-            </ul>
+            {campaignAnalytics?.campaign?.campaignType === "REFERRAL" &&
+              campaignAnalytics?.campaign?.referralRewards && (
+                <ul className="check-list text-sm">
+                  <li>
+                    Referrers earn{" "}
+                    {campaignAnalytics.campaign.referralRewards
+                      .referralRewardAmount || "X"}{" "}
+                    {campaignAnalytics.campaign.referralRewards
+                      .referralRewardType || "reward"}{" "}
+                    for each successful referral
+                  </li>
+                  <li>
+                    Referee's must{" "}
+                    {campaignAnalytics.campaign.referralRewards
+                      .referreeRewardAction || "sign up"}{" "}
+                    for a referral to be successful
+                  </li>
+                  <li>
+                    Referee's earn{" "}
+                    {campaignAnalytics.campaign.referralRewards
+                      .referreeRewardValue || "Y"}{" "}
+                    {campaignAnalytics.campaign.referralRewards
+                      .referreeRewardType || "reward"}{" "}
+                    after{" "}
+                    {campaignAnalytics.campaign.referralRewards
+                      .referreeRewardAction || "sign up"}
+                  </li>
+                  {campaignAnalytics.campaign.referralRewards
+                    .loyaltyTierBenefits && (
+                    <li>
+                      Users can unlock tier benefits:{" "}
+                      {
+                        campaignAnalytics.campaign.referralRewards
+                          .loyaltyTierBenefits
+                      }
+                    </li>
+                  )}
+                  <li>
+                    Rewards are redeemed at{" "}
+                    {campaignAnalytics.campaign.referralRewards
+                      .referreeRewardChannels || "checkout"}
+                  </li>
+                </ul>
+              )}
+            {campaignAnalytics?.campaign?.campaignType === "LOYALTY" &&
+              campaignAnalytics?.campaign?.loyaltyRewards && (
+                <ul className="check-list text-sm">
+                  <li>
+                    Customers earn{" "}
+                    {campaignAnalytics.campaign.loyaltyRewards
+                      .earnRewardPoints || "X"}{" "}
+                    points for every{" "}
+                    {campaignAnalytics.campaign.loyaltyRewards
+                      .earnRewardAction || "transaction"}
+                  </li>
+                  <li>
+                    Points can be redeemed for{" "}
+                    {campaignAnalytics.campaign.loyaltyRewards
+                      .redeemRewardValue || "Z"}{" "}
+                    (
+                    {campaignAnalytics.campaign.loyaltyRewards
+                      .redeemRewardPointRequired || "W"}{" "}
+                    pts)
+                  </li>
+                  {campaignAnalytics.campaign.loyaltyRewards
+                    .loyaltyTierBenefits && (
+                    <li>
+                      Users can unlock tier benefits:{" "}
+                      {
+                        campaignAnalytics.campaign.loyaltyRewards
+                          .loyaltyTierBenefits
+                      }
+                    </li>
+                  )}
+                </ul>
+              )}
+            {campaignAnalytics?.campaign?.campaignType === "COMBO" &&
+              campaignAnalytics?.campaign?.comboRewards && (
+                <ul className="check-list text-sm">
+                  <li>
+                    Referrers earn{" "}
+                    {campaignAnalytics.campaign.comboRewards
+                      .referralRewardAmount || "X"}{" "}
+                    {campaignAnalytics.campaign.comboRewards
+                      .referralRewardType || "reward"}{" "}
+                    for each successful referral
+                  </li>
+                  <li>
+                    Referee's must{" "}
+                    {campaignAnalytics.campaign.comboRewards
+                      .referreeRewardAction || "sign up"}{" "}
+                    for a referral to be successful
+                  </li>
+                  <li>
+                    Referee's earn{" "}
+                    {campaignAnalytics.campaign.comboRewards
+                      .referreeRewardValue || "Y"}{" "}
+                    {campaignAnalytics.campaign.comboRewards
+                      .referreeRewardType || "reward"}{" "}
+                    after{" "}
+                    {campaignAnalytics.campaign.comboRewards
+                      .referreeRewardAction || "sign up"}
+                  </li>
+                  <li>
+                    Customers earn{" "}
+                    {campaignAnalytics.campaign.comboRewards.loyaltyPoints ||
+                      "X"}{" "}
+                    points for transactions
+                  </li>
+                  <li>
+                    Points can be redeemed for{" "}
+                    {campaignAnalytics.campaign.comboRewards
+                      .redeemRewardValue || "Z"}{" "}
+                    (
+                    {campaignAnalytics.campaign.comboRewards
+                      .redeemRewardPointRequired || "W"}{" "}
+                    pts)
+                  </li>
+                  {campaignAnalytics.campaign.comboRewards
+                    .loyaltyTierBenefits && (
+                    <li>
+                      Users can unlock tier benefits:{" "}
+                      {
+                        campaignAnalytics.campaign.comboRewards
+                          .loyaltyTierBenefits
+                      }
+                    </li>
+                  )}
+                </ul>
+              )}
+            {!campaignAnalytics?.campaign?.campaignType && (
+              <ul className="check-list text-sm">
+                <li>Loading campaign information...</li>
+              </ul>
+            )}
           </div>
           <div className="bg-white p-3 rounded-md">
             <p>Channel Breakdown</p>

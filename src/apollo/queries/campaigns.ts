@@ -1,4 +1,3 @@
-
 import { gql } from "@apollo/client";
 
 export const GET_BUSINESS_CAMPAIGNS = gql`
@@ -86,6 +85,57 @@ export const GET_CAMPAIGN_ANALYTICS_BY_CAMPAIGN = gql`
         shareLinks
         analyticsEvents {
           referrer
+        }
+        referralRewards {
+          referreeValidityPeriod
+          referreeRewardValue
+          referreeRewardType
+          referreeRewardChannels
+          referreeRewardAction
+          referralRewardType
+          referralRewardLimitType
+          referralRewardLimit
+          referralRewardAmount
+          referralRewardAction
+          loyaltyTierBenefits
+          loyaltyPoints
+          loyaltyName
+        }
+        loyaltyRewards {
+          redeemValidityPeriod
+          redeemRewardValue
+          redeemRewardPointRequired
+          redeemRewardChannels
+          redeemRewardAction
+          loyaltyTierBenefits
+          loyaltyPoints
+          loyaltyName
+          earnRewardPoints
+          earnRewardAmount
+          earnRewardAction
+        }
+        comboRewards {
+          loyaltyName
+          loyaltyPoints
+          loyaltyTierBenefits
+          redeemRewardAction
+          redeemRewardChannels
+          redeemRewardPointRequired
+          redeemRewardValue
+          redeemValidityPeriod
+          referralName
+          referralPoints
+          referralRewardAction
+          referralRewardAmount
+          referralRewardLimit
+          referralRewardLimitType
+          referralRewardType
+          referralTierBenefits
+          referreeRewardAction
+          referreeRewardChannels
+          referreeRewardType
+          referreeRewardValue
+          referreeValidityPeriod
         }
       }
     }

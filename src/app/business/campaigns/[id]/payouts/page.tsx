@@ -32,7 +32,7 @@ const payouts = () => {
             <span className="text-sm">Refresh</span>
           </button>
         </div>
-        <div className="bg-[#D1DAF4] rounded-md flex justify-between">
+        {/* <div className="bg-[#D1DAF4] rounded-md flex justify-between">
           <div className="flex gap-4 justify-between">
             <div className="border-r m-3 pr-3 border-r-[#CCCCCC]">
               <h2 className="text-xs mb-2">Campaign Name</h2>
@@ -69,7 +69,7 @@ const payouts = () => {
               </Button>
             </Dropdown>
           </div>
-        </div>
+        </div> */}
 
         <div className="rounded-md mt-6">
           <div className="lg:flex justify-between">

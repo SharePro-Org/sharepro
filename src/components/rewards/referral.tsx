@@ -69,6 +69,7 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
     { label: "Quarterly", value: "quarterly" },
     { label: "Yearly", value: "yearly" },
   ];
+  const [campaignData, setCampaignData] = useState<any>(null);
 
   // Referrer state
   const [referrerAction, setReferrerAction] = useState("");
@@ -117,6 +118,7 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
     try {
       const { data } = await createReferralReward({ variables: { input } });
       if (data?.createCampaignReward?.success) {
+        setCampaignData(data.createCampaignReward.campaign);
         setSuccess(true);
         // message.success("Referral reward created successfully!");
       } else {
@@ -571,11 +573,7 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
       <ShareModal
         open={shareOpen}
         onClose={() => router.push(`/business/campaigns`)}
-        campaignUrl={
-          typeof window !== "undefined" && id
-            ? `${window.location.origin}/campaign/${id}`
-            : ""
-        }
+        campaignUrl={campaignData?.shareLinks || ""}
       />
     </div>
   );
