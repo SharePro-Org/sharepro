@@ -2,34 +2,34 @@
 
 import { Facebook, Twitter, Instagram } from "lucide-react";
 import Link from "next/link";
-import React, { useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 
-const MicroSite = () => {
+const MicroSiteComp = () => {
   const params = useParams();
   const searchParams = useSearchParams();
   const slug = params.slug as string;
 
   // Generate signup URL with query parameters
   const getSignupUrl = () => {
-    const campaignId = searchParams.get('cid');
-    const source = searchParams.get('src');
-    
-    let signupUrl = '/user/auth/signup';
+    const campaignId = searchParams.get("cid");
+    const source = searchParams.get("src");
+
+    let signupUrl = "/user/auth/signup";
     const params = new URLSearchParams();
-    params.append("ref", slug)
+    params.append("ref", slug);
 
     if (campaignId) {
-      params.append('cid', campaignId);
+      params.append("cid", campaignId);
     }
     if (source) {
-      params.append('src', source);
+      params.append("src", source);
     }
-    
+
     if (params.toString()) {
       signupUrl += `?${params.toString()}`;
     }
-    
+
     return signupUrl;
   };
 
@@ -271,6 +271,14 @@ const MicroSite = () => {
         </div>
       </footer>
     </div>
+  );
+};
+
+const MicroSite = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MicroSiteComp />
+    </Suspense>
   );
 };
 

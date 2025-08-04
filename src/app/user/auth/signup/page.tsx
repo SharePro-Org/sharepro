@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FiPhone } from "react-icons/fi";
 import { HiOutlineMail } from "react-icons/hi";
@@ -19,7 +19,7 @@ import { REGISTER_USER, TRACK_CONVERSION } from "@/apollo/mutations/auth";
 import TopRightLeftSection from "../../../../../public/assets/auth/top-right-left-section.svg";
 import BottomLeftLeftSection from "../../../../../public/assets/auth/bottom-left-left-section.svg";
 
-const signup = () => {
+const SignupComp = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [registerUser, { loading }] = useMutation(REGISTER_USER);
@@ -304,7 +304,8 @@ const signup = () => {
         }
 
         // Redirect to login or dashboard
-        router.push("/user/auth/login");
+        router.push(`/user/auth/verify-email?email=${encodeURIComponent(email)}`);
+        // router.push("/user/auth/login");
       } else {
         // Track registration failure analytics
         const trackRegistrationFailure = async () => {
@@ -545,7 +546,7 @@ const signup = () => {
             type="submit"
             disabled={!isFormValid || loading}
           >
-            {loading ? "Signing up..." : "Join SharePro"}
+            {loading ? "Signing up..." : "Create Account and Claim Reward"}
           </Button>
           <Button
             variant="outline"
@@ -578,4 +579,11 @@ const signup = () => {
   );
 };
 
+const signup = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SignupComp />
+    </Suspense>
+  );
+};
 export default signup;

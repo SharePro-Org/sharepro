@@ -108,8 +108,6 @@ export default function SignIn() {
             refreshToken: data.login.refreshToken,
             userId: user?.id,
             email: user?.email || email,
-            businessName: user?.businessName,
-            businessId: user.business.id,
             phone: user?.phone || phone,
           };
 
@@ -129,8 +127,6 @@ export default function SignIn() {
             refreshToken: data.loginPhone.refreshToken,
             userId: user?.id,
             email: user?.email,
-            businessName: user?.businessName,
-            businessId: user.business.id,
             phone: user?.phone || phone,
           };
           localStorage.setItem("userData", JSON.stringify(userData));
@@ -159,10 +155,10 @@ export default function SignIn() {
         className="pointer-events-none absolute right-6 top-0 z-0 object-cover"
       />
       <div className="w-full mx-auto max-w-xl mt-12 md:mt-16">
-        <h2 className="text-[29px] font-semibold mb-1 text-heading">
+        <h2 className="text-[29px] text-center font-semibold mb-1 text-heading">
           Welcome back!
         </h2>
-        <p className="text-sm text-body mb-8">
+        <p className="text-sm text-center text-body mb-8">
           Sign in to continue sharing and tracking your campaign rewards.
         </p>
 
