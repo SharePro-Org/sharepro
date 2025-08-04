@@ -9,6 +9,8 @@ export const CREATE_CAMPAIGN = gql`
       campaign {
         name
         id
+        referralCode
+        referralLink
       }
     }
   }
@@ -23,7 +25,8 @@ export const CREATE_LOYALTY_REWARD = gql`
       campaign {
         id
         name
-        shareLinks
+        referralCode
+        referralLink
         campaignType
         loyaltyRewards {
           id
@@ -45,7 +48,8 @@ export const CREATE_REFERRAL_REWARD = gql`
       campaign {
         id
         name
-        shareLinks
+        referralCode
+        referralLink
         campaignType
         referralRewards {
           id
@@ -67,7 +71,8 @@ export const CREATE_COMBO_REWARD = gql`
       campaign {
         id
         name
-        shareLinks
+        referralCode
+        referralLink
         campaignType
         loyaltyRewards {
           id

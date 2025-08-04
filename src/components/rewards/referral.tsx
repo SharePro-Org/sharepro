@@ -573,7 +573,10 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
       <ShareModal
         open={shareOpen}
         onClose={() => router.push(`/business/campaigns`)}
-        campaignUrl={campaignData?.shareLinks || ""}
+        campaignUrl={campaignData?.referralLink || ""}
+        campaignId={campaignData?.id || id || ""}
+        campaignName={campaignData?.name || ""}
+        campaignType={campaignData?.type || ""}
       />
     </div>
   );

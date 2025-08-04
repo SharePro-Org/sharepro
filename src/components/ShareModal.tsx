@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   Twitter,
@@ -14,40 +14,222 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import MDEditor, { commands } from "@uiw/react-md-editor";
 import "@uiw/react-md-editor/markdown-editor.css";
+import { useMutation } from "@apollo/client";
+import { TRACK_CONVERSION } from "@/apollo/mutations/auth";
+import { userAtom } from "@/store/User";
+import { useAtom } from "jotai";
 
 const ShareModal = ({
   open,
   onClose,
   campaignUrl,
+  campaignId,
+  campaignName,
+  campaignType,
 }: {
   open: boolean;
   onClose: () => void;
   campaignUrl: string;
+  campaignId?: string;
+  campaignName?: string;
+  campaignType?: string;
 }) => {
   const [step, setStep] = useState(1);
+  const [businessId, setBusinessId] = useState<string>("");
+  const [user] = useAtom(userAtom);
+
+  useEffect(() => {
+    if (user?.businessId) {
+      setBusinessId(user.businessId);
+    }
+  }, [user]);
+
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
+  const [trackConversion] = useMutation(TRACK_CONVERSION);
   const [shareText, setShareText] = useState(
     "🎉 **Exciting news!** I just launched my new campaign on SharePro.\n\nJoin me and let's grow together! 🚀\n\n## Key Features:\n- Easy referral tracking\n- Instant rewards\n- Seamless integration\n\n*#SharePro #Campaign #Growth*"
   );
 
-  const finalShareText = `${shareText}\n\n${campaignUrl}`;
+  // Create URL with tracking parameters
+  const urlWithParams = new URL(campaignUrl);
+  if (campaignId) {
+    urlWithParams.searchParams.set('cid', campaignId);
+  }
+  urlWithParams.searchParams.set('src', 'direct'); // Default source for copy action
+
+  const finalShareText = `${shareText
+    .replace(/\*\*(.*?)\*\*/g, "$1") // Bold
+    .replace(/\*(.*?)\*/g, "$1") // Italic
+    .replace(/~~(.*?)~~/g, "$1") // Strikethrough
+    .replace(/#{1,6}\s+(.*)/g, "$1") // Headers
+    .replace(/[-*]\s+(.*)/g, "• $1") // Lists
+    .replace(/\n{2,}/g, "\n\n")}\n\n${urlWithParams.toString()}`;
   const encodedShareText = encodeURIComponent(shareText);
   const url = encodeURIComponent(campaignUrl);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(finalShareText);
+  // Analytics tracking function
+  const trackAnalyticsEvent = useCallback(
+    async (eventData: { eventType: string; properties: any }) => {
+      if (!campaignId) return;
+
+      try {
+        await trackConversion({
+          variables: {
+            campaignId: campaignId,
+            businessId: businessId,
+            eventType: eventData.eventType,
+            properties: JSON.stringify({
+              ...eventData.properties,
+            }),
+          },
+        });
+      } catch (error) {
+        console.error("Analytics tracking failed:", error);
+      }
+    },
+    [campaignId, trackConversion]
+  );
+
+  // Generate share URLs for different platforms
+  const generateShareUrl = (platform: string) => {
+    // Add query parameters to the campaign URL for tracking
+    const urlWithParams = new URL(campaignUrl);
+    if (campaignId) {
+      urlWithParams.searchParams.set('cid', campaignId);
+    }
+    urlWithParams.searchParams.set('src', platform);
+    
+    const encodedLink = encodeURIComponent(urlWithParams.toString());
+    // Convert markdown to plain text for sharing
+    const plainText = shareText
+      .replace(/\*\*(.*?)\*\*/g, "$1") // Bold
+      .replace(/\*(.*?)\*/g, "$1") // Italic
+      .replace(/~~(.*?)~~/g, "$1") // Strikethrough
+      .replace(/#{1,6}\s+(.*)/g, "$1") // Headers
+      .replace(/[-*]\s+(.*)/g, "• $1") // Lists
+      .replace(/\n{2,}/g, "\n\n"); // Multiple line breaks
+
+    const message = encodeURIComponent(`${plainText}\n\n`);
+
+    switch (platform) {
+      case "whatsapp":
+        return `https://wa.me/?text=${message}${encodedLink}`;
+      case "facebook":
+        return `https://www.facebook.com/sharer/sharer.php?u=${encodedLink}&quote=${encodeURIComponent(
+          plainText
+        )}`;
+      case "twitter":
+        return `https://x.com/intent/tweet?text=${message}&url=${encodedLink}`;
+      case "instagram":
+        return `https://www.instagram.com/`;
+      case "email":
+        return `mailto:?subject=${encodeURIComponent(
+          campaignName || "Check out my campaign!"
+        )}&body=${message}${encodedLink}`;
+      default:
+        return urlWithParams.toString();
+    }
   };
 
-  const handleNext = () => {
+  // Track share modal view when opened
+  useEffect(() => {
+    trackAnalyticsEvent({
+      eventType: "campaign_view",
+      properties: {
+        campaign_name: campaignName,
+        campaign_type: campaignType,
+        view_source: "campaign_card",
+      },
+    });
+  }, []);
+
+  // Handle sharing to different platforms
+  const handleShare = async (platform: string) => {
+    setIsSharing(true);
+
+    try {
+      // Track share intent
+      await trackAnalyticsEvent({
+        eventType: "share",
+        properties: {
+          platform: platform,
+          campaign_name: campaignName,
+          share_method: "button_click",
+        },
+      });
+
+      // Open sharing platform
+      const shareUrl = generateShareUrl(platform);
+
+      if (
+        platform === "whatsapp" ||
+        platform === "facebook" ||
+        platform === "twitter"
+      ) {
+        window.open(shareUrl, "_blank", "width=600,height=400");
+      } else if (platform === "email") {
+        window.location.href = shareUrl;
+      } else if (platform === "instagram") {
+        // Copy to clipboard for Instagram
+        await navigator.clipboard.writeText(finalShareText);
+        alert(
+          "Campaign details copied! You can now paste them in your Instagram post."
+        );
+      }
+    } catch (error) {
+      console.error("Share failed:", error);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(finalShareText);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+
+      // Track copy action
+      await trackAnalyticsEvent({
+        eventType: "referral_click",
+        properties: {
+          campaign_name: campaignName,
+          action: "link_clicked",
+        },
+      });
+    } catch (error) {
+      console.error("Copy failed:", error);
+    }
+  };
+
+  const handleNext = async () => {
     setStep(2);
   };
 
-  const handleBack = () => {
+  const handleBack = async () => {
     setStep(1);
   };
 
+  const handleReferralLinkClick = async () => {
+    // Track referral link generation/copy
+    await trackAnalyticsEvent({
+      eventType: "referral_link_click",
+      properties: {
+        action: "link_clicked",
+        campaign_name: campaignName,
+        campaign_type: campaignType,
+      },
+    });
+  };
+
+  const handleModalClose = async () => {
+    onClose();
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleModalClose}>
       <DialogContent className="max-w-2xl w-full flex flex-col gap-6 py-6">
         {step === 1 && (
           <>
@@ -92,12 +274,11 @@ const ShareModal = ({
               </div>
 
               <div>
-                {/* <Label htmlFor="campaignLink" className="block mb-2 text-sm">
-                  Campaign Link (will be added automatically)
-                </Label> */}
-                <div className="flex text-sm">
+                <div className="flex text-sm" onClick={handleReferralLinkClick}>
                   <p>Campaign Link:</p>
-                  <p className="text-primary">{campaignUrl}</p>
+                  <p className="text-primary cursor-pointer hover:underline">
+                    {campaignUrl}
+                  </p>
                 </div>
               </div>
             </div>
@@ -105,14 +286,16 @@ const ShareModal = ({
             <div className="flex gap-3">
               <button
                 onClick={handleCopy}
-                className="w-1/2 p-3 flex gap-3 justify-center bg-primary text-white rounded-md"
+                disabled={isSharing}
+                className="w-1/2 p-3 flex gap-3 justify-center bg-primary text-white rounded-md disabled:opacity-50"
               >
                 <Copy size={16} className="my-auto" />
-                <span>Copy</span>
+                <span>{copiedLink ? "Copied!" : "Copy"}</span>
               </button>
               <button
-                className="flex w-1/2 gap-3 justify-center bg-secondary p-3 text-white rounded-md"
+                className="flex w-1/2 gap-3 justify-center bg-secondary p-3 text-white rounded-md disabled:opacity-50"
                 onClick={handleNext}
+                disabled={isSharing}
               >
                 <Share size={16} className="my-auto" />
                 <span>Share</span>
@@ -154,73 +337,62 @@ const ShareModal = ({
             </div> */}
 
             <div className="grid grid-cols-5 gap-6 w-full">
-              <a
-                href={`https://x.com/intent/tweet?text=${encodedShareText}&url=${url}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-col items-center justify-center gap-1 w-full p-3 hover:bg-gray-50 rounded-md transition-colors"
+              <button
+                onClick={() => handleShare("twitter")}
+                disabled={isSharing}
+                className="flex flex-col items-center justify-center gap-1 w-full p-3 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-50"
               >
-                {/* <Twitter size={32} className="text-blue-400" /> */}
                 <div className="w-18 h-18 flex items-center justify-center rounded-full bg-[#F0F0F0]">
                   <img src="/assets/icons/devicon_twitter.svg" alt="" />
                 </div>
                 <span className="text-xs mt-1">X</span>
-              </a>
-              <a
-                href={`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${encodedShareText}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-col items-center justify-center gap-1 w-full p-3 hover:bg-gray-50 rounded-md transition-colors"
+              </button>
+              <button
+                onClick={() => handleShare("facebook")}
+                disabled={isSharing}
+                className="flex flex-col items-center justify-center gap-1 w-full p-3 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-50"
               >
-                {/* <Facebook size={32} className="text-blue-600" /> */}
                 <div className="w-18 h-18 flex items-center justify-center rounded-full bg-[#1877F21A]">
                   <img src="/assets/icons/facebook.svg" alt="" />
                 </div>
                 <span className="text-xs mt-1">Facebook</span>
-              </a>
-              <a
-                href={`https://www.instagram.com/`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-col items-center justify-center gap-1 w-full p-3 hover:bg-gray-50 rounded-md transition-colors"
-                onClick={() => {
-                  navigator.clipboard.writeText(finalShareText);
-                  alert('Campaign details copied! You can now paste them in your Instagram post.');
-                }}
+              </button>
+              <button
+                onClick={() => handleShare("instagram")}
+                disabled={isSharing}
+                className="flex flex-col items-center justify-center gap-1 w-full p-3 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-50"
               >
-                {/* <Instagram size={32} className="text-pink-500" /> */}
                 <div className="w-18 h-18 flex items-center justify-center rounded-full bg-[#F5E8FE]">
                   <img src="/assets/icons/instagram.svg" alt="" />
                 </div>
                 <span className="text-xs mt-1">Instagram</span>
-              </a>
-              <a
-                href={`https://wa.me/?text=${encodedShareText}%20${url}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-col items-center justify-center gap-1 w-full p-3 hover:bg-gray-50 rounded-md transition-colors"
+              </button>
+              <button
+                onClick={() => handleShare("whatsapp")}
+                disabled={isSharing}
+                className="flex flex-col items-center justify-center gap-1 w-full p-3 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-50"
               >
-                {/* <MessageCircle size={32} className="text-green-500" /> */}
                 <div className="w-18 h-18 flex items-center justify-center rounded-full bg-[#25D3661A]">
                   <img src="/assets/icons/whatsapp.svg" alt="" />
                 </div>
                 <span className="text-xs mt-1">WhatsApp</span>
-              </a>
-              <a
-                href={`mailto:?subject=Check%20out%20my%20campaign!&body=${encodedShareText}%0A%0A${url}`}
-                className="flex flex-col items-center justify-center gap-1 w-full p-3 hover:bg-gray-50 rounded-md transition-colors"
+              </button>
+              <button
+                onClick={() => handleShare("email")}
+                disabled={isSharing}
+                className="flex flex-col items-center justify-center gap-1 w-full p-3 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-50"
               >
-                {/* <Mail size={32} className="text-gray-600" /> */}
                 <div className="w-18 h-18 flex items-center justify-center rounded-full bg-[#4285F42E]">
                   <img src="/assets/icons/gmail.svg" alt="" />
                 </div>
                 <span className="text-xs mt-1">Gmail</span>
-              </a>
+              </button>
             </div>
 
             <button
-              className="w-full bg-primary hover:bg-primary/90 p-4 text-white rounded-sm mt-4"
-              onClick={onClose}
+              className="w-full bg-primary hover:bg-primary/90 p-4 text-white rounded-sm mt-4 disabled:opacity-50"
+              onClick={handleModalClose}
+              disabled={isSharing}
             >
               Done
             </button>

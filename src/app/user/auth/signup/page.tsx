@@ -4,27 +4,120 @@ import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useEffect } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { FiPhone } from "react-icons/fi";
 import { HiOutlineMail } from "react-icons/hi";
 import { MdOutlineVisibilityOff, MdOutlineVisibility } from "react-icons/md";
+import { FiUser } from "react-icons/fi";
 import Link from "next/link";
 import Image from "next/image";
+import { useMutation } from "@apollo/client";
+import { REGISTER_USER, TRACK_CONVERSION } from "@/apollo/mutations/auth";
 
 import TopRightLeftSection from "../../../../../public/assets/auth/top-right-left-section.svg";
 import BottomLeftLeftSection from "../../../../../public/assets/auth/bottom-left-left-section.svg";
 
 const signup = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [registerUser, { loading }] = useMutation(REGISTER_USER);
+  const [trackConversion] = useMutation(TRACK_CONVERSION);
+
+  // Form state
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const router = useRouter();
 
-  const [errors, setErrors] = useState({ email: "", phone: "", password: "" });
+  // Extract referral information from URL
+  const [referralData, setReferralData] = useState({
+    referralCode: null as string | null,
+    campaignId: null as string | null,
+    source: null as string | null,
+  });
+
+  useEffect(() => {
+    // Extract query parameters
+    const campaignId = searchParams.get("cid");
+    const source = searchParams.get("src");
+
+    // Extract referral code from slug (stored in localStorage or query param as fallback)
+    let referralCode = searchParams.get("ref"); // fallback to query param
+
+    // Check if referral code was stored from slug route
+    const storedSlugData = localStorage.getItem("slugReferralCode");
+    if (storedSlugData) {
+      try {
+        const parsed = JSON.parse(storedSlugData);
+        // Use stored referral code if it's less than 24 hours old
+        if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
+          referralCode = parsed.referralCode;
+        } else {
+          // Clean up expired data
+          localStorage.removeItem("slugReferralCode");
+        }
+      } catch (error) {
+        console.error("Error parsing stored slug referral code:", error);
+        localStorage.removeItem("slugReferralCode");
+      }
+    }
+
+    // Track page visit analytics immediately
+    const trackPageVisit = async () => {
+      const pageVisitProperties = {
+        page: "registration_page",
+        hasReferralCode: !!referralCode,
+        campaignId: campaignId || null,
+        source: source || "direct",
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+        url: window.location.href,
+        referralSource: storedSlugData ? "slug" : "query_param",
+      };
+
+      // Track registration page visit
+      if (campaignId && referralCode) {
+        try {
+          await trackConversion({
+            variables: {
+              campaignId,
+              referralCode,
+              properties: JSON.stringify({
+                eventType: "registration_page_visit",
+                ...pageVisitProperties,
+              }),
+            },
+          });
+        } catch (error) {
+          console.error("Page visit tracking failed:", error);
+        }
+      }
+    };
+
+    trackPageVisit();
+
+    // Set referral data state
+    setReferralData({
+      referralCode,
+      campaignId,
+      source,
+    });
+  }, [searchParams, trackConversion]);
+
+  const [errors, setErrors] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    password: "",
+  });
   const [touched, setTouched] = useState({
+    firstName: false,
+    lastName: false,
     email: false,
     phone: false,
     password: false,
@@ -34,34 +127,260 @@ const signup = () => {
   const isValidEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isValidPhone = (phone: string) => /^[0-9]{8,15}$/.test(phone);
+  const isValidName = (name: string) => name.trim().length >= 2;
+  const isValidPassword = (password: string) => password.length >= 6;
 
   const validate = () => {
     return {
+      firstName: isValidName(firstName)
+        ? ""
+        : "First name must be at least 2 characters",
+      lastName: isValidName(lastName)
+        ? ""
+        : "Last name must be at least 2 characters",
       email: isValidEmail(email) ? "" : "Enter a valid email",
       phone: isValidPhone(phone) ? "" : "Enter a valid phone number",
-      password: password ? "" : "Password is required",
+      password: isValidPassword(password)
+        ? ""
+        : "Password must be at least 6 characters",
     };
   };
 
-  const handleBlur = (field: "email" | "phone" | "password") => {
+  const isFormValid =
+    isValidName(firstName) &&
+    isValidName(lastName) &&
+    isValidEmail(email) &&
+    isValidPhone(phone) &&
+    isValidPassword(password);
+
+  const handleBlur = (
+    field: "firstName" | "lastName" | "email" | "phone" | "password"
+  ) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
     setErrors(validate());
   };
 
   const handleChange = (
-    field: "email" | "phone" | "password",
+    field: "firstName" | "lastName" | "email" | "phone" | "password",
     value: string
   ) => {
+    if (field === "firstName") setFirstName(value);
+    if (field === "lastName") setLastName(value);
     if (field === "email") setEmail(value);
     if (field === "phone") setPhone(value);
     if (field === "password") setPassword(value);
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {};
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setTouched({
+      firstName: true,
+      lastName: true,
+      email: true,
+      phone: true,
+      password: true,
+    });
+    setGeneralError("");
+    const newErrors = validate();
+    setErrors(newErrors);
+    const hasError = Object.values(newErrors).some(Boolean);
+
+    if (hasError) return;
+
+    // Track registration attempt analytics
+    const trackRegistrationAttempt = async () => {
+      const attemptProperties = {
+        eventType: "registration_attempt",
+        email,
+        firstName,
+        lastName,
+        hasReferral: !!referralData.referralCode,
+        source: referralData.source || "direct",
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+      };
+
+      if (referralData.campaignId && referralData.referralCode) {
+        try {
+          await trackConversion({
+            variables: {
+              campaignId: referralData.campaignId,
+              referralCode: referralData.referralCode,
+              properties: JSON.stringify(attemptProperties),
+            },
+          });
+        } catch (error) {
+          console.error("Registration attempt tracking failed:", error);
+        }
+      }
+    };
+
+    await trackRegistrationAttempt();
+
+    try {
+      // Track registration attempt analytics
+      const registrationProperties = {
+        source: referralData.source || "direct",
+        hasReferral: !!referralData.referralCode,
+        timestamp: new Date().toISOString(),
+        userAgent: navigator.userAgent,
+      };
+
+      const { data } = await registerUser({
+        variables: {
+          input: {
+            firstName,
+            lastName,
+            email,
+            phoneNumber: phone,
+            password,
+            referralCode: referralData.referralCode,
+          },
+        },
+      });
+
+      if (data?.registerUserByCode?.success) {
+        // Track registration success analytics
+        const trackRegistrationSuccess = async () => {
+          const successProperties = {
+            eventType: "registration_success",
+            userId: data.registerUserByCode.user?.id,
+            userEmail: email,
+            firstName,
+            lastName,
+            hasReferral: !!referralData.referralCode,
+            source: referralData.source || "direct",
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+          };
+
+          if (referralData.campaignId && referralData.referralCode) {
+            try {
+              await trackConversion({
+                variables: {
+                  campaignId: referralData.campaignId,
+                  referralCode: referralData.referralCode,
+                  properties: JSON.stringify(successProperties),
+                },
+              });
+            } catch (error) {
+              console.error("Registration success tracking failed:", error);
+            }
+          }
+        };
+
+        await trackRegistrationSuccess();
+
+        // Track conversion if this is a referral signup
+        if (referralData.campaignId && referralData.referralCode) {
+          try {
+            await trackConversion({
+              variables: {
+                campaignId: referralData.campaignId,
+                referralCode: referralData.referralCode,
+                properties: JSON.stringify({
+                  eventType: "registration_conversion",
+                  conversionType: "registration",
+                  userEmail: email,
+                  firstName,
+                  lastName,
+                  userId: data.registerUserByCode.user?.id,
+                  timestamp: new Date().toISOString(),
+                  source: referralData.source,
+                }),
+              },
+            });
+
+            // Show success message for referral conversion
+            // alert("Registration successful! Referral reward processed.");
+          } catch (conversionError) {
+            console.error("Conversion tracking failed:", conversionError);
+            // Don't fail the registration for conversion tracking errors
+            // alert("Registration successful!");
+          }
+        } else {
+          // alert("Registration successful!");
+        }
+
+        // Redirect to login or dashboard
+        router.push("/user/auth/login");
+      } else {
+        // Track registration failure analytics
+        const trackRegistrationFailure = async () => {
+          const failureProperties = {
+            eventType: "registration_failure",
+            email,
+            firstName,
+            lastName,
+            errorMessage:
+              data?.registerUserByCode?.message || "Registration failed",
+            hasReferral: !!referralData.referralCode,
+            source: referralData.source || "direct",
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+          };
+
+          if (referralData.campaignId && referralData.referralCode) {
+            try {
+              await trackConversion({
+                variables: {
+                  campaignId: referralData.campaignId,
+                  referralCode: referralData.referralCode,
+                  properties: JSON.stringify(failureProperties),
+                },
+              });
+            } catch (error) {
+              console.error("Registration failure tracking failed:", error);
+            }
+          }
+        };
+
+        await trackRegistrationFailure();
+        setGeneralError(
+          data?.registerUserByCode?.message || "Registration failed"
+        );
+      }
+    } catch (err: any) {
+      console.error("Registration error:", err);
+
+      // Track registration failure analytics for network/server errors
+      const trackRegistrationError = async () => {
+        const errorProperties = {
+          eventType: "registration_failure",
+          email,
+          firstName,
+          lastName,
+          errorMessage: err.message || "Registration failed",
+          errorType: "network_error",
+          hasReferral: !!referralData.referralCode,
+          source: referralData.source || "direct",
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent,
+        };
+
+        if (referralData.campaignId && referralData.referralCode) {
+          try {
+            await trackConversion({
+              variables: {
+                campaignId: referralData.campaignId,
+                referralCode: referralData.referralCode,
+                properties: JSON.stringify(errorProperties),
+              },
+            });
+          } catch (error) {
+            console.error("Registration error tracking failed:", error);
+          }
+        }
+      };
+
+      await trackRegistrationError();
+      setGeneralError(err.message || "Registration failed");
+    }
+  };
 
   return (
-    <div>
+    <>
       <div className="p-4">
         <img className="w-32" src="/assets/logo.svg" alt="" />
       </div>
@@ -72,15 +391,15 @@ const signup = () => {
         height={35}
         className="pointer-events-none absolute right-6 top-0 z-0 object-cover"
       />
-      <div className="md:w-[30%] p-4 mx-auto mt-12 md:mt-16">
+      <div className="max-w-xl p-4 mx-auto mt-12 md:mt-16">
         <h2 className="text-[29px] text-center font-semibold mb-1 text-heading">
           Join SharePro & Start Earning Rewards
         </h2>
         <p className="text-sm text-center text-body mb-8">
-          You’ve been invited! Complete your registration to claim your reward.
+          {referralData.referralCode
+            ? "You've been invited! Complete your registration to claim your reward."
+            : "Create your account and start earning rewards today."}
         </p>
-
-        {/* Pill Toggle */}
 
         <form
           className="w-full max-w-xl space-y-4 "
@@ -93,10 +412,51 @@ const signup = () => {
             </p>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <div className="relative flex justify-between">
-              <Input id="username" type="text" placeholder="e.g johndoe" />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">First Name</Label>
+              <div className="relative flex justify-between">
+                <Input
+                  id="firstName"
+                  type="text"
+                  placeholder="e.g John"
+                  value={firstName}
+                  onChange={(e) => handleChange("firstName", e.target.value)}
+                  onBlur={() => handleBlur("firstName")}
+                  className={
+                    errors.firstName && touched.firstName
+                      ? "border !border-danger"
+                      : ""
+                  }
+                />
+                <FiUser className="absolute right-3 top-1/2 -translate-y-1/2 text-gray5" />
+              </div>
+              {errors.firstName && touched.firstName && (
+                <p className="text-xs text-danger mt-1">{errors.firstName}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name</Label>
+              <div className="relative flex justify-between">
+                <Input
+                  id="lastName"
+                  type="text"
+                  placeholder="e.g Doe"
+                  value={lastName}
+                  onChange={(e) => handleChange("lastName", e.target.value)}
+                  onBlur={() => handleBlur("lastName")}
+                  className={
+                    errors.lastName && touched.lastName
+                      ? "border !border-danger"
+                      : ""
+                  }
+                />
+                <FiUser className="absolute right-3 top-1/2 -translate-y-1/2 text-gray5" />
+              </div>
+              {errors.lastName && touched.lastName && (
+                <p className="text-xs text-danger mt-1">{errors.lastName}</p>
+              )}
             </div>
           </div>
 
@@ -180,19 +540,19 @@ const signup = () => {
             )}
           </div>
 
-          {/* <Button
+          <Button
             className="w-full"
             type="submit"
-            disabled={!canContinue || loadingEmail || loadingPhone}
+            disabled={!isFormValid || loading}
           >
-            {loadingEmail || loadingPhone ? "Signing in..." : "Continue"}
-          </Button> */}
+            {loading ? "Signing up..." : "Join SharePro"}
+          </Button>
           <Button
             variant="outline"
             className="flex w-full items-center justify-center gap-2"
             type="button"
           >
-            <FcGoogle /> Sign in with Google
+            <FcGoogle /> Sign up with Google
           </Button>
         </form>
 
@@ -214,7 +574,7 @@ const signup = () => {
         height={30}
         className="pointer-events-none absolute left-0 bottom-0 z-0 object-cover"
       />
-    </div>
+    </>
   );
 };
 

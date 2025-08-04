@@ -1,22 +1,34 @@
 "use client";
-
-import { cn } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useRouter } from "next/navigation";
-import React, { useState } from "react";
-import { FcGoogle } from "react-icons/fc";
-import { FiPhone } from "react-icons/fi";
+import { Label } from "@/components/ui/label";
 import { HiOutlineMail } from "react-icons/hi";
-import { MdOutlineVisibilityOff, MdOutlineVisibility } from "react-icons/md";
-import Link from "next/link";
+import { FiPhone } from "react-icons/fi";
 import Image from "next/image";
+
+import {
+  MdOutlineLock,
+  MdOutlineVisibility,
+  MdOutlineVisibilityOff,
+} from "react-icons/md";
+import { FcGoogle } from "react-icons/fc";
+import { cn } from "@/lib/utils";
+import { useMutation } from "@apollo/client";
+import { LOGIN, LOGIN_PHONE } from "@/apollo/mutations/auth";
+import { useSetAtom } from "jotai";
+import { userAtom } from "@/store/User";
 
 import TopRightLeftSection from "../../../../../public/assets/auth/top-right-left-section.svg";
 import BottomLeftLeftSection from "../../../../../public/assets/auth/bottom-left-left-section.svg";
 
-const login = () => {
+export default function SignIn() {
+  useEffect(() => {
+    localStorage.removeItem("userData");
+  }, []);
+
   const [tab, setTab] = useState<"email" | "phone">("email");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -24,6 +36,7 @@ const login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
+  // Validation state
   const [errors, setErrors] = useState({ email: "", phone: "", password: "" });
   const [touched, setTouched] = useState({
     email: false,
@@ -31,6 +44,9 @@ const login = () => {
     password: false,
   });
   const [generalError, setGeneralError] = useState("");
+  const [login, { loading: loadingEmail }] = useMutation(LOGIN);
+  const [loginPhone, { loading: loadingPhone }] = useMutation(LOGIN_PHONE);
+  const setUser = useSetAtom(userAtom);
 
   const isValidEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -73,10 +89,65 @@ const login = () => {
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {};
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setTouched({ email: true, phone: true, password: true });
+    setGeneralError("");
+    const newErrors = validate();
+    setErrors(newErrors);
+    const hasError = Object.values(newErrors).some(Boolean);
+    if (hasError || !canContinue) return;
+    try {
+      if (tab === "email") {
+        const { data } = await login({ variables: { email, password } });
+        if (data?.login?.success) {
+          const user = data.login.user;
+
+          const userData = {
+            accessToken: data.login.token,
+            refreshToken: data.login.refreshToken,
+            userId: user?.id,
+            email: user?.email || email,
+            businessName: user?.businessName,
+            businessId: user.business.id,
+            phone: user?.phone || phone,
+          };
+
+          localStorage.setItem("userData", JSON.stringify(userData));
+          setUser(userData);
+          router.push("/user/dashboard");
+        } else {
+          setGeneralError(data?.login?.message || "Invalid credentials");
+        }
+      } else {
+        const { data } = await loginPhone({ variables: { phone, password } });
+        if (data?.loginPhone?.success) {
+          const user = data.loginPhone.user;
+
+          const userData = {
+            accessToken: data.loginPhone.token,
+            refreshToken: data.loginPhone.refreshToken,
+            userId: user?.id,
+            email: user?.email,
+            businessName: user?.businessName,
+            businessId: user.business.id,
+            phone: user?.phone || phone,
+          };
+          localStorage.setItem("userData", JSON.stringify(userData));
+          setUser(userData);
+
+          router.push("/user/dashboard");
+        } else {
+          setGeneralError(data?.loginPhone?.message || "Invalid credentials");
+        }
+      }
+    } catch (err: any) {
+      setGeneralError(err.message || "Login failed");
+    }
+  };
 
   return (
-    <div>
+    <>
       <div className="p-4">
         <img className="w-32" src="/assets/logo.svg" alt="" />
       </div>
@@ -87,12 +158,12 @@ const login = () => {
         height={35}
         className="pointer-events-none absolute right-6 top-0 z-0 object-cover"
       />
-      <div className="md:w-[30%] p-4 mx-auto mt-12 md:mt-16">
-        <h2 className="text-[29px] text-center font-semibold mb-1 text-heading">
+      <div className="w-full mx-auto max-w-xl mt-12 md:mt-16">
+        <h2 className="text-[29px] font-semibold mb-1 text-heading">
           Welcome back!
         </h2>
-        <p className="text-sm text-center text-body mb-8">
-          Sign in to continue sharing and tracking your campaign rewards.{" "}
+        <p className="text-sm text-body mb-8">
+          Sign in to continue sharing and tracking your campaign rewards.
         </p>
 
         {/* Pill Toggle */}
@@ -226,13 +297,13 @@ const login = () => {
             </Link>
           </div>
 
-          {/* <Button
+          <Button
             className="w-full"
             type="submit"
             disabled={!canContinue || loadingEmail || loadingPhone}
           >
             {loadingEmail || loadingPhone ? "Signing in..." : "Continue"}
-          </Button> */}
+          </Button>
           <Button
             variant="outline"
             className="flex w-full items-center justify-center gap-2"
@@ -260,8 +331,6 @@ const login = () => {
         height={30}
         className="pointer-events-none absolute left-0 bottom-0 z-0 object-cover"
       />
-    </div>
+    </>
   );
-};
-
-export default login;
+}

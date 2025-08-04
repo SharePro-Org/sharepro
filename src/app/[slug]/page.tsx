@@ -1,8 +1,38 @@
+"use client";
+
 import { Facebook, Twitter, Instagram } from "lucide-react";
 import Link from "next/link";
-import React from "react";
+import React, { useEffect } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 
 const MicroSite = () => {
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const slug = params.slug as string;
+
+  // Generate signup URL with query parameters
+  const getSignupUrl = () => {
+    const campaignId = searchParams.get('cid');
+    const source = searchParams.get('src');
+    
+    let signupUrl = '/user/auth/signup';
+    const params = new URLSearchParams();
+    params.append("ref", slug)
+
+    if (campaignId) {
+      params.append('cid', campaignId);
+    }
+    if (source) {
+      params.append('src', source);
+    }
+    
+    if (params.toString()) {
+      signupUrl += `?${params.toString()}`;
+    }
+    
+    return signupUrl;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -55,7 +85,7 @@ const MicroSite = () => {
                   Login
                 </button>
               </Link>
-              <Link href="/user/auth/signup">
+              <Link href={getSignupUrl()}>
                 <button className="bg-primary text-white px-4 py-2 rounded-sm font-medium">
                   Get Started
                 </button>
@@ -76,7 +106,7 @@ const MicroSite = () => {
           <p className="text-xl mb-10 max-w-2xl mx-auto">
             Join our referral and loyalty programmes to participate and win.
           </p>
-          <Link href="/user/auth/signup">
+          <Link href={getSignupUrl()}>
             <button className="bg-primary text-white px-10 py-3 rounded-sm font-medium text-lg">
               Get Started
             </button>
@@ -145,7 +175,7 @@ const MicroSite = () => {
               </div>
             </div>
 
-            <Link href="/user/auth/signup">
+            <Link href={getSignupUrl()}>
               <button className="bg-primary text-white px-16 py-3 rounded-sm font-medium text-lg mt-12">
                 Sign Up
               </button>
@@ -168,7 +198,7 @@ const MicroSite = () => {
               Monitor and claim rewards at any time.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/user/auth/signup">
+              <Link href={getSignupUrl()}>
                 <button className="bg-white w-52 text-purple-600 py-3 rounded-sm font-medium text-lg hover:bg-gray-100 transition-colors">
                   Sign Up
                 </button>

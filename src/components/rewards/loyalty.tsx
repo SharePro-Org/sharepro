@@ -494,7 +494,10 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
         {loading ? "Creating..." : "Create Loyalty Reward"}
       </button>
 
-      <Dialog open={success} onOpenChange={() => router.push(`/business/campaigns`)}>
+      <Dialog
+        open={success}
+        onOpenChange={() => router.push(`/business/campaigns`)}
+      >
         <DialogContent className="max-w-md w-full flex flex-col items-center justify-center gap-6 py-12">
           <div className="bg-[#009B541A] p-4 rounded-md">
             <div className="text-body text-base mb-2">
@@ -547,7 +550,10 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
       <ShareModal
         open={shareOpen}
         onClose={() => router.push(`/business/campaigns`)}
-        campaignUrl={campaignData?.shareLinks || ""}
+        campaignUrl={campaignData?.referralLink || ""}
+        campaignId={campaignData?.id || id || ""}
+        campaignName={campaignData?.name || ""}
+        campaignType={campaignData?.type || ""}
       />
     </div>
   );

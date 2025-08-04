@@ -1,4 +1,36 @@
-import { gql } from '@apollo/client';
+import { gql } from "@apollo/client";
+
+export const REGISTER_USER = gql`
+  mutation RegisterUserByCode($input: RegisterUserInput!) {
+    registerUserByCode(input: $input) {
+      success
+      message
+      user {
+        id
+        email
+        firstName
+        lastName
+      }
+    }
+  }
+`;
+
+export const TRACK_CONVERSION = gql`
+  mutation TrackConversion(
+    $campaignId: ID!
+    $referralCode: String
+    $properties: JSONString
+  ) {
+    trackConversion(
+      campaignId: $campaignId
+      referralCode: $referralCode
+      properties: $properties
+    ) {
+      success
+      message
+    }
+  }
+`;
 
 export const LOGIN = gql`
   mutation Login($email: String!, $password: String!) {
@@ -94,7 +126,6 @@ export const ONBOARDING_BUSINESS = gql`
     }
   }
 `;
-
 
 // BUSINESS_TYPES = [
 //   ('retail', 'Retail'),

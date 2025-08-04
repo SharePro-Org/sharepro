@@ -20,7 +20,7 @@ const ComboRewards = ({ id }: { id: string | null }) => {
   const [success, setSuccess] = useState(false);
   const [campaignData, setCampaignData] = useState<any>(null);
   const router = useRouter();
-  const [shareOpen, setShareOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(true);
 
   const [businessType, setBusinessType] = useState<string>("");
   const [triggerAmount, setTriggerAmount] = useState<string>("");
@@ -66,8 +66,7 @@ const ComboRewards = ({ id }: { id: string | null }) => {
     setTiers((prev) => prev.filter((_, i) => i !== index));
   };
 
-
-    const loyaltyBusinessTypes = [
+  const loyaltyBusinessTypes = [
     { label: "Make a Purchase", value: "purchase" },
     { label: "Leave a Review", value: "review" },
   ];
@@ -906,7 +905,10 @@ const ComboRewards = ({ id }: { id: string | null }) => {
         {loading ? "Creating..." : "Create Combo Reward"}
       </button>
 
-      <Dialog open={success} onOpenChange={() => router.push(`/business/campaigns`)}>
+      <Dialog
+        open={success}
+        onOpenChange={() => router.push(`/business/campaigns`)}
+      >
         <DialogContent className="max-w-md w-full flex flex-col items-center justify-center gap-6 py-12">
           <div className="bg-[#009B541A] p-4 rounded-md">
             <div className="text-body text-base mb-2">
@@ -973,7 +975,10 @@ const ComboRewards = ({ id }: { id: string | null }) => {
       <ShareModal
         open={shareOpen}
         onClose={() => router.push(`/business/campaigns`)}
-        campaignUrl={campaignData?.shareLinks || ""}
+        campaignUrl={campaignData?.referralLink || ""}
+        campaignId={campaignData?.id || id || ""}
+        campaignName={campaignData?.name || ""}
+        campaignType={campaignData?.type || ""}
       />
     </div>
   );
