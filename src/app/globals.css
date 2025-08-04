@@ -86,3 +86,17 @@
   left: 0;
   top: 0;
 }
+
+#microsite-hero{
+  background-image: url('/assets/vectors/microsite-hero.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+#microsite-cta{
+  background-image: url('/assets/vectors/microsite-cta.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
