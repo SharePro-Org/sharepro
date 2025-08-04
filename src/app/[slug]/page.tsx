@@ -1,4 +1,5 @@
 import { Facebook, Twitter, Instagram } from "lucide-react";
+import Link from "next/link";
 import React from "react";
 
 const MicroSite = () => {
@@ -49,12 +50,16 @@ const MicroSite = () => {
 
             {/* Auth Buttons */}
             <div className="flex items-center space-x-4">
-              <button className="text-gray-700 hover:text-gray-900 font-medium">
-                Login
-              </button>
-              <button className="bg-primary text-white px-4 py-2 rounded-sm font-medium">
-                Get Started
-              </button>
+              <Link href="/user/auth/login">
+                <button className="text-gray-700 hover:text-gray-900 font-medium">
+                  Login
+                </button>
+              </Link>
+              <Link href="/user/auth/signup">
+                <button className="bg-primary text-white px-4 py-2 rounded-sm font-medium">
+                  Get Started
+                </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -71,9 +76,11 @@ const MicroSite = () => {
           <p className="text-xl mb-10 max-w-2xl mx-auto">
             Join our referral and loyalty programmes to participate and win.
           </p>
-          <button className="bg-primary text-white px-10 py-3 rounded-sm font-medium text-lg">
-            Get Started
-          </button>
+          <Link href="/user/auth/signup">
+            <button className="bg-primary text-white px-10 py-3 rounded-sm font-medium text-lg">
+              Get Started
+            </button>
+          </Link>
         </div>
       </section>
 
@@ -138,9 +145,11 @@ const MicroSite = () => {
               </div>
             </div>
 
-            <button className="bg-primary text-white px-16 py-3 rounded-sm font-medium text-lg mt-12">
-              Sign Up
-            </button>
+            <Link href="/user/auth/signup">
+              <button className="bg-primary text-white px-16 py-3 rounded-sm font-medium text-lg mt-12">
+                Sign Up
+              </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -159,12 +168,16 @@ const MicroSite = () => {
               Monitor and claim rewards at any time.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-white w-52 text-purple-600 py-3 rounded-sm font-medium text-lg hover:bg-gray-100 transition-colors">
-                Sign Up
-              </button>
-              <button className="border-2 w-52 border-white text-white py-3 rounded-sm font-medium text-lg hover:bg-white hover:text-purple-600 transition-colors">
-                Explore Campaigns
-              </button>
+              <Link href="/user/auth/signup">
+                <button className="bg-white w-52 text-purple-600 py-3 rounded-sm font-medium text-lg hover:bg-gray-100 transition-colors">
+                  Sign Up
+                </button>
+              </Link>
+              <Link href="/user/auth/login">
+                <button className="border-2 w-52 border-white text-white py-3 rounded-sm font-medium text-lg hover:bg-white hover:text-purple-600 transition-colors">
+                  Explore Campaigns
+                </button>
+              </Link>
             </div>
           </div>
         </div>
