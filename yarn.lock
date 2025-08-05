@@ -600,6 +600,11 @@
   resolved "https://registry.npmjs.org/@tanstack/virtual-core/-/virtual-core-3.13.12.tgz"
   integrity sha512-1YBOJfRHV4sXUmWsFSf5rQor4Ss82G8dQWLRbnk3GA4jeP8hQt1hxXh0tmflpC0dz3VgEv/1+qwPyLeWkQuPFA==
 
+"@types/date-fns@^2.5.3":
+  version "2.5.3"
+  resolved "https://registry.npmjs.org/@types/date-fns/-/date-fns-2.5.3.tgz"
+  integrity sha512-4KVPD3g5RjSgZtdOjvI/TDFkLNUHhdoWxmierdQbDeEg17Rov0hbBYtIzNaQA67ORpteOhvR9YEMTb6xeDCang==
+
 "@types/debug@^4.0.0":
   version "4.1.12"
   resolved "https://registry.npmjs.org/@types/debug/-/debug-4.1.12.tgz"
