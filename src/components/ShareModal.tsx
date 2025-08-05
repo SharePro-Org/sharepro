@@ -52,11 +52,34 @@ const ShareModal = ({
   );
 
   // Create URL with tracking parameters
-  const urlWithParams = new URL(campaignUrl);
-  if (campaignId) {
-    urlWithParams.searchParams.set('cid', campaignId);
-  }
-  urlWithParams.searchParams.set('src', 'direct'); // Default source for copy action
+  const createUrlWithParams = (baseUrl: string, source: string = 'direct') => {
+    try {
+      // Check if the URL is already complete (has protocol)
+      let fullUrl = baseUrl;
+      if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+        fullUrl = `https://${baseUrl}`;
+      }
+      
+      const urlWithParams = new URL(fullUrl);
+      if (campaignId) {
+        urlWithParams.searchParams.set('cid', campaignId);
+      }
+      urlWithParams.searchParams.set('src', source);
+      return urlWithParams.toString();
+    } catch (error) {
+      console.error('Invalid URL format:', baseUrl, error);
+      // Fallback: return the original URL with query parameters appended manually
+      const separator = baseUrl.includes('?') ? '&' : '?';
+      let params = [];
+      if (campaignId) {
+        params.push(`cid=${encodeURIComponent(campaignId)}`);
+      }
+      params.push(`src=${encodeURIComponent(source)}`);
+      return `${baseUrl}${separator}${params.join('&')}`;
+    }
+  };
+
+  const urlWithParams = createUrlWithParams(campaignUrl);
 
   const finalShareText = `${shareText
     .replace(/\*\*(.*?)\*\*/g, "$1") // Bold
@@ -64,7 +87,7 @@ const ShareModal = ({
     .replace(/~~(.*?)~~/g, "$1") // Strikethrough
     .replace(/#{1,6}\s+(.*)/g, "$1") // Headers
     .replace(/[-*]\s+(.*)/g, "• $1") // Lists
-    .replace(/\n{2,}/g, "\n\n")}\n\n${urlWithParams.toString()}`;
+    .replace(/\n{2,}/g, "\n\n")}\n\n${urlWithParams}`;
   const encodedShareText = encodeURIComponent(shareText);
   const url = encodeURIComponent(campaignUrl);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -95,13 +118,9 @@ const ShareModal = ({
   // Generate share URLs for different platforms
   const generateShareUrl = (platform: string) => {
     // Add query parameters to the campaign URL for tracking
-    const urlWithParams = new URL(campaignUrl);
-    if (campaignId) {
-      urlWithParams.searchParams.set('cid', campaignId);
-    }
-    urlWithParams.searchParams.set('src', platform);
+    const urlWithParams = createUrlWithParams(campaignUrl, platform);
     
-    const encodedLink = encodeURIComponent(urlWithParams.toString());
+    const encodedLink = encodeURIComponent(urlWithParams);
     // Convert markdown to plain text for sharing
     const plainText = shareText
       .replace(/\*\*(.*?)\*\*/g, "$1") // Bold
@@ -129,7 +148,7 @@ const ShareModal = ({
           campaignName || "Check out my campaign!"
         )}&body=${message}${encodedLink}`;
       default:
-        return urlWithParams.toString();
+        return urlWithParams;
     }
   };
 

@@ -8,10 +8,15 @@ import { ArrowLeft, ArrowRight, RefreshCwIcon } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { Dropdown, Button } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
-import ReactApexChart from "react-apexcharts";
+import dynamic from "next/dynamic";
 import CampaignsTable from "@/components/dashboard/CampaignsTable";
 import Link from "next/link";
 import { Filter } from "@/components/Filter";
+
+// Dynamic import for ReactApexChart with SSR disabled
+const ReactApexChart = dynamic(() => import("react-apexcharts"), {
+  ssr: false,
+});
 
 const singleCampaign = () => {
   const params = useParams();
@@ -25,6 +30,7 @@ const singleCampaign = () => {
       activeReferrals?: number;
       totalRewardsGiven?: number;
       totalReferrals?: number;
+      referralLink?: string;
       referralRewards?: {
         referreeValidityPeriod?: number;
         referreeRewardValue?: string;
@@ -79,6 +85,7 @@ const singleCampaign = () => {
     };
     date?: string;
     conversionRate?: number;
+    [key: string]: any; // To allow additional properties
   };
 
   const [campaignAnalytics, setCampaignAnalytics] =
@@ -328,6 +335,7 @@ const singleCampaign = () => {
               {campaignAnalytics?.campaign?.campaignType === "COMBO" &&
                 "Combo Program:"}
             </div>
+            <p className="text-primary text-sm">{campaignAnalytics?.campaign?.referralLink}</p>
             {campaignAnalytics?.campaign?.campaignType === "REFERRAL" &&
               campaignAnalytics?.campaign?.referralRewards && (
                 <ul className="check-list text-sm">

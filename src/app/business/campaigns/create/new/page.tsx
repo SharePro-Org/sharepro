@@ -244,14 +244,7 @@ const NewCampaignContent = () => {
               </div>
             </div>
             <div className="">
-              <button
-                className="w-full bg-primary p-4 text-white mb-3 rounded-sm"
-                onClick={() => router.push("/business/dashboard")}
-              >
-                Go to Dashboard
-              </button>
-
-              <button
+                          <button
                 className="w-full bg-secondary p-4 text-white rounded-sm"
                 onClick={() =>
                   router.push(
@@ -261,6 +254,14 @@ const NewCampaignContent = () => {
               >
                 Set Rewards
               </button>
+              <button
+                className="w-full bg-primary p-4 text-white mb-3 rounded-sm"
+                onClick={() => router.push("/business/dashboard")}
+              >
+                Go to Dashboard
+              </button>
+
+
             </div>
           </DialogContent>
         </Dialog>
