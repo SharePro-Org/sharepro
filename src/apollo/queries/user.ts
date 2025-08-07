@@ -63,3 +63,24 @@ export const AVAILABLE_CAMPAIGNS = gql`
   }
 `;
 
+export const USER_REWARDS = gql`
+  query UserRewards($userId: UUID!) {
+    userRewards(userId: $userId) {
+      amount
+      createdAt
+      currency
+      deletedAt
+      description
+      expiresAt
+      id
+      status
+      rewardType
+      isExpired
+      campaign {
+        campaignType
+        name
+        status
+      }
+    }
+  }
+`;

@@ -90,3 +90,14 @@ export const CREATE_COMBO_REWARD = gql`
     }
   }
 `;
+
+
+export const ACTIVATE_CAMPAIGN = gql`
+  mutation ActivateCampaign($id: UUID!, $isActive: Boolean!) {
+    activateCampaign(id: $id, isActive: $isActive) {
+      message
+      success
+    }
+  }
+`;
+

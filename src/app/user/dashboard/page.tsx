@@ -7,8 +7,6 @@ import { USER_DASHBOARD_SUMMARY } from "@/apollo/queries/user";
 import { useQuery } from "@apollo/client";
 import { Calendar, Users, XIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { GiPriceTag } from "react-icons/gi";
-import { MdCampaign } from "react-icons/md";
 import { userAtom } from "@/store/User";
 import { useAtom } from "jotai";
 import Link from "next/link";

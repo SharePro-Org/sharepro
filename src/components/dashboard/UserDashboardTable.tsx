@@ -6,33 +6,11 @@ import {
 } from "@/apollo/queries/user";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
+import { Campaign, Reward } from "@/apollo/types";
+import { Button, Dropdown } from "antd";
+import { MoreOutlined } from "@ant-design/icons";
+
 // import { format } from "date-fns";
-
-// Define interfaces for the data types
-interface Campaign {
-  campaignId: string;
-  campaignName: string;
-  campaignType: string;
-  dateJoined: string;
-  referralCode: string;
-  rewardInfo: string;
-  status: string;
-  totalReferrals: number;
-  totalRewards: number;
-}
-
-interface Reward {
-  amount: number;
-  campaignName: string;
-  createdAt: string;
-  currency: string;
-  description: string;
-  isClaimable: boolean;
-  processedAt: string | null;
-  rewardId: string;
-  rewardType: string;
-  status: string;
-}
 
 const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
   // Access the current user from the global state
@@ -134,7 +112,22 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                       {formatDate(campaign.dateJoined)}
                     </td>
                     <td className="px-4 py-3">
-                      <button className="text-primary underline">View</button>
+                      <Dropdown
+                        menu={{
+                          items: [
+                            { key: "copy", label: "Copy Referral Link" },
+                            { key: "campaign", label: "Campaign Details" },
+                            { key: "reward", label: "Claim Reward" },
+                            { key: "view", label: "View Performance" },
+                          ],
+                        }}
+                        trigger={["click"]}
+                      >
+                        <Button type="text">
+                          <MoreOutlined />
+                        </Button>
+                      </Dropdown>
+                      {/* <button className="text-primary underline">View</button> */}
                     </td>
                   </tr>
                 )

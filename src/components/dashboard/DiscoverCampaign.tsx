@@ -8,18 +8,8 @@ import { useQuery } from "@apollo/client";
 import { AVAILABLE_CAMPAIGNS } from "@/apollo/queries/user";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
+import { Campaign } from "@/apollo/types";
 
-interface Campaign {
-  campaignId: string;
-  campaignName: string;
-  campaignType: string;
-  endDate: string;
-  isJoinable: boolean;
-  participantsCount: number;
-  rewardInfo: string;
-  maxParticipants: number;
-  description: string;
-}
 
 const DiscoverCampaign = ({ max = 4 }: { max?: number }) => {
   const [user] = useAtom(userAtom);

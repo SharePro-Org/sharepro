@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Dropdown, Button } from "antd";
+import { Dropdown, Button, message } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
-import { useQuery } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client";
 import { GET_BUSINESS_CAMPAIGNS } from "@/apollo/queries/campaigns";
+import { ACTIVATE_CAMPAIGN } from "@/apollo/mutations/campaigns";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
 import { useRouter } from "next/navigation";
@@ -22,6 +23,39 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: Number }) => {
     variables: { businessId },
     skip: !businessId,
   });
+
+  const [activateCampaign, { loading: activateLoading }] = useMutation(
+    ACTIVATE_CAMPAIGN,
+    {
+      refetchQueries: [
+        { query: GET_BUSINESS_CAMPAIGNS, variables: { businessId } },
+      ],
+      onCompleted: (data) => {
+        if (data.activateCampaign.success) {
+          message.success(data.activateCampaign.message);
+        } else {
+          message.error(
+            data.activateCampaign.message || "Failed to update campaign status"
+          );
+        }
+      },
+      onError: (error) => {
+        message.error(`Error: ${error.message}`);
+      },
+    }
+  );
+
+  const handleToggleCampaignStatus = (
+    campaignId: string,
+    isCurrentlyActive: boolean
+  ) => {
+    activateCampaign({
+      variables: {
+        id: campaignId,
+        isActive: !isCurrentlyActive,
+      },
+    });
+  };
 
   const handleAddReward = (campaignType: string, campaignId: string) => {
     router.push(
@@ -141,7 +175,18 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: Number }) => {
                   <Dropdown
                     menu={{
                       items: [
-                        { key: "pause", label: "Pause Campaign" },
+                        {
+                          key: "toggleActive",
+                          label: row.isActive
+                            ? "Pause Campaign"
+                            : "Activate Campaign",
+                          onClick: () =>
+                            handleToggleCampaignStatus(
+                              row.id,
+                              row.isActive
+                            ),
+                          disabled: activateLoading,
+                        },
                         { key: "edit", label: "Edit Campaign" },
                         {
                           key: "view",
