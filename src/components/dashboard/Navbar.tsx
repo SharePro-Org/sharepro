@@ -1,9 +1,11 @@
-'use client';
-import Image from 'next/image';
-import Logo from '../../../public/assets/logo.svg';
-import {  Bell, Sun, Moon, Search } from 'lucide-react';
-import Avatar from '../../../public/assets/Avatar.svg';
+"use client";
+import Image from "next/image";
+import Logo from "../../../public/assets/logo-white.svg";
+import { Bell, Sun, Moon, Search } from "lucide-react";
+import Avatar from "../../../public/assets/Avatar.svg";
 import { RiMenu2Line } from "react-icons/ri";
+import { userAtom } from "@/store/User";
+import { useAtom } from "jotai";
 
 interface NavbarProps {
   onToggleSidebar: () => void;
@@ -11,13 +13,25 @@ interface NavbarProps {
   toggleDark: () => void;
 }
 
-export default function Navbar({ onToggleSidebar, darkMode, toggleDark }: NavbarProps) {
+export default function Navbar({
+  onToggleSidebar,
+  darkMode,
+  toggleDark,
+}: NavbarProps) {
+  const [user] = useAtom(userAtom);
+
   return (
     <header className="fixed top-0 left-0 right-0 w-full bg-white border-b border-gray-200 shadow-sm z-40 h-[72px] flex items-center px-2 sm:px-4">
       {/* Logo and Menu Button */}
       <div className="flex items-center gap-3 min-w-[120px] sm:min-w-[180px] md:min-w-[230px] px-2 sm:px-4">
         <div className="ml-1 sm:ml-2">
-          <Image src={Logo} alt="logo" width={90} height={18} className="sm:w-[110px] sm:h-[21px] w-[90px] h-[18px]" />
+          <Image
+            src={Logo}
+            alt="logo"
+            width={90}
+            height={18}
+            className="sm:w-[110px] sm:h-[21px] w-[90px] h-[18px]"
+          />
         </div>
       </div>
 
@@ -29,7 +43,7 @@ export default function Navbar({ onToggleSidebar, darkMode, toggleDark }: Navbar
           onClick={onToggleSidebar}
           aria-label="Toggle sidebar"
         >
-         <RiMenu2Line className="w-5 h-5 text-[#83859C]" />
+          <RiMenu2Line className="w-5 h-5 text-[#83859C]" />
         </button>
         {/* Search hidden on mobile */}
         <div className="hidden sm:flex relative w-full max-w-[200px] sm:max-w-[320px] md:max-w-[430px] items-center">
@@ -74,10 +88,12 @@ export default function Navbar({ onToggleSidebar, darkMode, toggleDark }: Navbar
             alt="avatar"
             className="rounded-full border border-gray-200"
           />
-          <span className="text-sm font-medium text-[#233E97]">Emirhan Boruch</span>
-          <svg width="14" height="8" fill="none" viewBox="0 0 14 8" className="ml-1">
+          <span className="text-sm font-medium text-[#233E97]">
+            {user?.businessName}
+          </span>
+          {/* <svg width="14" height="8" fill="none" viewBox="0 0 14 8" className="ml-1">
             <path d="M1 1l6 6 6-6" stroke="#83859C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+          </svg> */}
         </div>
       </div>
       {/* Mobile profile/actions */}

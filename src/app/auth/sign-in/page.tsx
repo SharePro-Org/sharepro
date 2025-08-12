@@ -107,6 +107,7 @@ export default function SignIn() {
             businessName: user?.businessName,
             businessId: user.business.id,
             phone: user?.phone || phone,
+            userType: user?.profile.userType,
             onBoardingComplete,
           };
 
@@ -132,6 +133,7 @@ export default function SignIn() {
             businessName: user?.businessName,
             businessId: user.business.id,
             phone: user?.phone || phone,
+            userType: user?.profile.userType,
             onBoardingComplete,
           };
           localStorage.setItem("userData", JSON.stringify(userData));

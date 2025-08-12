@@ -33,7 +33,7 @@ function VerifyEmailContent() {
   return (
     <>
       <div className="p-4">
-        <img className="w-32" src="/assets/logo.svg" alt="" />
+        <img className="w-32" src="/assets/logo-white.svg" alt="" />
       </div>
       <Image
         src={TopRightLeftSection}

@@ -42,6 +42,9 @@ export const LOGIN = gql`
       user {
         id
         email
+        profile {
+          userType
+        }
         phone
         businessName
         business {
@@ -64,6 +67,9 @@ export const LOGIN_PHONE = gql`
         id
         businessName
         email
+        profile {
+          userType
+        }
         phone
         business {
           onBoardingComplete

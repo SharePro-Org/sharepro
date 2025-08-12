@@ -41,7 +41,7 @@ const MicroSiteComp = () => {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <img src="/assets/logo.svg" alt="Logo" />
+              <img src="/assets/logo-white.svg" alt="Logo" />
             </div>
 
             {/* Navigation */}
@@ -219,7 +219,7 @@ const MicroSiteComp = () => {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
             {/* Logo and Tagline */}
             <div className="mb-6 md:mb-0">
-              <img src="/assets/logo.svg" alt="Logo" className="w-32 mb-2" />
+              <img src="/assets/logo-white.svg" alt="Logo" className="w-32 mb-2" />
               <p className="text-gray-600 max-w-xs">
                 Built to help businesses grow through smart loyalty and
                 referrals.
