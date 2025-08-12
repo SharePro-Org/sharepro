@@ -152,9 +152,9 @@ export default function SignIn() {
         alt=""
         width={35}
         height={35}
-        className="pointer-events-none absolute right-6 top-0 z-0 object-cover"
+        className="pointer-events-none absolute  lg:block hidden right-6 top-0 z-0 object-cover"
       />
-      <div className="w-full mx-auto max-w-xl mt-12 md:mt-16">
+      <div className="w-full p-4 mx-auto max-w-xl mt-12 md:mt-16">
         <h2 className="text-[29px] text-center font-semibold mb-1 text-heading">
           Welcome back!
         </h2>
@@ -325,7 +325,7 @@ export default function SignIn() {
         alt=""
         width={30}
         height={30}
-        className="pointer-events-none absolute left-0 bottom-0 z-0 object-cover"
+        className="pointer-events-none absolute lg:block hidden left-0 bottom-0 z-0 object-cover"
       />
     </>
   );

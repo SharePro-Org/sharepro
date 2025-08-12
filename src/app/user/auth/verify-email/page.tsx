@@ -10,7 +10,6 @@ import TopRightLeftSection from "../../../../../public/assets/auth/top-right-lef
 import BottomLeftLeftSection from "../../../../../public/assets/auth/bottom-left-left-section.svg";
 import Image from "next/image";
 
-
 function VerifyEmailContent() {
   const router = useRouter();
   const [email, setEmail] = useState<string>("");
@@ -40,9 +39,9 @@ function VerifyEmailContent() {
         alt=""
         width={35}
         height={35}
-        className="pointer-events-none absolute right-6 top-0 z-0 object-cover"
+        className="pointer-events-none absolute lg:block hidden  right-6 top-0 z-0 object-cover"
       />
-      <div className="w-full mx-auto max-w-xl  mt-16 md:mt-28">
+      <div className="w-full mx-auto max-w-xl p-4 mt-16 md:mt-28">
         <div className="w-full max-w-xl space-y-4 ">
           <button
             type="button"
@@ -61,7 +60,10 @@ function VerifyEmailContent() {
             <span className="font-semibold">{maskEmail(email)}</span>. Please
             check your inbox and click the link to continue.
           </p>
-          <Button className="w-full " onClick={() => router.push("/user/auth/otp")}>
+          <Button
+            className="w-full "
+            onClick={() => router.push("/user/auth/otp")}
+          >
             Continue
           </Button>
           <Button variant="outline" className="w-full">
@@ -74,7 +76,7 @@ function VerifyEmailContent() {
         alt=""
         width={30}
         height={30}
-        className="pointer-events-none absolute left-0 bottom-0 z-0 object-cover"
+        className="pointer-events-none absolute lg:block hidden  left-0 bottom-0 z-0 object-cover"
       />
     </>
   );

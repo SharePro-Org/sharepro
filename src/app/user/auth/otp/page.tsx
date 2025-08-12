@@ -83,10 +83,10 @@ export default function OtpPage() {
         alt=""
         width={35}
         height={35}
-        className="pointer-events-none absolute right-6 top-0 z-0 object-cover"
+        className="pointer-events-none absolute  lg:block hidden right-6 top-0 z-0 object-cover"
       />
       <form
-        className="w-full mx-auto max-w-xl mt-12 md:mt-20"
+        className="w-full mx-auto p-4 max-w-xl mt-12 md:mt-20"
         onSubmit={handleSubmit}
       >
         {/* Back Button, h2, p, etc */}
@@ -158,7 +158,7 @@ export default function OtpPage() {
         alt=""
         width={30}
         height={30}
-        className="pointer-events-none absolute left-0 bottom-0 z-0 object-cover"
+        className="pointer-events-none absolute lg:block hidden left-0 bottom-0 z-0 object-cover"
       />
     </>
   );
