@@ -41,7 +41,7 @@ const MicroSiteComp = () => {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <img src="/assets/logo-white.svg" alt="Logo" />
+              <img src="/assets/logo-white.svg" className="w-32" alt="Logo" />
             </div>
 
             {/* Navigation */}

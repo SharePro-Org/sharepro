@@ -221,7 +221,10 @@ const NewCampaignContent = () => {
           )}
         </form>
 
-        <Dialog open={success} onOpenChange={() => router.push(`/business/campaigns`)}>
+        <Dialog
+          open={success}
+          onOpenChange={() => router.push(`/business/campaigns`)}
+        >
           <DialogContent className="max-w-md w-full flex flex-col items-center justify-center gap-6 py-12">
             {/* Success Icon */}
 
@@ -244,8 +247,8 @@ const NewCampaignContent = () => {
               </div>
             </div>
             <div className="">
-                          <button
-                className="w-full bg-secondary p-4 text-white rounded-sm"
+              <button
+                className="w-full bg-primary p-4 text-white mb-3 rounded-sm"
                 onClick={() =>
                   router.push(
                     `/business/campaigns/create/rewards?type=${type}&id=${campaignId}`
@@ -255,13 +258,11 @@ const NewCampaignContent = () => {
                 Set Rewards
               </button>
               <button
-                className="w-full bg-primary p-4 text-white mb-3 rounded-sm"
+                className="w-full bg-secondary p-4 text-white rounded-sm"
                 onClick={() => router.push("/business/dashboard")}
               >
                 Go to Dashboard
               </button>
-
-
             </div>
           </DialogContent>
         </Dialog>
