@@ -11,10 +11,14 @@ import { userAtom } from "@/store/User";
 import { Campaign } from "@/apollo/types";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
+import Image from "next/image";
+import userCheck from "../../../public/assets/Check.svg";
+
 const DiscoverCampaign = ({ max = 4 }: { max?: number }) => {
   const [user] = useAtom(userAtom);
   const [joining, setJoining] = useState<any>(null);
   const [open, setOpen] = useState(false);
+  const [joined, setJoined] = useState(false);
 
   // Fetch available campaigns
   const { data, loading, error } = useQuery(AVAILABLE_CAMPAIGNS, {
@@ -38,6 +42,7 @@ const DiscoverCampaign = ({ max = 4 }: { max?: number }) => {
 
   // Join campaign handler
   const handleJoinCampaign = (campaign: any) => {
+    console.log(campaign);
     setJoining(campaign);
     setOpen(true);
   };
@@ -128,14 +133,14 @@ const DiscoverCampaign = ({ max = 4 }: { max?: number }) => {
       </div>
 
       <Dialog open={open} onOpenChange={() => setOpen(false)}>
-        <DialogContent className="max-w-2xl w-full flex flex-col gap-6 py-6">
-          {joining?.campaignType === "loyalty" && (
+        <DialogContent size="3xl" className="w-full flex flex-col gap-6 py-6">
+          {joining?.campaignType === "Loyalty" && (
             <div>
-              <h3 className="text-lg font-medium text-center">
+              <h3 className="text-lg font-medium text-center mb-3">
                 {joining.campaignName}
               </h3>
-              <div className="grid grid-cols-5">
-                <div className="flex">
+              <div className="grid grid-cols-4">
+                <div className="flex gap-2">
                   <button className="bg-[#ECF3FF] rounded-sm p-3">
                     <MdCampaign color="#A16AD4" />
                   </button>
@@ -152,9 +157,75 @@ const DiscoverCampaign = ({ max = 4 }: { max?: number }) => {
                   <p className="text-sm"> End Date</p>
                   <p> {formatDate(joining.endDate)}</p>
                 </div>
+
                 <div>
-                  <p className="text-sm"> Status</p>
-                  <p> {joining.status}</p>
+                  <p>
+                    {joining.participantsCount}{" "}
+                    {joining.participantsCount === 1 ? "user" : "users"} joined
+                    {joining.maxParticipants > 0 &&
+                      ` (max: ${joining.maxParticipants})`}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          {joining?.campaignType === "Combo" && (
+            <div>
+              <h3 className="text-lg font-medium text-center mb-3">
+                {joining.campaignName}
+              </h3>
+              <div className="grid grid-cols-4">
+                <div className="flex gap-2">
+                  <button className="bg-[#ECF3FF] rounded-sm p-3">
+                    <MdCampaign color="#A16AD4" />
+                  </button>
+                  <div>
+                    <p className="text-sm"> Campaign Name</p>
+                    <p> {joining.campaignName}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm"> Campaign Type</p>
+                  <p> {joining.campaignType}</p>
+                </div>
+                <div>
+                  <p className="text-sm"> End Date</p>
+                  <p> {formatDate(joining.endDate)}</p>
+                </div>
+
+                <div>
+                  <p>
+                    {joining.participantsCount}{" "}
+                    {joining.participantsCount === 1 ? "user" : "users"} joined
+                    {joining.maxParticipants > 0 &&
+                      ` (max: ${joining.maxParticipants})`}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          {joining?.campaignType === "Referral" && (
+            <div>
+              <h3 className="text-lg font-medium text-center mb-3">
+                {joining.campaignName}
+              </h3>
+              <div className="grid grid-cols-4">
+                <div className="flex gap-2">
+                  <button className="bg-[#ECF3FF] rounded-sm p-3">
+                    <MdCampaign color="#A16AD4" />
+                  </button>
+                  <div>
+                    <p className="text-sm"> Campaign Name</p>
+                    <p> {joining.campaignName}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm"> Campaign Type</p>
+                  <p> {joining.campaignType}</p>
+                </div>
+                <div>
+                  <p className="text-sm"> End Date</p>
+                  <p> {formatDate(joining.endDate)}</p>
                 </div>
                 <div>
                   <p>
@@ -167,86 +238,74 @@ const DiscoverCampaign = ({ max = 4 }: { max?: number }) => {
               </div>
             </div>
           )}
-          {joining?.campaignType === "combo" && (
+          <p className="text-sm">{joining?.rewardInfo}</p>
+          <div className="text-center">
+            <button
+              onClick={() => setJoined(true)}
+              className="bg-primary p-3 text-white rounded-md"
+            >
+              Join Campaign
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={joined} onOpenChange={setJoined}>
+        <DialogContent size="3xl">
+          {joining?.campaignType === "Loyalty" && (
             <div>
-              <h3 className="text-lg font-medium text-center">
-                {joining.campaignName}
-              </h3>
-              <div className="grid grid-cols-5">
-                <div className="flex">
-                  <button className="bg-[#ECF3FF] rounded-sm p-3">
-                    <MdCampaign color="#A16AD4" />
-                  </button>
-                  <div>
-                    <p className="text-sm"> Campaign Name</p>
-                    <p> {joining.campaignName}</p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm"> Campaign Type</p>
-                  <p> {joining.campaignType}</p>
-                </div>
-                <div>
-                  <p className="text-sm"> End Date</p>
-                  <p> {formatDate(joining.endDate)}</p>
-                </div>
-                <div>
-                  <p className="text-sm"> Status</p>
-                  <p> {joining.status}</p>
-                </div>
-                <div>
-                  <p>
-                    {joining.participantsCount}{" "}
-                    {joining.participantsCount === 1 ? "user" : "users"} joined
-                    {joining.maxParticipants > 0 &&
-                      ` (max: ${joining.maxParticipants})`}
-                  </p>
-                </div>
+              <div className="  flex items-center justify-center">
+                <Image
+                  src={userCheck}
+                  alt="userchecker"
+                  width={80}
+                  height={21}
+                />
               </div>
-            </div>
-          )}
-          {joining?.campaignType === "referral" && (
-            <div>
-              <h3 className="text-lg font-medium text-center">
-                {joining.campaignName}
-              </h3>
-              <div className="grid grid-cols-5">
-                <div className="flex">
-                  <button className="bg-[#ECF3FF] rounded-sm p-3">
-                    <MdCampaign color="#A16AD4" />
-                  </button>
-                  <div>
-                    <p className="text-sm"> Campaign Name</p>
-                    <p> {joining.campaignName}</p>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm"> Campaign Type</p>
-                  <p> {joining.campaignType}</p>
-                </div>
-                <div>
-                  <p className="text-sm"> End Date</p>
-                  <p> {formatDate(joining.endDate)}</p>
-                </div>
-                <div>
-                  <p className="text-sm"> Status</p>
-                  <p> {joining.status}</p>
-                </div>
-                <div>
-                  <p>
-                    {joining.participantsCount}{" "}
-                    {joining.participantsCount === 1 ? "user" : "users"} joined
-                    {joining.maxParticipants > 0 &&
-                      ` (max: ${joining.maxParticipants})`}
+              <p className="text-center font-semibold my-3">
+                You have successfully joined this campaign!
+              </p>
+              <div className="grid grid-cols-3 gap-4 mt-4 text-center">
+                <div className="border border-[#CCCCCC] rounded-md p-4">
+                  <p className="text-sm font-semibold">
+                    Shop on the Business Site
                   </p>
+                  <p className="text-xs mt-2 mb-4">
+                    Click the button below to visit the business and make a
+                    purchase.
+                  </p>
+                  <button className="bg-primary text-sm text-white rounded-sm p-2">
+                    Go to Website
+                  </button>
+                </div>
+                <div className="border border-[#CCCCCC] rounded-md p-4">
+                  <p className="text-sm font-semibold">Submit Your Receipt:</p>
+                  <p className="text-xs mt-2 mb-4">
+                    Once done, come back and submit your receipt Id for reward.
+                  </p>
+                  <button
+                    className="bg-primary text-sm text-white rounded-sm p-2"
+                    disabled
+                  >
+                    Submit Receipt ID
+                  </button>
+                </div>
+                <div className="border border-[#CCCCCC] rounded-md p-4">
+                  <p className="text-sm font-semibold">Earn Rewards</p>
+                  <p className="text-xs mt-2 mb-4">
+                    Once verified, your reward will be added to your dashboard.
+                  </p>
+                  <button className="bg-primary text-sm text-white rounded-sm p-2">
+                    Go to Dashboard
+                  </button>
                 </div>
               </div>
             </div>
           )}
 
-          <div className="text-center">
-            <button className="bg-primary p-3 rounded-md">Join Campaign</button>
-          </div>
+          {joining?.campaignType === "Combo" && <div></div>}
+
+          {joining?.campaignType === "Referral" && <div></div>}
         </DialogContent>
       </Dialog>
     </div>
