@@ -27,3 +27,13 @@ export interface Reward {
   rewardType: string;
   status: string;
 }
+
+export interface Plan {
+  name: string;
+  price: string;
+  per: string;
+  features: string[];
+  planType: string;
+  type: string;
+  recommended?: boolean;
+}
