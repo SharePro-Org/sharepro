@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
 
   // Environment variables that will be available to the browser
   env: {
-    NEXT_PUBLIC_API_URL:  "https://156fae257498.ngrok-free.app/graphql/",
+    NEXT_PUBLIC_API_URL:  "https://041955f6d82c.ngrok-free.app/graphql/",
   },
 };
 

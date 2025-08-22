@@ -112,3 +112,13 @@ export const JOIN_CAMPAIGN = gql`
   }
 `;
 
+export const CLAIM_REWARD = gql`
+  mutation ClaimReward($rewardId: UUID!, $userId: UUID!) {
+    claimReward(rewardId: $rewardId, userId: $userId) {
+      message
+      errors
+      success
+    }
+  }
+`;
+

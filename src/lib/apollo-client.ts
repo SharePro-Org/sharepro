@@ -25,7 +25,7 @@ export const setToken = (token: string): void => {
   localStorage.setItem('userData', JSON.stringify(userData));
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://156fae257498.ngrok-free.app/graphql/";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://041955f6d82c.ngrok-free.app/graphql/";
 if (!API_BASE_URL) {
   throw new Error(
     'NEXT_PUBLIC_API_URL is not set in environment variables.'
