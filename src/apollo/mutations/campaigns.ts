@@ -91,7 +91,6 @@ export const CREATE_COMBO_REWARD = gql`
   }
 `;
 
-
 export const ACTIVATE_CAMPAIGN = gql`
   mutation ActivateCampaign($id: UUID!, $isActive: Boolean!) {
     activateCampaign(id: $id, isActive: $isActive) {
@@ -102,8 +101,8 @@ export const ACTIVATE_CAMPAIGN = gql`
 `;
 
 export const JOIN_CAMPAIGN = gql`
-  mutation JoinCampaign($campaignId: UUID!, $userId: UUID!) {
-    joinCampaign(campaignId: $campaignId, userId: $userId) {
+  mutation JoinCampaign($input: JoinCampaignInput!) {
+    joinCampaign(input: $input) {
       referralCode
       referralLink
       message
@@ -121,4 +120,3 @@ export const CLAIM_REWARD = gql`
     }
   }
 `;
-

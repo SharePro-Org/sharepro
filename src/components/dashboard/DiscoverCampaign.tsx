@@ -16,7 +16,7 @@ import Image from "next/image";
 import userCheck from "../../../public/assets/Check.svg";
 import Link from "next/link";
 
-const DiscoverCampaign = ({ max = 4 }: { max?: number }) => {
+const DiscoverCampaign = ({ max = 4, grid }: { max?: number, grid?: boolean }) => {
   const [user] = useAtom(userAtom);
   const [joining, setJoining] = useState<any>(null);
   const [open, setOpen] = useState(false);
@@ -65,8 +65,10 @@ const DiscoverCampaign = ({ max = 4 }: { max?: number }) => {
     try {
       const response = await joinCampaign({
         variables: {
-          campaignId: joining.campaignId,
-          userId: user?.userId,
+          input: {
+            campaignId: joining.campaignId,
+            userId: user?.userId,
+          },
         },
       });
 
@@ -124,7 +126,7 @@ const DiscoverCampaign = ({ max = 4 }: { max?: number }) => {
   return (
     <div>
       <p className="text-lg font-medium">Discover Campaigns</p>
-      <div className="flex flex-col gap-3">
+      <div className={` ${grid ? 'grid grid-cols-2' : "flex flex-col"} gap-3`}>
         {loading ? (
           <div className="text-center py-4">Loading available campaigns...</div>
         ) : error ? (
