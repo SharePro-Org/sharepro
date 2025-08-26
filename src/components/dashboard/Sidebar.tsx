@@ -1,6 +1,9 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { AlertCircleIcon } from "lucide-react";
+
 import Image from "next/image";
 import Logo from "/assets/logo.svg";
 import { cn } from "@/lib/utils";
@@ -17,6 +20,7 @@ import {
   HelpCircle,
   LogOut,
 } from "lucide-react";
+import { useState } from "react";
 
 const links = [
   { label: "Dashboard", href: "/business/dashboard", icon: LayoutDashboard },
@@ -33,7 +37,7 @@ const links = [
   },
   { label: "Account", href: "/business/account", icon: User },
   { label: "Help & Support", href: "/business/support", icon: HelpCircle },
-  { label: "Logout", href: "/auth/sign-in", icon: LogOut },
+  // { label: "Logout", href: "/auth/sign-in", icon: LogOut },
 ];
 
 const userLinks = [
@@ -42,7 +46,7 @@ const userLinks = [
   { label: "My Rewards", href: "/user/rewards", icon: Wallet },
   { label: "Account", href: "/user/account", icon: User },
   { label: "Help & Support", href: "/user/support", icon: HelpCircle },
-  { label: "Logout", href: "/user/auth/login", icon: LogOut },
+  // { label: "Logout", href: "/user/auth/login", icon: LogOut },
 ];
 
 export default function Sidebar({
@@ -53,6 +57,15 @@ export default function Sidebar({
   user?: Boolean | undefined;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const [show, setShow] = useState(false);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    router.push("/auth/sign-in");
+  };
+
   return (
     <aside
       className={cn(
@@ -91,7 +104,30 @@ export default function Sidebar({
               </li>
             );
           })}
+          <li
+            className={cn(
+              "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-[#83859C] hover:bg-[#F1F3F9]"
+            )}
+            onClick={() => setShow(true)}
+          >
+            <LogOut className="w-5 h-5" />
+            <span>Logout</span>
+          </li>
         </ul>
+
+        <Dialog open={show} onOpenChange={() => setShow(false)}>
+          <DialogContent className="text-center py-10">
+            <div className="flex justify-center mb-2">
+              <AlertCircleIcon color="#E7302B" className="w-12 h-12 text-white" />
+            </div>
+            <h2 className="text-lg font-semibold">You’re about to logout!</h2>
+            <p>Are you sure you want to logout?</p>
+            <div className="flex justify-center gap-4">
+              <button className="p-3 px-8 rounded-md bg-[#E7302B] text-white" onClick={handleLogout}>Logout</button>
+              <button className="p-3 px-8 rounded-md bg-gray-600 text-white" onClick={() => setShow(false)}>Cancel</button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </nav>
     </aside>
   );

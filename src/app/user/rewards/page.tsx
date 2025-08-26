@@ -2,10 +2,23 @@
 
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import UserDashboardTable from "@/components/dashboard/UserDashboardTable";
-import { HeartIcon, RefreshCwIcon, SearchIcon } from "lucide-react";
-import React from "react";
+import { HeartIcon, RefreshCwIcon, SearchIcon, Users } from "lucide-react";
+import React, { useState } from "react";
 
 const userRewards = () => {
+  const [loading, setLoading] = useState(false);
+  const [summary, setSummary] = useState({
+    totalRewardsEarned: "₦0.00",
+    recentRewardChange: "",
+    recentRewardPercentage: 0,
+    totalCampaignsJoined: 0,
+    ongoingCampaigns: 0,
+    totalReferrals: 0,
+    convertedReferrals: 0,
+    pendingActions: 0,
+    walletBalance: "₦0.00",
+  });
+
   return (
     <DashboardLayout user={true}>
       <section className="p-4 rounded-md bg-white">
@@ -22,63 +35,88 @@ const userRewards = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Card 1: Ongoing Campaigns (already refactored) */}
-          <div className="flex flex-col border border-[#CCCCCC33] rounded-md p-6 items-start min-h-[100px] justify-center">
-            <div className="flex justify-evenly">
-              <div className="rounded-full bg-[#EDF3FE] w-[30px] h-[30px] flex my-auto items-center justify-center">
-                <HeartIcon
-                  size={16}
-                  fill="#5B93FF"
-                  className="text-[#5B93FF]"
-                />
+          {/* Card 1: Total Rewards Earned */}
+          <div className="flex flex-col bg-[#fff] rounded-md p-4 items-start min-h-[100px] justify-center">
+            <div className="flex w-full flex-col">
+              <div className="flex justify-between">
+                <p className="my-auto font-medium">Total Rewards Earned</p>
+                <div className="rounded-full ml-auto bg-[#A16AD4]/20 w-[30px] h-[30px] flex items-center justify-center">
+                  <Users size={16} fill="#A16AD4" className="text-[#A16AD4]" />
+                </div>
               </div>
-              <div className="ml-4">
-                <div className="text-lg font-bold">₦25,560.20</div>
-                <div className="text-xs text-gray-500">
-                  Total Rewards Earned
+              <div className="text-xl my-3 font-bold">
+                {loading ? "Loading..." : summary.totalRewardsEarned}
+              </div>
+              <div className="w-full mt-2">
+                <div className="text-sm text-gray-500">
+                  Across all campaigns
                 </div>
               </div>
             </div>
           </div>
-          <div className="flex flex-col border border-[#CCCCCC33] rounded-md p-6 items-start min-h-[100px] justify-center">
-            <div className="flex justify-evenly">
-              <div className="rounded-full bg-[#EDF3FE] w-[30px] h-[30px] flex my-auto items-center justify-center">
-                <HeartIcon
-                  size={16}
-                  fill="#5B93FF"
-                  className="text-[#5B93FF]"
-                />
+
+          {/* Card 2: Total Campaigns Joined */}
+          <div className="flex flex-col bg-[#fff] rounded-md p-4 items-start min-h-[100px] justify-center">
+            <div className="flex w-full flex-col">
+              <div className="flex justify-between">
+                <p className="my-auto font-medium">Referral Rewards</p>
+                <div className="rounded-full ml-auto bg-[#233E97]/20 w-[30px] h-[30px] flex items-center justify-center">
+                  <Users size={16} fill="#233E97" className="text-[#233E97]" />
+                </div>
               </div>
-              <div className="ml-4">
-                <div className="text-lg font-bold">2</div>
-                <div className="text-xs text-gray-500">Unclaimed Rewards </div>
+              <div className="text-xl my-3 font-bold">
+                {loading ? "Loading..." : summary.totalCampaignsJoined}
               </div>
-            </div>
-          </div>
-          <div className="flex flex-col border border-[#CCCCCC33] rounded-md p-6 items-start min-h-[100px] justify-center">
-            <div className="flex justify-evenly">
-              <div className="rounded-full bg-[#EDF3FE] w-[30px] h-[30px] flex my-auto items-center justify-center">
-                <HeartIcon
-                  size={16}
-                  fill="#5B93FF"
-                  className="text-[#5B93FF]"
-                />
-              </div>
-              <div className="ml-4">
-                <div className="text-lg font-bold">25</div>
-                <div className="text-xs text-gray-500">Claimed Rewards</div>
+              <div className="w-full mt-2">
+                <div className="text-sm text-gray-500">
+                  Invite more to earn more
+                </div>
               </div>
             </div>
           </div>
-          <div className="my-auto flex items-end ml-auto">
-            <button className="bg-primary p-3 rounded-md text-white">
-              Claim Reward
-            </button>
+
+          {/* Card 3: Total Referrals */}
+          <div className="flex flex-col bg-[#fff] rounded-md p-4 items-start min-h-[100px] justify-center">
+            <div className="flex w-full flex-col">
+              <div className="flex justify-between">
+                <p className="my-auto font-medium">Loyalty Rewards</p>
+                <div className="rounded-full ml-auto bg-[#233E97]/20 w-[30px] h-[30px] flex items-center justify-center">
+                  <Users size={16} fill="#233E97" className="text-[#233E97]" />
+                </div>
+              </div>
+              <div className="text-xl my-3 font-bold">
+                {loading ? "Loading..." : summary.totalReferrals}
+              </div>
+              <div className="w-full mt-2">
+                <div className="text-sm text-gray-500">
+                  Upload receipts to earn more
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 4: Pending Actions */}
+          <div className="flex flex-col bg-[#fff] rounded-md p-4 items-start min-h-[100px] justify-center">
+            <div className="flex w-full flex-col">
+              <div className="flex justify-between">
+                <p className="my-auto font-medium">Combo Rewards</p>
+                <div className="rounded-full ml-auto bg-[#233E97]/20 w-[30px] h-[30px] flex items-center justify-center">
+                  <Users size={16} fill="#233E97" className="text-[#233E97]" />
+                </div>
+              </div>
+              <div className="text-xl my-3 font-bold">
+                {loading ? "Loading..." : summary.pendingActions}
+              </div>
+              <div className=" w-full mt-2">
+                <div className="text-sm text-gray-500">
+                  Earn faster with combined efforts
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div className="border border-[#CCCCCC4D] rounded-md p-3 mt-3">
           <div className="mb-3 flex justify-between">
-            <div></div>
             <div className="relative ml-auto md:mt-0 mt-2">
               <input
                 type="text"
@@ -90,6 +128,11 @@ const userRewards = () => {
                 size={16}
                 className="absolute top-4 left-3 text-gray-500"
               />
+            </div>
+            <div className="my-auto flex items-end ml-auto">
+              <button className="bg-primary p-3 rounded-md text-white">
+                Redeem Reward
+              </button>
             </div>
           </div>
           <UserDashboardTable type="rewards" />
