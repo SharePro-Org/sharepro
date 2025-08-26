@@ -49,13 +49,13 @@ export default function Navbar({
         <div className="hidden sm:flex relative w-full max-w-[200px] sm:max-w-[320px] md:max-w-[430px] items-center">
           <input
             type="text"
-            placeholder="Search or type command..."
+            placeholder="Search"
             className="w-full rounded-md bg-[#F7F9FB] border border-gray-200 pl-10 pr-12 sm:pr-16 py-2 sm:py-3 text-[14px] sm:text-[15px] shadow-none focus:ring-2 focus:ring-[#233E97] focus:border-[#233E97] transition"
           />
           <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-[#83859C]" />
-          <span className="hidden sm:inline absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 rounded border border-gray-200 text-xs text-[#83859C] bg-white font-medium select-none">
+          {/* <span className="hidden sm:inline absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 rounded border border-gray-200 text-xs text-[#83859C] bg-white font-medium select-none">
             ⌘ K
-          </span>
+          </span> */}
         </div>
       </div>
 

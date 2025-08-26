@@ -2,18 +2,73 @@
 
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Camera, Edit, Plus } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { Country, City } from "country-state-city";
 import { Button, Dropdown } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
+import { useMutation } from "@apollo/client";
+import { INVITE_MEMBER } from "@/apollo/mutations/account";
+import { useAtom } from "jotai";
+import { userAtom } from "@/store/User";
 
 const account = () => {
   const [active, setActive] = useState("profile");
   const [openBusinessModal, setOpenBusinessModal] = useState(false);
   const [openAddressModal, setOpenAddressModal] = useState(false);
   const [openInviteModal, setOpenInviteModal] = useState(false);
+  const [inviteName, setInviteName] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("");
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
+  const [inviteMember] = useMutation(INVITE_MEMBER);
+
+  // Replace with actual businessId and inviterName from context/store
+  const [businessId, setBusinessId] = useState<string>("");
+  const [user] = useAtom(userAtom);
+
+  useEffect(() => {
+    if (user?.businessId) {
+      setBusinessId(user.businessId);
+    }
+  }, [user]);
+
+  const handleInviteUser = async () => {
+    setInviteLoading(true);
+    setInviteError(null);
+    setInviteSuccess(null);
+    try {
+      const response = await inviteMember({
+        variables: {
+          input: {
+            businessId,
+            email: inviteEmail,
+            role: inviteRole.toUpperCase(),
+            inviterName: inviteName,
+          },
+        },
+      });
+      if (response.data?.inviteMember?.success) {
+        setInviteSuccess(
+          response.data.inviteMember.message || "Invite sent successfully!"
+        );
+        setInviteName("");
+        setInviteEmail("");
+        setInviteRole("");
+      } else {
+        setInviteError(
+          response.data?.inviteMember?.error || "Failed to send invite."
+        );
+      }
+    } catch (err: any) {
+      setInviteError(err.message || "An error occurred.");
+    } finally {
+      setInviteLoading(false);
+    }
+  };
   const [openDeactivateModal, setOpenDeactivateModal] = useState(false);
   const [steps, setSteps] = useState(0);
   const [selectedCountry, setSelectedCountry] = useState("");
@@ -494,10 +549,24 @@ const account = () => {
 
         <Dialog
           open={openInviteModal}
-          onOpenChange={() => setOpenInviteModal(false)}
+          onOpenChange={() => {
+            setOpenInviteModal(false);
+            setInviteError(null);
+            setInviteSuccess(null);
+          }}
         >
           <DialogContent className="">
             <h2 className="text-center font-medium">Invite User</h2>
+            {inviteError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded mb-2 text-sm">
+                {inviteError}
+              </div>
+            )}
+            {inviteSuccess && (
+              <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded mb-2 text-sm">
+                {inviteSuccess}
+              </div>
+            )}
             <div>
               <label htmlFor="name" className="mb-2 text-[#030229CC] text-sm">
                 Full Name
@@ -506,6 +575,8 @@ const account = () => {
                 type="text"
                 className="border border-[#E5E5EA] rounded-md p-3 w-full"
                 placeholder="e.g John Doe"
+                value={inviteName}
+                onChange={(e) => setInviteName(e.target.value)}
               />
             </div>
             <div>
@@ -519,16 +590,22 @@ const account = () => {
                 type="email"
                 className="border border-[#E5E5EA] rounded-md p-3 w-full"
                 placeholder="e.g johndoe@email.com"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
               />
             </div>
             <div>
               <label
-                htmlFor="invite-email"
+                htmlFor="invite-role"
                 className="mb-2 text-[#030229CC] text-sm"
               >
                 Role*
               </label>
-              <select className="border border-[#E5E5EA] rounded-md p-3 w-full">
+              <select
+                className="border border-[#E5E5EA] rounded-md p-3 w-full"
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value)}
+              >
                 <option value="">Select a role</option>
                 <option value="admin">Admin</option>
                 <option value="manager">Manager</option>
@@ -536,8 +613,12 @@ const account = () => {
               </select>
             </div>
             <div className="text-center">
-              <button className="p-3 bg-primary rounded-md text-white">
-                Send Invite
+              <button
+                className="p-3 bg-primary rounded-md text-white w-full"
+                onClick={handleInviteUser}
+                disabled={inviteLoading || !inviteEmail || !inviteRole}
+              >
+                {inviteLoading ? "Sending..." : "Send Invite"}
               </button>
             </div>
           </DialogContent>

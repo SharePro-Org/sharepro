@@ -18,6 +18,8 @@ import { Filter } from "@/components/Filter";
 import { useQuery } from "@apollo/client";
 import { GET_BUSINESS_CAMPAIGNS } from "@/apollo/queries/campaigns";
 import CampaignsTable from "@/components/dashboard/CampaignsTable";
+import { useAtom } from "jotai";
+import { userAtom } from "@/store/User";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -219,20 +221,14 @@ export default function Dashboard() {
     },
   });
 
-  const [businessId, setBusinessId] = useState("");
+  const [businessId, setBusinessId] = useState<string>("");
+  const [user] = useAtom(userAtom);
+
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const userData = localStorage.getItem("userData");
-      if (userData) {
-        try {
-          const parsed = JSON.parse(userData);
-          if (parsed.businessId) {
-            setBusinessId(parsed.businessId);
-          }
-        } catch (err) {}
-      }
+    if (user?.businessId) {
+      setBusinessId(user.businessId);
     }
-  }, []);
+  }, [user]);
 
   const {
     data: campaignsData,

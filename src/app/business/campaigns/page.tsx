@@ -2,7 +2,7 @@
 
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { SearchIcon } from "lucide-react";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Dropdown, Button } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import Link from "next/link";
@@ -10,26 +10,20 @@ import { Filter } from "@/components/Filter";
 import { useQuery } from "@apollo/client";
 import { GET_BUSINESS_CAMPAIGNS } from "@/apollo/queries/campaigns";
 import CampaignsTable from "@/components/dashboard/CampaignsTable";
+import { useAtom } from "jotai";
+import { userAtom } from "@/store/User";
 
 // Filter component
 
 const campaigns = () => {
-  const [businessId, setBusinessId] = React.useState<string>("");
-  React.useEffect(() => {
-    if (typeof window !== "undefined") {
-      const userData = localStorage.getItem("userData");
-      if (userData) {
-        try {
-          const parsed = JSON.parse(userData);
-          if (parsed.businessId) {
-            setBusinessId(parsed.businessId);
-          }
-        } catch (err) {
-          // handle error if needed
-        }
-      }
+  const [businessId, setBusinessId] = useState<string>("");
+  const [user] = useAtom(userAtom);
+
+  useEffect(() => {
+    if (user?.businessId) {
+      setBusinessId(user.businessId);
     }
-  }, []);
+  }, [user]);
 
   const { data, loading, error } = useQuery(GET_BUSINESS_CAMPAIGNS, {
     variables: { businessId },
