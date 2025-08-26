@@ -61,7 +61,7 @@ export default function Navbar({
 
       {/* Actions: Theme, Bell, Profile */}
       <div className="hidden md:flex items-center gap-3 min-w-[120px] sm:min-w-[180px] md:min-w-[230px] px-2 sm:px-4 justify-end">
-        <button
+        {/* <button
           onClick={toggleDark}
           aria-label="Toggle theme"
           className="flex items-center justify-center w-9 h-9 rounded-full border border-gray-200 hover:bg-gray-50 transition"
@@ -71,7 +71,7 @@ export default function Navbar({
           ) : (
             <Moon className="w-5 h-5 text-[#83859C]" />
           )}
-        </button>
+        </button> */}
         <button
           aria-label="Notifications"
           className="relative flex items-center justify-center w-9 h-9 rounded-full border border-gray-200 hover:bg-gray-50 transition"
@@ -98,7 +98,7 @@ export default function Navbar({
       </div>
       {/* Mobile profile/actions */}
       <div className="flex md:hidden items-center gap-2 px-2">
-        <button
+        {/* <button
           onClick={toggleDark}
           aria-label="Toggle theme"
           className="flex items-center justify-center w-8 h-8 rounded-full border border-gray-200 hover:bg-gray-50 transition"
@@ -108,7 +108,7 @@ export default function Navbar({
           ) : (
             <Moon className="w-5 h-5 text-[#83859C]" />
           )}
-        </button>
+        </button> */}
         <button
           aria-label="Notifications"
           className="relative flex items-center justify-center w-8 h-8 rounded-full border border-gray-200 hover:bg-gray-50 transition"
