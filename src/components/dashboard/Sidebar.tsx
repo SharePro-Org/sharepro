@@ -63,7 +63,11 @@ export default function Sidebar({
 
   const handleLogout = () => {
     localStorage.clear();
-    router.push("/auth/sign-in");
+    if (pathname.startsWith("/user")) {
+      router.push("/user/auth/login");
+    } else {
+      router.push("/auth/sign-in");
+    }
   };
 
   return (
@@ -106,7 +110,7 @@ export default function Sidebar({
           })}
           <li
             className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-[#83859C] hover:bg-[#F1F3F9]"
+              "flex items-center gap-3 cursor-pointer rounded-md px-3 py-2.5 text-sm text-[#83859C] hover:bg-[#F1F3F9]"
             )}
             onClick={() => setShow(true)}
           >
@@ -118,13 +122,26 @@ export default function Sidebar({
         <Dialog open={show} onOpenChange={() => setShow(false)}>
           <DialogContent className="text-center py-10">
             <div className="flex justify-center mb-2">
-              <AlertCircleIcon color="#E7302B" className="w-12 h-12 text-white" />
+              <AlertCircleIcon
+                color="#E7302B"
+                className="w-12 h-12 text-white"
+              />
             </div>
             <h2 className="text-lg font-semibold">You’re about to logout!</h2>
             <p>Are you sure you want to logout?</p>
             <div className="flex justify-center gap-4">
-              <button className="p-3 px-8 rounded-md bg-[#E7302B] text-white" onClick={handleLogout}>Logout</button>
-              <button className="p-3 px-8 rounded-md bg-gray-600 text-white" onClick={() => setShow(false)}>Cancel</button>
+              <button
+                className="p-3 px-8 rounded-md bg-[#E7302B] text-white"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+              <button
+                className="p-3 px-8 rounded-md bg-gray-600 text-white"
+                onClick={() => setShow(false)}
+              >
+                Cancel
+              </button>
             </div>
           </DialogContent>
         </Dialog>

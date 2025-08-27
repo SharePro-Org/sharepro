@@ -1,10 +1,8 @@
-"use client";
-
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import SupportView from "@/components/views/SupportView";
 import React from "react";
 
-const helpAndSupport = () => {
+const support = () => {
   return (
     <DashboardLayout>
       <SupportView />
@@ -12,4 +10,4 @@ const helpAndSupport = () => {
   );
 };
 
-export default helpAndSupport;
+export default support;
