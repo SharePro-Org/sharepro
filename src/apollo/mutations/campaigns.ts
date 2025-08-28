@@ -101,8 +101,8 @@ export const ACTIVATE_CAMPAIGN = gql`
 `;
 
 export const JOIN_CAMPAIGN = gql`
-  mutation JoinCampaign($input: JoinCampaignInput!) {
-    joinCampaign(input: $input) {
+  mutation JoinCampaign($campaignId: UUID!, $userId: UUID!) {
+    joinCampaign(campaignId: $campaignId, userId: $userId) {
       referralCode
       referralLink
       message

@@ -85,13 +85,8 @@ export default function Sidebar({
             let active = false;
             if (item.href === "/") {
               active = pathname === "/";
-            } else if (item.href.startsWith("/business/")) {
-              // Get the first segment after /business/
-              const pathSeg = pathname.split("/")[2];
-              const linkSeg = item.href.split("/")[2];
-              active = pathSeg === linkSeg;
-            } else if (item.href.startsWith("/user/")) {
-              // Get the first segment after /user/
+            } else if (item.href.startsWith("/business/") || item.href.startsWith("/user/")) {
+              // Unify logic for business and user routes
               const pathSeg = pathname.split("/")[2];
               const linkSeg = item.href.split("/")[2];
               active = pathSeg === linkSeg;

@@ -183,7 +183,7 @@ const userDashboard = () => {
             </div>
           </div>
 
-          <div className="bg-white relative p-4 rounded-md">
+          {/* <div className="bg-white relative p-4 rounded-md">
             <button className="absolute top-2 right-4 mb-2">
               <XIcon />
             </button>
@@ -201,7 +201,7 @@ const userDashboard = () => {
                 Claim Reward
               </button>
             </div>
-          </div>
+          </div> */}
 
           <div className="grid grid-cols-3 gap-6">
             <div className="col-span-2 p-4 bg-white rounded-md">

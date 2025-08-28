@@ -16,7 +16,13 @@ import Image from "next/image";
 import userCheck from "../../../public/assets/Check.svg";
 import Link from "next/link";
 
-const DiscoverCampaign = ({ max = 4, grid }: { max?: number, grid?: boolean }) => {
+const DiscoverCampaign = ({
+  max = 4,
+  grid,
+}: {
+  max?: number;
+  grid?: boolean;
+}) => {
   const [user] = useAtom(userAtom);
   const [joining, setJoining] = useState<any>(null);
   const [open, setOpen] = useState(false);
@@ -61,14 +67,12 @@ const DiscoverCampaign = ({ max = 4, grid }: { max?: number, grid?: boolean }) =
   const joinCampaignClick = async () => {
     setIsJoining(true);
     setJoinError(null);
-    
+
     try {
       const response = await joinCampaign({
         variables: {
-          input: {
-            campaignId: joining.campaignId,
-            userId: user?.userId,
-          },
+          campaignId: joining.campaignId,
+          userId: user?.userId,
         },
       });
 
@@ -80,11 +84,15 @@ const DiscoverCampaign = ({ max = 4, grid }: { max?: number, grid?: boolean }) =
         setOpen(false);
         setJoined(true);
       } else {
-        setJoinError(response.data?.joinCampaign?.message || "Failed to join campaign");
+        setJoinError(
+          response.data?.joinCampaign?.message || "Failed to join campaign"
+        );
       }
     } catch (e: any) {
       console.error("Join campaign error:", e);
-      setJoinError(e.message || "An unexpected error occurred while joining the campaign");
+      setJoinError(
+        e.message || "An unexpected error occurred while joining the campaign"
+      );
     } finally {
       setIsJoining(false);
     }
@@ -126,7 +134,7 @@ const DiscoverCampaign = ({ max = 4, grid }: { max?: number, grid?: boolean }) =
   return (
     <div>
       <p className="text-lg font-medium">Discover Campaigns</p>
-      <div className={` ${grid ? 'grid grid-cols-2' : "flex flex-col"} gap-3`}>
+      <div className={` ${grid ? "grid grid-cols-2" : "flex flex-col"} gap-3`}>
         {loading ? (
           <div className="text-center py-4">Loading available campaigns...</div>
         ) : error ? (
@@ -202,12 +210,15 @@ const DiscoverCampaign = ({ max = 4, grid }: { max?: number, grid?: boolean }) =
         )}
       </div>
 
-      <Dialog open={open} onOpenChange={(isOpen) => {
-        setOpen(isOpen);
-        if (!isOpen) {
-          setJoinError(null); // Reset error when closing dialog
-        }
-      }}>
+      <Dialog
+        open={open}
+        onOpenChange={(isOpen) => {
+          setOpen(isOpen);
+          if (!isOpen) {
+            setJoinError(null); // Reset error when closing dialog
+          }
+        }}
+      >
         <DialogContent size="3xl" className="w-full flex flex-col gap-6 py-6">
           {joining?.campaignType === "Loyalty" && (
             <div>
@@ -428,7 +439,7 @@ const DiscoverCampaign = ({ max = 4, grid }: { max?: number, grid?: boolean }) =
                           <p className="text-sm font-medium mb-1">
                             Referral Code:
                           </p>
-                          <div className="flex items-center justify-between bg-white p-2 rounded border">
+                          <div className="flex items-center justify-between bg-white p-2 rounded border border-[#CCCCCC]">
                             <span className="text-sm font-mono">
                               {referralData.referralCode}
                             </span>
@@ -543,7 +554,7 @@ const DiscoverCampaign = ({ max = 4, grid }: { max?: number, grid?: boolean }) =
                           <p className="text-sm font-medium mb-1">
                             Referral Code:
                           </p>
-                          <div className="flex items-center justify-between bg-white p-2 rounded border">
+                          <div className="flex items-center justify-between bg-white p-2 rounded border border-[#CCCCCC]">
                             <span className="text-sm font-mono">
                               {referralData.referralCode}
                             </span>
