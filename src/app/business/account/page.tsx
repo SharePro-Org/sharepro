@@ -85,15 +85,15 @@ const account = () => {
     skip: !businessId,
   });
 
-  const {
-    data: userData,
-    loading: userLoading,
-    error: userError,
-    refetch: refetchUser,
-  } = useQuery(GET_USER, {
-    variables: { id: businessId },
-    skip: !businessId,
-  });
+  // const {
+  //   data: userData,
+  //   loading: userLoading,
+  //   error: userError,
+  //   refetch: refetchUser,
+  // } = useQuery(GET_USER, {
+  //   variables: { id: businessId },
+  //   skip: !businessId,
+  // });
 
   const [openDeactivateModal, setOpenDeactivateModal] = useState(false);
   const [steps, setSteps] = useState(0);

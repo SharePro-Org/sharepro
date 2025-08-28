@@ -1,6 +1,5 @@
 "use client";
 
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import React, { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
@@ -13,8 +12,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import Link from "next/link";
-import { useQuery } from "@apollo/client";
-import { ALL_FAQS } from "@/apollo/queries/support";
+import { useQuery, useMutation } from "@apollo/client";
+import { ALL_FAQS, CREATE_SUPPORT_REQUEST } from "@/apollo/queries/support";
 import { FAQ } from "@/apollo/types";
 
 const helpAndSupport = () => {
@@ -24,18 +23,32 @@ const helpAndSupport = () => {
     subject: "",
     contactEmail: "",
     description: "",
+    priority: "medium",
     screenshot: null as File | null,
   });
 
-  const { data: faqData, loading: faqLoading, error: faqError } = useQuery(ALL_FAQS);
+  const {
+    data: faqData,
+    loading: faqLoading,
+    error: faqError,
+  } = useQuery(ALL_FAQS);
+  const [createSupportRequest, { loading: submitLoading, error: submitError }] =
+    useMutation(CREATE_SUPPORT_REQUEST);
 
   const issueTypes = [
-    { value: "technical", label: "Technical Issue" },
-    { value: "billing", label: "Billing Question" },
-    { value: "feature", label: "Feature Request" },
-    { value: "bug", label: "Bug Report" },
-    { value: "account", label: "Account Issue" },
-    { value: "other", label: "Other" },
+    { value: "technical", label: "Technical Issues" },
+    { value: "account", label: "Account Related Problems" },
+    { value: "billing", label: "Billing and Payment Issues" },
+    { value: "feature_request", label: "New Feature Requests" },
+    { value: "bug_report", label: "Bug Reports" },
+    { value: "general", label: "General Inquiries" },
+  ];
+
+  const priorityTypes = [
+    { value: "low", label: "Low" },
+    { value: "medium", label: "Medium" },
+    { value: "high", label: "High" },
+    { value: "urgent", label: "Urgent" },
   ];
 
   const handleInputChange = (field: string, value: any) => {
@@ -55,15 +68,39 @@ const helpAndSupport = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Support request submitted:", formData);
-    // Handle form submission here
-    setOpen(false);
+
+    try {
+      const result = await createSupportRequest({
+        variables: {
+          issueType: formData.issueType,
+          subject: formData.subject,
+          contactEmail: formData.contactEmail,
+          description: formData.description,
+        },
+      });
+
+      if (result.data?.createSupportRequest?.success) {
+        // Success - reset form and close dialog
+        setFormData({
+          issueType: "",
+          subject: "",
+          contactEmail: "",
+          description: "",
+          priority: "medium",
+          screenshot: null,
+        });
+        setOpen(false);
+      } else {
+        // Handle server-side errors - they will be displayed in the UI via submitError
+        console.error("Server error:", result.data?.createSupportRequest?.errors);
+      }
+    } catch (error) {
+      console.error("Mutation error:", error);
+      // Network errors will be handled by the submitError from useMutation
+    }
   };
-
-
-
 
   return (
     <>
@@ -122,7 +159,12 @@ const helpAndSupport = () => {
           <p className="my-2 text-sm">
             Need to speak with someone? Our support team is here to help.
           </p>
-          <button onClick={() => setOpen(true)} className="border-b text-sm">
+          <button
+            onClick={() => {
+              setOpen(true);
+            }}
+            className="border-b text-sm"
+          >
             Submit a Request
           </button>
         </div>
@@ -153,7 +195,9 @@ const helpAndSupport = () => {
         {faqLoading ? (
           <div className="py-4 text-center text-gray-500">Loading FAQs...</div>
         ) : faqError ? (
-          <div className="py-4 text-center text-red-500">Error loading FAQs</div>
+          <div className="py-4 text-center text-red-500">
+            Error loading FAQs
+          </div>
         ) : (
           <div>
             <Accordion
@@ -207,6 +251,31 @@ const helpAndSupport = () => {
                   ))}
                 </select>
               </div>
+
+              {/* Priority */}
+              {/* <div>
+                <label
+                  htmlFor="priority"
+                  className="block text-sm font-medium mb-2"
+                >
+                  Priority *
+                </label>
+                <select
+                  id="priority"
+                  value={formData.priority}
+                  onChange={(e) =>
+                    handleInputChange("priority", e.target.value)
+                  }
+                  className="w-full border border-[#E4E7EC] rounded-md p-3 text-sm"
+                  required
+                >
+                  {priorityTypes.map((priority) => (
+                    <option key={priority.value} value={priority.value}>
+                      {priority.label}
+                    </option>
+                  ))}
+                </select>
+              </div> */}
 
               {/* Subject */}
               <div>
@@ -303,20 +372,34 @@ const helpAndSupport = () => {
                 />
               </div>
 
+              {/* Error Display */}
+              {submitError && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                  <p className="text-red-600 text-sm">
+                    Error submitting request: {submitError.message}
+                  </p>
+                </div>
+              )}
+
               {/* Submit Button */}
               <div className="flex justify-end gap-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
                   className="px-6 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50 transition-colors"
+                  disabled={submitLoading}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-primary text-white rounded-md text-sm hover:bg-primary/90 transition-colors"
+                  disabled={submitLoading}
+                  className="px-6 py-2 bg-primary text-white rounded-md text-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  Submit Request
+                  {submitLoading && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  )}
+                  {submitLoading ? "Submitting..." : "Submit Request"}
                 </button>
               </div>
             </form>

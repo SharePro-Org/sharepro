@@ -57,3 +57,23 @@ export const GET_FAQS_BY_CATEGORY = gql`
     }
   }
 `;
+
+export const CREATE_SUPPORT_REQUEST = gql`
+  mutation CreateSupportRequest(
+    $contactEmail: String!
+    $description: String!
+    $issueType: String!
+    $subject: String!
+  ) {
+    createSupportRequest(
+      contactEmail: $contactEmail
+      description: $description
+      issueType: $issueType
+      subject: $subject
+    ) {
+      success
+      message
+      errors
+    }
+  }
+`;
