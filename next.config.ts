@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
 
   // Environment variables that will be available to the browser
   env: {
-    NEXT_PUBLIC_API_URL:  "https://api.mysharepro.com/graphql",
+    NEXT_PUBLIC_API_URL:  "https://api.mysharepro.com/graphql/",
   },
 };
 

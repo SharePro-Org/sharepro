@@ -48,6 +48,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
+import { usePathname } from "next/navigation";
 
 export default function DashboardLayout({
   children,
@@ -58,13 +59,18 @@ export default function DashboardLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       // Redirect if userData is not in localStorage
       const userData = localStorage.getItem("userData");
       if (!userData) {
-        window.location.replace("/auth/sign-in");
+        if (pathname.startsWith("/user")) {
+          window.location.replace("/user/auth/login");
+        } else {
+          window.location.replace("/auth/sign-in");
+        }
         return;
       }
       if (window.innerWidth >= 768) {

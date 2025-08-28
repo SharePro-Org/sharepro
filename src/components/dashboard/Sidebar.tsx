@@ -80,13 +80,18 @@ export default function Sidebar({
     >
       <nav className="flex-1 overflow-y-auto pt-4 pb-4 hide-scrollbar">
         <ul className="space-y-2">
-          {(user ? userLinks : links).map((item) => {
+          {(pathname.startsWith("/user") ? userLinks : links).map((item) => {
             const Icon = item.icon;
             let active = false;
             if (item.href === "/") {
               active = pathname === "/";
             } else if (item.href.startsWith("/business/")) {
               // Get the first segment after /business/
+              const pathSeg = pathname.split("/")[2];
+              const linkSeg = item.href.split("/")[2];
+              active = pathSeg === linkSeg;
+            } else if (item.href.startsWith("/user/")) {
+              // Get the first segment after /user/
               const pathSeg = pathname.split("/")[2];
               const linkSeg = item.href.split("/")[2];
               active = pathSeg === linkSeg;
