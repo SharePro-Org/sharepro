@@ -37,3 +37,30 @@ export interface Plan {
   type: string;
   recommended?: boolean;
 }
+
+export interface FAQ {
+  id: string;
+  question: string;
+  answer: string;
+  category: string;
+  tags: string[];
+  order: number;
+  isFeatured: boolean;
+  helpfulCount: number;
+  viewCount: number;
+  createdAt: string;
+}
+
+export interface WalkthroughVideo {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  fileUrl: string;
+  thumbnailUrl: string;
+  duration: number;
+  order: number;
+  isFeatured: boolean;
+  viewCount: number;
+  createdAt: string;
+}

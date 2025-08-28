@@ -155,7 +155,20 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                     className="border-b border-gray-200"
                   >
                     <td className="px-4 py-3">{campaign.campaignName}</td>
-                    <td className="px-4 py-3">{campaign.campaignType}</td>
+                    <td className={`px-4 py-3`}>
+                      <span
+                        className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs ${
+                          campaign.campaignType.toLowerCase() === "loyalty"
+                            ? "bg-[#A16AD4]"
+                            : campaign.campaignType.toLowerCase() === "combo"
+                            ? "bg-[#6192AE]"
+                            : "bg-[#4C8AFF]"
+                        }`}
+                      >
+                        {" "}
+                        {campaign.campaignType}
+                      </span>
+                    </td>
                     <td className="px-4 py-3">{campaign.rewardInfo}</td>
                     <td className="px-4 py-3">
                       <span

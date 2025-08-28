@@ -13,6 +13,9 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import Link from "next/link";
+import { useQuery } from "@apollo/client";
+import { ALL_FAQS } from "@/apollo/queries/support";
+import { FAQ } from "@/apollo/types";
 
 const helpAndSupport = () => {
   const [open, setOpen] = useState(false);
@@ -23,6 +26,8 @@ const helpAndSupport = () => {
     description: "",
     screenshot: null as File | null,
   });
+
+  const { data: faqData, loading: faqLoading, error: faqError } = useQuery(ALL_FAQS);
 
   const issueTypes = [
     { value: "technical", label: "Technical Issue" },
@@ -56,6 +61,9 @@ const helpAndSupport = () => {
     // Handle form submission here
     setOpen(false);
   };
+
+
+
 
   return (
     <>
@@ -142,20 +150,28 @@ const helpAndSupport = () => {
       </section>
       <section className="bg-white rounded-md p-4">
         <p className="font-semibold ">Frequently Asked Questions</p>
-        <div>
-          <Accordion
-            type="single"
-            collapsible
-            className="border border-[#E5E5EA] rounded-md px-3 my-2"
-          >
-            <AccordionItem value="item-1">
-              <AccordionTrigger>Is it accessible?</AccordionTrigger>
-              <AccordionContent>
-                Yes. It adheres to the WAI-ARIA design pattern.
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
+        {faqLoading ? (
+          <div className="py-4 text-center text-gray-500">Loading FAQs...</div>
+        ) : faqError ? (
+          <div className="py-4 text-center text-red-500">Error loading FAQs</div>
+        ) : (
+          <div>
+            <Accordion
+              type="single"
+              collapsible
+              className="border border-[#E5E5EA] rounded-md px-3 my-2"
+            >
+              {faqData?.faqs?.map((faq: FAQ) => (
+                <AccordionItem key={faq.id} value={`item-${faq.id}`}>
+                  <AccordionTrigger>{faq.question}</AccordionTrigger>
+                  <AccordionContent>
+                    <div dangerouslySetInnerHTML={{ __html: faq.answer }} />
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        )}
       </section>
 
       <Dialog open={open} onOpenChange={() => setOpen(false)}>

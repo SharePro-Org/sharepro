@@ -9,9 +9,14 @@ import { Country, City } from "country-state-city";
 import { Button, Dropdown } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import { useMutation } from "@apollo/client";
-import { INVITE_MEMBER } from "@/apollo/mutations/account";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
+import {
+  LIST_INVITED_MEMBERS,
+  GET_USER,
+  INVITE_MEMBER,
+} from "@/apollo/mutations/account";
+import { useQuery } from "@apollo/client";
 
 const account = () => {
   const [active, setActive] = useState("profile");
@@ -69,6 +74,27 @@ const account = () => {
       setInviteLoading(false);
     }
   };
+
+  const {
+    data: membersData,
+    loading: membersLoading,
+    error: membersError,
+    refetch: refetchMembers,
+  } = useQuery(LIST_INVITED_MEMBERS, {
+    variables: { businessId },
+    skip: !businessId,
+  });
+
+  const {
+    data: userData,
+    loading: userLoading,
+    error: userError,
+    refetch: refetchUser,
+  } = useQuery(GET_USER, {
+    variables: { id: businessId },
+    skip: !businessId,
+  });
+
   const [openDeactivateModal, setOpenDeactivateModal] = useState(false);
   const [steps, setSteps] = useState(0);
   const [selectedCountry, setSelectedCountry] = useState("");
@@ -262,31 +288,62 @@ const account = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        <tr>
-                          <td className="px-4 black font-normal py-3">
-                            John Doe
-                          </td>
-                          <td className="px-4 black font-normal py-3">
-                            JohnDoe@gmail
-                          </td>
-                          <td className="px-4 black font-normal py-3">Admin</td>
-                          <td className="px-4 black font-normal py-3"></td>
-                          <td className="px-4 black font-normal py-3">
-                            <Dropdown
-                              menu={{
-                                items: [
-                                  { key: "edit", label: "Edit" },
-                                  { key: "remove", label: "Remove" },
-                                ],
-                              }}
-                              trigger={["click"]}
+                        {membersLoading ? (
+                          <tr>
+                            <td colSpan={5} className="text-center py-4">
+                              Loading team members...
+                            </td>
+                          </tr>
+                        ) : membersError ? (
+                          <tr>
+                            <td
+                              colSpan={5}
+                              className="text-center py-4 text-red-500"
                             >
-                              <Button type="text">
-                                <MoreOutlined />
-                              </Button>
-                            </Dropdown>
-                          </td>
-                        </tr>
+                              Error loading members.
+                            </td>
+                          </tr>
+                        ) : membersData?.businessMembers?.length > 0 ? (
+                          membersData.businessMembers.map(
+                            (member: any, idx: number) => (
+                              <tr key={idx}>
+                                <td className="px-4 black font-normal py-3">
+                                  {member.inviterName || "-"}
+                                </td>
+                                <td className="px-4 black font-normal py-3">
+                                  {member.memberEmail}
+                                </td>
+                                <td className="px-4 black font-normal py-3">
+                                  {member.role}
+                                </td>
+                                <td className="px-4 black font-normal py-3">
+                                  {member.status}
+                                </td>
+                                <td className="px-4 black font-normal py-3">
+                                  <Dropdown
+                                    menu={{
+                                      items: [
+                                        { key: "edit", label: "Edit" },
+                                        { key: "remove", label: "Remove" },
+                                      ],
+                                    }}
+                                    trigger={["click"]}
+                                  >
+                                    <Button type="text">
+                                      <MoreOutlined />
+                                    </Button>
+                                  </Dropdown>
+                                </td>
+                              </tr>
+                            )
+                          )
+                        ) : (
+                          <tr>
+                            <td colSpan={5} className="text-center py-4">
+                              No team members found.
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
