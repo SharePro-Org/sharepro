@@ -39,11 +39,11 @@ export const GET_USER = gql`
     currentUser(id: $id) {
       dateJoined
       email
+      phone
       userProfile {
         firstName
         lastName
         id
-        location
         language
       }
     }
@@ -71,7 +71,7 @@ export const UPDATE_USER = gql`
     updateUser(id: $id, firstName: $firstName, lastName: $lastName, phone: $phone) {
       success
       message
-      errors
+      
     }
   }
 `;

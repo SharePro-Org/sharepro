@@ -126,6 +126,30 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
     setClaimSuccess(null);
   };
 
+  // Handle dropdown action
+  const handleDropdownAction = (action: string, campaign: Campaign) => {
+    if (action === "copy") {
+      if (campaign.referralCode) {
+        navigator.clipboard.writeText(campaign.referralCode);
+        // message.success("Referral link copied to clipboard!");
+      } else {
+        // message.error("No referral link available.");
+      }
+    } else if (action === "campaign") {
+      // Show campaign details modal (simple alert for now)
+      // message.info(
+      //   `Campaign: ${campaign.campaignName}\nType: ${campaign.campaignType}\nReward: ${campaign.rewardInfo}`
+      // );
+    }
+    //  else if (action === "reward") {
+    //   if (campaign.isClaimable && campaign.rewardId) {
+    //     handleClaimReward(campaign.rewardId);
+    //   } else {
+    //     message.error("Reward not claimable or missing reward ID.");
+    //   }
+    // }
+  };
+
   return (
     <div>
       {type === "campaigns" ? (
@@ -192,9 +216,9 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                           items: [
                             { key: "copy", label: "Copy Referral Link" },
                             { key: "campaign", label: "Campaign Details" },
-                            { key: "reward", label: "Claim Reward" },
-                            { key: "view", label: "View Performance" },
+                            // { key: "reward", label: "Claim Reward" },
                           ],
+                          onClick: ({ key }) => handleDropdownAction(key, campaign),
                         }}
                         trigger={["click"]}
                       >

@@ -4,33 +4,37 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Camera, Edit, Plus } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { CustomSelect } from "@/components/ui/custom-select";
-import { Country, City } from "country-state-city";
-import { Button, Dropdown } from "antd";
-import { MoreOutlined } from "@ant-design/icons";
-import { useMutation } from "@apollo/client";
-import { INVITE_MEMBER } from "@/apollo/mutations/account";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
+import { useQuery, useMutation } from "@apollo/client";
+import { GET_USER, UPDATE_USER } from "@/apollo/mutations/account";
 
 const account = () => {
   const [openBusinessModal, setOpenBusinessModal] = useState(false);
   const [user] = useAtom(userAtom);
+  const { data: userData, loading: userLoading, error: userError } = useQuery(GET_USER, {
+    variables: { id: user?.userId },
+    skip: !user?.userId,
+  });
+
+  const [updateUser, { loading: updateLoading, error: updateError }] = useMutation(UPDATE_USER);
+  const [editForm, setEditForm] = useState({
+    firstName: "",
+    lastName: "",
+    phone: "",
+  });
+  useEffect(() => {
+    if (userData?.currentUser?.userProfile) {
+      setEditForm({
+        firstName: userData.currentUser.userProfile.firstName || "",
+        lastName: userData.currentUser.userProfile.lastName || "",
+        phone: userData.currentUser.userProfile.phone || "",
+      });
+    }
+  }, [userData]);
 
   const [openDeactivateModal, setOpenDeactivateModal] = useState(false);
   const [steps, setSteps] = useState(0);
-
-  const categories = [
-    { value: "retail", label: "Retail" },
-    { value: "food", label: "Food" },
-    { value: "health", label: "Health" },
-    { value: "technology", label: "Technology" },
-  ];
-  const businessTypes = [
-    { value: "retail", label: "Retail" },
-    { value: "wholesale", label: "Wholesale" },
-    { value: "service", label: "Service" },
-  ];
 
   return (
     <DashboardLayout>
@@ -62,24 +66,26 @@ const account = () => {
                     <Edit size={10} className="my-auto" />
                   </button>
                 </div>
-                <div className="grid grid-cols-4 gap-4">
-                  <div>
-                    <p className="text-sm text-[#030229B2] mb-2">Name</p>
-                    <p className="font-medium">hello</p>
+                {userLoading ? (
+                  <div className="text-center py-4 text-gray-500">Loading user info...</div>
+                ) : userError ? (
+                  <div className="text-center py-4 text-red-500">Error loading user info</div>
+                ) : (
+                  <div className="grid grid-cols-4 gap-4">
+                    <div>
+                      <p className="text-sm text-[#030229B2] mb-2">Name</p>
+                      <p className="font-medium">{userData?.currentUser?.userProfile?.firstName} {userData?.currentUser?.userProfile?.lastName}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-[#030229B2] mb-2">Email Address</p>
+                      <p className="font-medium">{userData?.currentUser?.email}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-sm text-[#030229B2] mb-2">Phone Number</p>
+                      <p className="font-medium">{userData?.currentUser?.phone || "-"}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-[#030229B2] mb-2">
-                      Email Address
-                    </p>
-                    <p className="font-medium">hello</p>
-                  </div>
-                  <div className="col-span-2">
-                    <p className="text-sm text-[#030229B2] mb-2">
-                      Phone Number
-                    </p>
-                    <p className="font-medium">hello</p>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
@@ -102,34 +108,60 @@ const account = () => {
             <h2 className="font-medium text-center">
               Edit Profile Information
             </h2>
-            {/* Business information form goes here */}
-            <div className="">
-              <label
-                htmlFor="bussName"
-                className="mb-2 text-[#030229CC] text-sm"
-              >
-                Name
-              </label>
-              <input
-                type="text"
-                className="border border-[#E5E5EA] rounded-md p-2 w-full"
-              />
-            </div>
-            <div className="">
-              <label htmlFor="phone" className="mb-2 text-[#030229CC] text-sm">
-                Phone Number
-              </label>
-              <input
-                type="phone"
-                className="border border-[#E5E5EA] rounded-md p-2 w-full"
-              />
-            </div>
-
-            <div className="text-center">
-              <button className="p-3 bg-primary rounded-md text-white">
-                Save Changes
-              </button>
-            </div>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                await updateUser({
+                  variables: {
+                    id: user?.userId,
+                    firstName: editForm.firstName,
+                    lastName: editForm.lastName,
+                    phone: editForm.phone,
+                  },
+                });
+                setOpenBusinessModal(false);
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label htmlFor="firstName" className="mb-2 text-[#030229CC] text-sm">First Name</label>
+                <input
+                  type="text"
+                  id="firstName"
+                  value={editForm.firstName}
+                  onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })}
+                  className="border border-[#E5E5EA] rounded-md p-2 w-full"
+                />
+              </div>
+              <div>
+                <label htmlFor="lastName" className="mb-2 text-[#030229CC] text-sm">Last Name</label>
+                <input
+                  type="text"
+                  id="lastName"
+                  value={editForm.lastName}
+                  onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })}
+                  className="border border-[#E5E5EA] rounded-md p-2 w-full"
+                />
+              </div>
+              <div>
+                <label htmlFor="phone" className="mb-2 text-[#030229CC] text-sm">Phone Number</label>
+                <input
+                  type="text"
+                  id="phone"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                  className="border border-[#E5E5EA] rounded-md p-2 w-full"
+                />
+              </div>
+              {updateError && (
+                <div className="text-red-500 text-sm">Error updating profile: {updateError.message}</div>
+              )}
+              <div className="text-center">
+                <button type="submit" className="p-3 bg-primary rounded-md text-white" disabled={updateLoading}>
+                  {updateLoading ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
           </DialogContent>
         </Dialog>
 
