@@ -1,7 +1,7 @@
 "use client";
 
 import { Calendar, Copy, Check } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { GiPriceTag } from "react-icons/gi";
 import { MdCampaign } from "react-icons/md";
 import { useMutation, useQuery } from "@apollo/client";
@@ -11,6 +11,7 @@ import { userAtom } from "@/store/User";
 import { Campaign } from "@/apollo/types";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { JOIN_CAMPAIGN } from "@/apollo/mutations/campaigns";
+import { TRACK_CONVERSION } from "@/apollo/mutations/auth";
 
 import Image from "next/image";
 import userCheck from "../../../public/assets/Check.svg";
@@ -35,6 +36,10 @@ const DiscoverCampaign = ({
   const [copySuccess, setCopySuccess] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareCampaignData, setShareCampaignData] = useState<any>(null);
+  const [businessId, setBusinessId] = useState<string>("");
+  const [trackConversion] = useMutation(TRACK_CONVERSION);
   const [joinCampaign] = useMutation(JOIN_CAMPAIGN);
 
   // Fetch available campaigns
@@ -100,14 +105,145 @@ const DiscoverCampaign = ({
 
   // Copy referral code to clipboard
   const copyReferralCode = async () => {
-    if (referralData?.referralCode) {
+    if (referralData?.referralLink) {
       try {
-        await navigator.clipboard.writeText(referralData.referralCode);
+        await navigator.clipboard.writeText(referralData.referralLink);
         setCopySuccess(true);
         setTimeout(() => setCopySuccess(false), 2000);
       } catch (error) {
-        console.error("Failed to copy referral code:", error);
+        console.error("Failed to copy referral link:", error);
       }
+    }
+  };
+
+  const [shareText, setShareText] = useState(
+    "🎉 **Exciting news!** I just joined a campaign on SharePro.\n\nJoin me and let's grow together! 🚀\n\n## Key Features:\n- Easy referral tracking\n- Instant rewards\n- Seamless integration\n\n*#SharePro #Campaign #Growth*"
+  );
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  // Get campaigns and slice if max is provided
+  const campaigns: Campaign[] = data?.availableCampaigns || [];
+  const displayCampaigns = max ? campaigns.slice(0, max) : campaigns;
+  const campaignsToShow = displayCampaigns;
+
+  const createUrlWithParams = (
+    baseUrl: string,
+    campaignId?: string,
+    source: string = "direct"
+  ) => {
+    try {
+      let fullUrl = baseUrl;
+      if (!baseUrl.startsWith("http://") && !baseUrl.startsWith("https://")) {
+        fullUrl = `https://${baseUrl}`;
+      }
+      const urlWithParams = new URL(fullUrl);
+      if (campaignId) {
+        urlWithParams.searchParams.set("cid", campaignId);
+      }
+      urlWithParams.searchParams.set("src", source);
+      return urlWithParams.toString();
+    } catch (error) {
+      console.error("Invalid URL format:", baseUrl, error);
+      const separator = baseUrl.includes("?") ? "&" : "?";
+      let params = [];
+      if (campaignId) {
+        params.push(`cid=${encodeURIComponent(campaignId)}`);
+      }
+      params.push(`src=${encodeURIComponent(source)}`);
+      return `${baseUrl}${separator}${params.join("&")}`;
+    }
+  };
+
+  const trackAnalyticsEvent = useCallback(
+    async (eventData: { eventType: string; properties: any }) => {
+      if (!joining?.campaignId) return;
+      try {
+        await trackConversion({
+          variables: {
+            campaignId: joining.campaignId,
+            businessId: businessId,
+            eventType: eventData.eventType,
+            properties: JSON.stringify({ ...eventData.properties }),
+          },
+        });
+      } catch (error) {
+        console.error("Analytics tracking failed:", error);
+      }
+    },
+    [joining?.campaignId, trackConversion, businessId]
+  );
+
+  const handleSharePlatform = async (platform: string) => {
+    setIsSharing(true);
+    try {
+      await trackAnalyticsEvent({
+        eventType: "share",
+        properties: {
+          platform,
+          campaign_name: joining?.campaignName,
+          share_method: "button_click",
+        },
+      });
+      const campaignUrl = referralData?.referralLink || window.location.href;
+      const urlWithParams = createUrlWithParams(campaignUrl, joining?.campaignId, platform);
+      const encodedLink = encodeURIComponent(urlWithParams);
+      const plainText = shareText
+        .replace(/\*\*(.*?)\*\*/g, "$1")
+        .replace(/\*(.*?)\*/g, "$1")
+        .replace(/~~(.*?)~~/g, "$1")
+        .replace(/#{1,6}\s+(.*)/g, "$1")
+        .replace(/[-*]\s+(.*)/g, "• $1")
+        .replace(/\n{2,}/g, "\n\n");
+      const message = encodeURIComponent(`${plainText}\n\n`);
+      let shareUrl = "";
+      switch (platform) {
+        case "whatsapp":
+          shareUrl = `https://wa.me/?text=${message}${encodedLink}`;
+          window.open(shareUrl, "_blank", "width=600,height=400");
+          break;
+        case "facebook":
+          shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedLink}&quote=${encodeURIComponent(plainText)}`;
+          window.open(shareUrl, "_blank", "width=600,height=400");
+          break;
+        case "twitter":
+          shareUrl = `https://x.com/intent/tweet?text=${message}&url=${encodedLink}`;
+          window.open(shareUrl, "_blank", "width=600,height=400");
+          break;
+        case "instagram":
+          await navigator.clipboard.writeText(`${plainText}\n\n${urlWithParams}`);
+          alert("Campaign details copied! You can now paste them in your Instagram post.");
+          break;
+        case "email":
+          shareUrl = `mailto:?subject=${encodeURIComponent(joining?.campaignName || "Check out my campaign!")}&body=${message}${encodedLink}`;
+          window.location.href = shareUrl;
+          break;
+        default:
+          window.open(urlWithParams, "_blank");
+      }
+    } catch (error) {
+      console.error("Share failed:", error);
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const handleCopyShareText = async () => {
+    try {
+      const campaignUrl = referralData?.referralLink || window.location.href;
+      const urlWithParams = createUrlWithParams(campaignUrl, joining?.campaignId);
+      const finalShareText = `${shareText.replace(/\*\*(.*?)\*\*/g, "$1").replace(/\*(.*?)\*/g, "$1").replace(/~~(.*?)~~/g, "$1").replace(/#{1,6}\s+(.*)/g, "$1").replace(/[-*]\s+(.*)/g, "• $1").replace(/\n{2,}/g, "\n\n")}\n\n${urlWithParams}`;
+      await navigator.clipboard.writeText(finalShareText);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+      await trackAnalyticsEvent({
+        eventType: "referral_click",
+        properties: {
+          campaign_name: joining?.campaignName,
+          action: "link_clicked",
+        },
+      });
+    } catch (error) {
+      console.error("Copy failed:", error);
     }
   };
 
@@ -124,13 +260,6 @@ const DiscoverCampaign = ({
     }
   };
 
-  // Get campaigns and slice if max is provided
-  const campaigns: Campaign[] = data?.availableCampaigns || [];
-  const displayCampaigns = max ? campaigns.slice(0, max) : campaigns;
-
-  const campaignsToShow = displayCampaigns;
-
-  const handleShare = (platform: string) => {};
   return (
     <div>
       <p className="text-lg font-medium">Discover Campaigns</p>
@@ -481,7 +610,7 @@ const DiscoverCampaign = ({
                     )}
                     <div className="grid grid-cols-5 gap-6 w-full">
                       <button
-                        onClick={() => handleShare("twitter")}
+                        onClick={() => handleSharePlatform("twitter")}
                         disabled={isSharing}
                         className="flex flex-col items-center justify-center gap-1 w-full p-3 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-50"
                       >
@@ -491,7 +620,7 @@ const DiscoverCampaign = ({
                         <span className="text-xs mt-1">X</span>
                       </button>
                       <button
-                        onClick={() => handleShare("facebook")}
+                        onClick={() => handleSharePlatform("facebook")}
                         disabled={isSharing}
                         className="flex flex-col items-center justify-center gap-1 w-full p-3 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-50"
                       >
@@ -501,7 +630,7 @@ const DiscoverCampaign = ({
                         <span className="text-xs mt-1">Facebook</span>
                       </button>
                       <button
-                        onClick={() => handleShare("instagram")}
+                        onClick={() => handleSharePlatform("instagram")}
                         disabled={isSharing}
                         className="flex flex-col items-center justify-center gap-1 w-full p-3 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-50"
                       >
@@ -511,7 +640,7 @@ const DiscoverCampaign = ({
                         <span className="text-xs mt-1">Instagram</span>
                       </button>
                       <button
-                        onClick={() => handleShare("whatsapp")}
+                        onClick={() => handleSharePlatform("whatsapp")}
                         disabled={isSharing}
                         className="flex flex-col items-center justify-center gap-1 w-full p-3 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-50"
                       >
@@ -521,7 +650,7 @@ const DiscoverCampaign = ({
                         <span className="text-xs mt-1">WhatsApp</span>
                       </button>
                       <button
-                        onClick={() => handleShare("email")}
+                        onClick={() => handleSharePlatform("email")}
                         disabled={isSharing}
                         className="flex flex-col items-center justify-center gap-1 w-full p-3 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-50"
                       >
@@ -602,7 +731,7 @@ const DiscoverCampaign = ({
                     </p>
                     <div className="grid grid-cols-5 gap-6 w-full">
                       <button
-                        onClick={() => handleShare("twitter")}
+                        onClick={() => handleSharePlatform("twitter")}
                         disabled={isSharing}
                         className="flex flex-col items-center justify-center gap-1 w-full p-3 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-50"
                       >
@@ -612,7 +741,7 @@ const DiscoverCampaign = ({
                         <span className="text-xs mt-1">X</span>
                       </button>
                       <button
-                        onClick={() => handleShare("facebook")}
+                        onClick={() => handleSharePlatform("facebook")}
                         disabled={isSharing}
                         className="flex flex-col items-center justify-center gap-1 w-full p-3 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-50"
                       >
@@ -622,7 +751,7 @@ const DiscoverCampaign = ({
                         <span className="text-xs mt-1">Facebook</span>
                       </button>
                       <button
-                        onClick={() => handleShare("instagram")}
+                        onClick={() => handleSharePlatform("instagram")}
                         disabled={isSharing}
                         className="flex flex-col items-center justify-center gap-1 w-full p-3 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-50"
                       >
@@ -632,7 +761,7 @@ const DiscoverCampaign = ({
                         <span className="text-xs mt-1">Instagram</span>
                       </button>
                       <button
-                        onClick={() => handleShare("whatsapp")}
+                        onClick={() => handleSharePlatform("whatsapp")}
                         disabled={isSharing}
                         className="flex flex-col items-center justify-center gap-1 w-full p-3 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-50"
                       >
@@ -642,7 +771,7 @@ const DiscoverCampaign = ({
                         <span className="text-xs mt-1">WhatsApp</span>
                       </button>
                       <button
-                        onClick={() => handleShare("email")}
+                        onClick={() => handleSharePlatform("email")}
                         disabled={isSharing}
                         className="flex flex-col items-center justify-center gap-1 w-full p-3 hover:bg-gray-50 rounded-md transition-colors disabled:opacity-50"
                       >

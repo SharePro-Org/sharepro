@@ -34,20 +34,47 @@ export const INVITE_MEMBER = gql`
   }
 `;
 
-
 export const GET_USER = gql`
-  query GetUser($id: UUID!) {
-    user(id: $id) {
-      businessName
+  query User($id: UUID!) {
+    currentUser(id: $id) {
       dateJoined
       email
-      firstName
-      business {
-        addressLine1
-        addressLine2
-        email
+      userProfile {
+        firstName
+        lastName
         id
+        location
+        language
       }
     }
   }
 `;
+
+export const GET_BUSINESS = gql`
+  query Business($id: UUID!) {
+    business(id: $id) {
+      subscriptions {
+        isTrial
+        isActive
+        endDate
+        startDate
+        plan {
+          name
+        }
+      }
+    }
+  }
+`;
+
+export const UPDATE_USER = gql`
+  mutation UpdateUser($id: UUID!, $firstName: String, $lastName: String, $phone: String) {
+    updateUser(id: $id, firstName: $firstName, lastName: $lastName, phone: $phone) {
+      success
+      message
+      errors
+    }
+  }
+`;
+
+
+

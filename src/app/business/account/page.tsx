@@ -11,9 +11,10 @@ import { MoreOutlined } from "@ant-design/icons";
 import { useMutation } from "@apollo/client";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
+
 import {
   LIST_INVITED_MEMBERS,
-  GET_USER,
+  GET_BUSINESS,
   INVITE_MEMBER,
 } from "@/apollo/mutations/account";
 import { useQuery } from "@apollo/client";
@@ -85,15 +86,15 @@ const account = () => {
     skip: !businessId,
   });
 
-  // const {
-  //   data: userData,
-  //   loading: userLoading,
-  //   error: userError,
-  //   refetch: refetchUser,
-  // } = useQuery(GET_USER, {
-  //   variables: { id: businessId },
-  //   skip: !businessId,
-  // });
+  const {
+    data: userData,
+    loading: userLoading,
+    error: userError,
+    refetch: refetchUser,
+  } = useQuery(GET_BUSINESS, {
+    variables: { id: businessId },
+    skip: !businessId,
+  });
 
   const [openDeactivateModal, setOpenDeactivateModal] = useState(false);
   const [steps, setSteps] = useState(0);

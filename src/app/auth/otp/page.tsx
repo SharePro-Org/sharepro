@@ -57,10 +57,10 @@ export default function OtpPage() {
     setOtpError("");
     try {
       const { data } = await verifyEmail({ variables: { code: otpValue } });
-      if (data?.verifyEmail?.success) {
+      if (data?.verifyEmailToken?.success) {
         router.push("/auth/sign-in");
       } else {
-        setOtpError(data?.verifyEmail?.message || "The code you entered is incorrect.");
+        setOtpError(data?.verifyEmailToken?.message || "The code you entered is incorrect.");
       }
     } catch (err: any) {
       setOtpError(err.message || "Verification failed");

@@ -81,8 +81,8 @@ export const LOGIN_PHONE = gql`
 `;
 
 export const VERIFY_EMAIL = gql`
-  mutation VerifyEmail($code: String!) {
-    verifyEmail(code: $code) {
+  mutation VerifyEmailToken($code: String!) {
+    verifyEmailToken(code: $code) {
       message
       success
       user {

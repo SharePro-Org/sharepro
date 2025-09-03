@@ -61,11 +61,11 @@ export default function OtpPage() {
     setOtpError("");
     try {
       const { data } = await verifyEmail({ variables: { code: otpValue } });
-      if (data?.verifyEmail?.success) {
+      if (data?.verifyEmailToken?.success) {
         router.push("/user/auth/login");
       } else {
         setOtpError(
-          data?.verifyEmail?.message || "The code you entered is incorrect."
+          data?.verifyEmailToken?.message || "The code you entered is incorrect."
         );
       }
     } catch (err: any) {
