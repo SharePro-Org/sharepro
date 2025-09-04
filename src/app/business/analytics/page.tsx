@@ -17,7 +17,7 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 });
 
 const analytics = () => {
-  const [active, setActive] = useState("general");
+  const [active, setActive] = useState("referral");
   const [isClient, setIsClient] = useState(false);
   const [businessId, setBusinessId] = useState<string>("");
   const [user] = useAtom(userAtom);
@@ -237,7 +237,7 @@ const analytics = () => {
         </div>
 
         <div className="flex p-4 text-sm gap-6 text-[#030229B2]">
-          <button
+          {/* <button
             onClick={() => setActive("general")}
             className={`p-3 ${
               active === "general" &&
@@ -245,7 +245,7 @@ const analytics = () => {
             }`}
           >
             General
-          </button>
+          </button> */}
           <button
             onClick={() => setActive("referral")}
             className={`p-3 ${
