@@ -16,6 +16,7 @@ import {
   LIST_INVITED_MEMBERS,
   GET_BUSINESS,
   INVITE_MEMBER,
+  UPDATE_BUSINESS,
 } from "@/apollo/mutations/account";
 import { useQuery } from "@apollo/client";
 
@@ -31,16 +32,50 @@ const account = () => {
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
   const [inviteMember] = useMutation(INVITE_MEMBER);
+  const [updateBusiness, { loading: updateLoading, error: updateError }] =
+    useMutation(UPDATE_BUSINESS);
 
   // Replace with actual businessId and inviterName from context/store
   const [businessId, setBusinessId] = useState<string>("");
   const [user] = useAtom(userAtom);
+
+  const [editBusinessForm, setEditBusinessForm] = useState({
+    name: "",
+    phone: "",
+    category: "",
+    type: "",
+    website: "",
+    tagline: "",
+  });
+
+  const {
+    data: userData,
+    loading: userLoading,
+    error: userError,
+    refetch: refetchUser,
+  } = useQuery(GET_BUSINESS, {
+    variables: { id: businessId },
+    skip: !businessId,
+  });
 
   useEffect(() => {
     if (user?.businessId) {
       setBusinessId(user.businessId);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (userData?.business) {
+      setEditBusinessForm({
+        name: userData.business.name || "",
+        phone: userData.business.phone || "",
+        category: "", // Add logic if category is available
+        type: "", // Add logic if type is available
+        website: userData.business.website || "",
+        tagline: userData.business.tagline || "",
+      });
+    }
+  }, [userData]);
 
   const handleInviteUser = async () => {
     setInviteLoading(true);
@@ -83,16 +118,6 @@ const account = () => {
     refetch: refetchMembers,
   } = useQuery(LIST_INVITED_MEMBERS, {
     variables: { businessId },
-    skip: !businessId,
-  });
-
-  const {
-    data: userData,
-    loading: userLoading,
-    error: userError,
-    refetch: refetchUser,
-  } = useQuery(GET_BUSINESS, {
-    variables: { id: businessId },
     skip: !businessId,
   });
 
@@ -190,19 +215,19 @@ const account = () => {
                   <div className="grid grid-cols-4 gap-4">
                     <div>
                       <p className="text-sm text-[#030229B2] mb-2">Name</p>
-                      <p className="font-medium">hello</p>
+                      <p className="font-medium">{userData?.business?.name}</p>
                     </div>
                     <div>
                       <p className="text-sm text-[#030229B2] mb-2">
                         Email Address
                       </p>
-                      <p className="font-medium">hello</p>
+                      <p className="font-medium">{userData?.business?.email}</p>
                     </div>
                     <div className="col-span-2">
                       <p className="text-sm text-[#030229B2] mb-2">
                         Phone Number
                       </p>
-                      <p className="font-medium">hello</p>
+                      <p className="font-medium">{userData?.business?.phone}</p>
                     </div>
                     <div>
                       <p className="text-sm text-[#030229B2] mb-2">Type</p>
@@ -216,11 +241,15 @@ const account = () => {
                       <p className="text-sm text-[#030229B2] mb-2">
                         Website/Social media
                       </p>
-                      <p className="font-medium">hello</p>
+                      <p className="font-medium">
+                        {userData?.business?.website}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-[#030229B2] mb-2">Tagline</p>
-                      <p className="font-medium">hello</p>
+                      <p className="font-medium">
+                        {userData?.business?.tagline}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -387,89 +416,173 @@ const account = () => {
             <h2 className="font-medium text-center">
               Edit Business Information
             </h2>
-            {/* Business information form goes here */}
-            <div className="">
-              <label
-                htmlFor="bussName"
-                className="mb-2 text-[#030229CC] text-sm"
-              >
-                Business Name
-              </label>
-              <input
-                type="text"
-                className="border border-[#E5E5EA] rounded-md p-2 w-full"
-              />
-            </div>
-            <div className="">
-              <label htmlFor="phone" className="mb-2 text-[#030229CC] text-sm">
-                Phone Number
-              </label>
-              <input
-                type="phone"
-                className="border border-[#E5E5EA] rounded-md p-2 w-full"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                await updateBusiness({
+                  variables: {
+                    businessId: businessId,
+                    input: {
+                      name: editBusinessForm.name,
+                      phone: editBusinessForm.phone,
+                      category: editBusinessForm.category,
+                      type: editBusinessForm.type,
+                      website: editBusinessForm.website,
+                      tagline: editBusinessForm.tagline,
+                    },
+                  },
+                });
+                setOpenBusinessModal(false);
+              }}
+              className="space-y-4"
+            >
               <div>
                 <label
-                  htmlFor="bussCat"
+                  htmlFor="bussName"
                   className="mb-2 text-[#030229CC] text-sm"
                 >
-                  Business Category
+                  Business Name
                 </label>
-                <select className="border border-[#E5E5EA] rounded-md p-2 w-full">
-                  {categories.map((category) => (
-                    <option key={category.value} value={category.value}>
-                      {category.label}
-                    </option>
-                  ))}
-                </select>
+                <input
+                  type="text"
+                  id="bussName"
+                  value={editBusinessForm.name}
+                  onChange={(e) =>
+                    setEditBusinessForm({
+                      ...editBusinessForm,
+                      name: e.target.value,
+                    })
+                  }
+                  className="border border-[#E5E5EA] rounded-md p-2 w-full"
+                />
               </div>
               <div>
                 <label
-                  htmlFor="bussType"
+                  htmlFor="phone"
                   className="mb-2 text-[#030229CC] text-sm"
                 >
-                  Business Type
+                  Phone Number
                 </label>
-                <select className="border border-[#E5E5EA] rounded-md p-2 w-full">
-                  {businessTypes.map((type) => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
-                  ))}
-                </select>
+                <input
+                  type="text"
+                  id="phone"
+                  value={editBusinessForm.phone}
+                  onChange={(e) =>
+                    setEditBusinessForm({
+                      ...editBusinessForm,
+                      phone: e.target.value,
+                    })
+                  }
+                  className="border border-[#E5E5EA] rounded-md p-2 w-full"
+                />
               </div>
-            </div>
-            <div className="">
-              <label
-                htmlFor="website"
-                className="mb-2 text-[#030229CC] text-sm"
-              >
-                Business Website/Social Media
-              </label>
-              <input
-                type="text"
-                className="border border-[#E5E5EA] rounded-md p-2 w-full"
-              />
-            </div>
-            <div className="">
-              <label
-                htmlFor="tagline"
-                className="mb-2 text-[#030229CC] text-sm"
-              >
-                Business Tagline
-              </label>
-              <input
-                type="text"
-                className="border border-[#E5E5EA] rounded-md p-2 w-full"
-              />
-            </div>
-            <div className="text-center">
-              <button className="p-3 bg-primary rounded-md text-white">
-                Save Changes
-              </button>
-            </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label
+                    htmlFor="bussCat"
+                    className="mb-2 text-[#030229CC] text-sm"
+                  >
+                    Business Category
+                  </label>
+                  <select
+                    id="bussCat"
+                    className="border border-[#E5E5EA] rounded-md p-2 w-full"
+                    value={editBusinessForm.category}
+                    onChange={(e) =>
+                      setEditBusinessForm({
+                        ...editBusinessForm,
+                        category: e.target.value,
+                      })
+                    }
+                  >
+                    {categories.map((category) => (
+                      <option key={category.value} value={category.value}>
+                        {category.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label
+                    htmlFor="bussType"
+                    className="mb-2 text-[#030229CC] text-sm"
+                  >
+                    Business Type
+                  </label>
+                  <select
+                    id="bussType"
+                    className="border border-[#E5E5EA] rounded-md p-2 w-full"
+                    value={editBusinessForm.type}
+                    onChange={(e) =>
+                      setEditBusinessForm({
+                        ...editBusinessForm,
+                        type: e.target.value,
+                      })
+                    }
+                  >
+                    {businessTypes.map((type) => (
+                      <option key={type.value} value={type.value}>
+                        {type.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label
+                  htmlFor="website"
+                  className="mb-2 text-[#030229CC] text-sm"
+                >
+                  Business Website/Social Media
+                </label>
+                <input
+                  type="text"
+                  id="website"
+                  value={editBusinessForm.website}
+                  onChange={(e) =>
+                    setEditBusinessForm({
+                      ...editBusinessForm,
+                      website: e.target.value,
+                    })
+                  }
+                  className="border border-[#E5E5EA] rounded-md p-2 w-full"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="tagline"
+                  className="mb-2 text-[#030229CC] text-sm"
+                >
+                  Business Tagline
+                </label>
+                <input
+                  type="text"
+                  id="tagline"
+                  value={editBusinessForm.tagline}
+                  onChange={(e) =>
+                    setEditBusinessForm({
+                      ...editBusinessForm,
+                      tagline: e.target.value,
+                    })
+                  }
+                  className="border border-[#E5E5EA] rounded-md p-2 w-full"
+                />
+              </div>
+              {updateError && (
+                <div className="text-red-500 text-sm">
+                  Error updating business: {updateError.message}
+                </div>
+              )}
+              <div className="text-center">
+                <button
+                  type="submit"
+                  className="p-3 bg-primary rounded-md text-white"
+                  disabled={updateLoading}
+                >
+                  {updateLoading ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
           </DialogContent>
         </Dialog>
 

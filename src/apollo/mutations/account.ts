@@ -1,3 +1,4 @@
+
 import { gql } from "@apollo/client";
 
 export const LIST_INVITED_MEMBERS = gql`
@@ -53,6 +54,16 @@ export const GET_USER = gql`
 export const GET_BUSINESS = gql`
   query Business($id: UUID!) {
     business(id: $id) {
+      id
+      name
+      description
+      tagline
+      website
+      logo
+      email
+      phone
+      onBoardingComplete
+      isKycVerified
       subscriptions {
         isTrial
         isActive
@@ -67,14 +78,58 @@ export const GET_BUSINESS = gql`
 `;
 
 export const UPDATE_USER = gql`
-  mutation UpdateUser($id: UUID!, $firstName: String, $lastName: String, $phone: String) {
-    updateUser(id: $id, firstName: $firstName, lastName: $lastName, phone: $phone) {
+  mutation UpdateUser(
+    $id: UUID!
+    $firstName: String
+    $lastName: String
+    $phone: String
+  ) {
+    updateUser(
+      id: $id
+      firstName: $firstName
+      lastName: $lastName
+      phone: $phone
+    ) {
       success
       message
-      
+    }
+  }
+`;
+
+export const UPDATE_BUSINESS = gql`
+  mutation UpdateBusiness($businessId: UUID!, $input: UpdateOnboardingInput!) {
+    updateBusiness(businessId: $businessId, input: $input) {
+      business {
+        id
+        name
+        description
+        tagline
+        website
+        logo
+      }
+      success
+      message
     }
   }
 `;
 
 
-
+export const GET_BUSINESS_SETTINGS = gql`
+  query GetBusinessSettings($businessId: UUID!) {
+    businessSettings(businessId: $businessId) {
+      id
+      allowPublicProfile
+      allowDirectContact
+      emailNotifications
+      smsNotifications
+      campaignDefaults {
+        defaultRewardAmount
+        defaultCurrency
+      }
+      integrations {
+        webhookUrl
+        apiKeys
+      }
+    }
+  }
+`;

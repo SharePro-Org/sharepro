@@ -20,7 +20,7 @@ const ComboRewards = ({ id }: { id: string | null }) => {
   const [success, setSuccess] = useState(false);
   const [campaignData, setCampaignData] = useState<any>(null);
   const router = useRouter();
-  const [shareOpen, setShareOpen] = useState(true);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const [businessType, setBusinessType] = useState<string>("");
   const [triggerAmount, setTriggerAmount] = useState<string>("");

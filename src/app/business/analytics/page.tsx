@@ -4,6 +4,10 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Users } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { useQuery } from "@apollo/client";
+import { GET_BUSINESS_ANALYTICS } from "@/apollo/queries/analytics";
+import { useAtom } from "jotai";
+import { userAtom } from "@/store/User";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -15,7 +19,14 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 const analytics = () => {
   const [active, setActive] = useState("general");
   const [isClient, setIsClient] = useState(false);
+  const [businessId, setBusinessId] = useState<string>("");
+  const [user] = useAtom(userAtom);
 
+  useEffect(() => {
+    if (user?.businessId) {
+      setBusinessId(user.businessId);
+    }
+  }, [user]);
   const [state, setState] = useState({
     series: [
       {
@@ -114,6 +125,15 @@ const analytics = () => {
     },
   });
 
+  // TODO: Replace with actual businessId from context/store
+  const { data, loading, error } = useQuery(GET_BUSINESS_ANALYTICS, {
+    variables: { businessId },
+    skip: !businessId,
+  });
+
+  // Default fallback values
+  const analyticsData = data?.businessAnalyticsByBusiness || {};
+
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -124,20 +144,23 @@ const analytics = () => {
         <p className="text-lg font-semibold capitalize mb-3">Analytics</p>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Card 1: Total Rewards Earned */}
+          {/* Card 1: Total Views */}
           <div className="flex flex-col bg-[#fff] rounded-md p-4 items-start min-h-[100px] justify-center">
             <div className="flex w-full flex-col">
               <div className="flex justify-between">
-                <p className="my-auto font-medium">Total Shares</p>
+                <p className="my-auto font-medium">Total Views</p>
                 <div className="rounded-full ml-auto bg-[#A16AD4]/20 w-[30px] h-[30px] flex items-center justify-center">
                   <Users size={16} fill="#A16AD4" className="text-[#A16AD4]" />
                 </div>
               </div>
-              <div className="text-xl my-3 font-bold">4,500</div>
+              <div className="text-xl my-3 font-bold">
+                {analyticsData.totalViews ?? "-"}
+              </div>
               <div className="flex justify-between w-full mt-2">
                 <div className="text-xs text-gray-500">
-                  Referral links shared.
+                  Referral links viewed.
                 </div>
+                {/* Example: growth rate, replace with actual data if available */}
                 <div className={`text-xs text-green-600 mt-1 font-bold`}>
                   10% ↑
                 </div>
@@ -145,7 +168,7 @@ const analytics = () => {
             </div>
           </div>
 
-          {/* Card 2: Total Campaigns Joined */}
+          {/* Card 2: Total Clicks */}
           <div className="flex flex-col bg-[#fff] rounded-md p-4 items-start min-h-[100px] justify-center">
             <div className="flex w-full flex-col">
               <div className="flex justify-between">
@@ -154,7 +177,9 @@ const analytics = () => {
                   <Users size={16} fill="#233E97" className="text-[#233E97]" />
                 </div>
               </div>
-              <div className="text-xl my-3 font-bold">500</div>
+              <div className="text-xl my-3 font-bold">
+                {analyticsData.totalClicks ?? "-"}
+              </div>
               <div className="flex justify-between w-full mt-2">
                 <div className="text-xs text-gray-500">
                   Clicks on referral links.
@@ -166,7 +191,7 @@ const analytics = () => {
             </div>
           </div>
 
-          {/* Card 3: Total Referrals */}
+          {/* Card 3: Total Conversions */}
           <div className="flex flex-col bg-[#fff] rounded-md p-4 items-start min-h-[100px] justify-center">
             <div className="flex w-full flex-col">
               <div className="flex justify-between">
@@ -175,7 +200,9 @@ const analytics = () => {
                   <Users size={16} fill="#233E97" className="text-[#233E97]" />
                 </div>
               </div>
-              <div className="text-xl my-3 font-bold">100</div>
+              <div className="text-xl my-3 font-bold">
+                {analyticsData.totalConversions ?? "-"}
+              </div>
               <div className="flex justify-between w-full mt-2">
                 <div className="text-xs text-gray-500">
                   Referral purchases made
@@ -187,20 +214,20 @@ const analytics = () => {
             </div>
           </div>
 
-          {/* Card 4: Pending Actions */}
+          {/* Card 4: Total Revenue */}
           <div className="flex flex-col bg-[#fff] rounded-md p-4 items-start min-h-[100px] justify-center">
             <div className="flex w-full flex-col">
               <div className="flex justify-between">
-                <p className="my-auto font-medium">Total Rewards</p>
+                <p className="my-auto font-medium">Total Revenue</p>
                 <div className="rounded-full ml-auto bg-[#233E97]/20 w-[30px] h-[30px] flex items-center justify-center">
                   <Users size={16} fill="#233E97" className="text-[#233E97]" />
                 </div>
               </div>
-              <div className="text-xl my-3 font-bold">5,000</div>
+              <div className="text-xl my-3 font-bold">
+                {analyticsData.totalRevenue ?? "-"}
+              </div>
               <div className="flex justify-between w-full mt-2">
-                <div className="text-xs text-gray-500">
-                  Rewards claimed by customers
-                </div>
+                <div className="text-xs text-gray-500">Revenue generated</div>
                 <div className="text-xs text-green-600 mt-1 font-bold">
                   5% ↑
                 </div>
