@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Dropdown, Button, message } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client/react";
 import { GET_BUSINESS_CAMPAIGNS } from "@/apollo/queries/campaigns";
 import { ACTIVATE_CAMPAIGN } from "@/apollo/mutations/campaigns";
 import { useAtom } from "jotai";

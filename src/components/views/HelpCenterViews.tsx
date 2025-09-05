@@ -14,7 +14,8 @@ import {
   GET_FAQS_BY_CATEGORY,
   GET_FAQ_CATEGORIES,
 } from "@/apollo/queries/support";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
+
 
 const HelpCenterView = () => {
   const router = useRouter();

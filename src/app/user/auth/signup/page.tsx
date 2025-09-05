@@ -13,7 +13,8 @@ import { MdOutlineVisibilityOff, MdOutlineVisibility } from "react-icons/md";
 import { FiUser } from "react-icons/fi";
 import Link from "next/link";
 import Image from "next/image";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { REGISTER_USER, TRACK_CONVERSION } from "@/apollo/mutations/auth";
 
 import TopRightLeftSection from "../../../../../public/assets/auth/top-right-left-section.svg";

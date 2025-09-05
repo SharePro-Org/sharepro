@@ -4,7 +4,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Users } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { GET_BUSINESS_ANALYTICS } from "@/apollo/queries/analytics";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
@@ -126,7 +126,17 @@ const analytics = () => {
   });
 
   // TODO: Replace with actual businessId from context/store
-  const { data, loading, error } = useQuery(GET_BUSINESS_ANALYTICS, {
+  type BusinessAnalyticsQueryResult = {
+    businessAnalyticsByBusiness?: {
+      totalViews?: number;
+      totalClicks?: number;
+      totalConversions?: number;
+      totalRevenue?: number;
+      // Add other fields as needed
+    };
+  };
+
+  const { data, loading, error } = useQuery<BusinessAnalyticsQueryResult>(GET_BUSINESS_ANALYTICS, {
     variables: { businessId },
     skip: !businessId,
   });

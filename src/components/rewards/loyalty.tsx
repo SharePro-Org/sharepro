@@ -6,7 +6,8 @@ import { Select } from "antd";
 import { BriefcaseIcon, ClockIcon, CurrencyIcon } from "lucide-react";
 import { Country } from "country-state-city";
 import Tiers from "./Tiers";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { CREATE_LOYALTY_REWARD } from "@/apollo/mutations/campaigns";
 import { message } from "antd";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";

@@ -16,7 +16,8 @@ import {
 } from "react-icons/md";
 import { FcGoogle } from "react-icons/fc";
 import { cn } from "@/lib/utils";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { LOGIN, LOGIN_PHONE } from "@/apollo/mutations/auth";
 import { useSetAtom } from "jotai";
 import { userAtom } from "@/store/User";

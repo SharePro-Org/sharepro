@@ -6,7 +6,8 @@ import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { CREATE_CAMPAIGN } from "@/apollo/mutations/campaigns";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import Image from "next/image";

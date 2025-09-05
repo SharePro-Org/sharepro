@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Select } from "antd";
 import { Country } from "country-state-city";
 import { BriefcaseIcon, Clock, CurrencyIcon } from "lucide-react";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { CREATE_REFERRAL_REWARD } from "@/apollo/mutations/campaigns";
 import { message } from "antd";
 

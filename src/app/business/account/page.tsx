@@ -8,7 +8,8 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { Country, City } from "country-state-city";
 import { Button, Dropdown } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
 
@@ -18,7 +19,8 @@ import {
   INVITE_MEMBER,
   UPDATE_BUSINESS,
 } from "@/apollo/mutations/account";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
+
 
 const account = () => {
   const [active, setActive] = useState("profile");

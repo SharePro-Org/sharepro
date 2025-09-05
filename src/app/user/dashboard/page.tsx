@@ -4,7 +4,8 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import DiscoverCampaign from "@/components/dashboard/DiscoverCampaign";
 import UserDashboardTable from "@/components/dashboard/UserDashboardTable";
 import { USER_DASHBOARD_SUMMARY } from "@/apollo/queries/user";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
+
 import { Calendar, Users, XIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { userAtom } from "@/store/User";

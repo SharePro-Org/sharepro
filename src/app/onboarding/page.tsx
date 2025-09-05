@@ -22,7 +22,8 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import Image from "next/image";
 import userCheck from "../../../public/assets/userCheck.svg";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { ONBOARDING_BUSINESS } from "@/apollo/mutations/auth";
 
 // Shared types

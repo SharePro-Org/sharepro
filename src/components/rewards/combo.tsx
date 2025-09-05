@@ -10,7 +10,8 @@ import { BriefcaseIcon, Clock, ClockIcon, CurrencyIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import ShareModal from "../ShareModal";
 import { CREATE_COMBO_REWARD } from "@/apollo/mutations/campaigns";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { message } from "antd";
 
 const emptyTier = { name: "", pointsRequired: "", benefits: "" };

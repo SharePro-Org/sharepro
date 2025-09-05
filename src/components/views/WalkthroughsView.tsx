@@ -3,7 +3,8 @@
 import { ArrowLeft, SearchIcon, Play, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
+
 import { ALL_WALKTHROUGH_VIDEOS } from "@/apollo/queries/support";
 import { WalkthroughVideo } from "@/apollo/types";
 

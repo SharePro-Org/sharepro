@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client/react";
 import {
   USER_JOINED_CAMPAIGNS,
   USER_REWARD_HISTORY,
@@ -29,7 +29,7 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
   const [claimReward] = useMutation(CLAIM_REWARD);
 
   // Fetch campaigns data
-  const { data: campaignsData, loading: campaignsLoading } = useQuery(
+  const { data: campaignsData, loading: campaignsLoading } = useQuery<{ userJoinedCampaigns: Campaign[] }>(
     USER_JOINED_CAMPAIGNS,
     {
       variables: { userId: user?.userId },
@@ -38,7 +38,7 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
   );
 
   // Fetch rewards data
-  const { data: rewardsData, loading: rewardsLoading } = useQuery(
+  const { data: rewardsData, loading: rewardsLoading } = useQuery<{ userRewardHistory: Reward[] }>(
     USER_REWARD_HISTORY,
     {
       variables: { userId: user?.userId },
@@ -77,6 +77,13 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
   const displayRewards = max ? rewards.slice(0, max) : rewards;
 
   // Handle claim reward
+  type ClaimRewardResponse = {
+    claimReward?: {
+      success: boolean;
+      message?: string;
+    };
+  };
+
   const handleClaimReward = async (rewardId: string) => {
     setClaimingReward(rewardId);
     setClaimError(null);
@@ -96,14 +103,16 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
         ],
       });
 
-      if (response.data?.claimReward?.success) {
+      const data = response.data as ClaimRewardResponse;
+
+      if (data?.claimReward?.success) {
         setClaimSuccess(
-          response.data.claimReward.message || "Reward claimed successfully!"
+          data.claimReward.message || "Reward claimed successfully!"
         );
         setModalOpen(true);
       } else {
         setClaimError(
-          response.data?.claimReward?.message || "Failed to claim reward"
+          data?.claimReward?.message || "Failed to claim reward"
         );
         setModalOpen(true);
       }

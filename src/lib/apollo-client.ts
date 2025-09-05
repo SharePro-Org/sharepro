@@ -4,13 +4,17 @@ import {
   ApolloLink,
   Observable,
   HttpLink,
-} from '@apollo/client';
-import { setContext } from '@apollo/client/link/context';
-import { onError } from '@apollo/client/link/error';
+  split,
+} from "@apollo/client";
+import { setContext } from "@apollo/client/link/context";
+import { onError } from "@apollo/client/link/error";
+import { getMainDefinition } from "@apollo/client/utilities";
+import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
+import { createClient } from "graphql-ws";
 
 // Utility Functions
 export const getUserData = (): any | null => {
-  const userData = localStorage.getItem('userData');
+  const userData = localStorage.getItem("userData");
   return userData ? JSON.parse(userData) : null;
 };
 
@@ -22,34 +26,61 @@ export const getAuthToken = (): string | null => {
 export const setToken = (token: string): void => {
   const userData = getUserData() || {};
   userData.accessToken = token;
-  localStorage.setItem('userData', JSON.stringify(userData));
+  localStorage.setItem("userData", JSON.stringify(userData));
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.mysharepro.com/graphql/";
+export const clearAuth = (): void => {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("userData");
+};
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://api.mysharepro.com/graphql/";
+const WS_URL =
+  process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000/ws/graphql/";
 if (!API_BASE_URL) {
-  throw new Error(
-    'NEXT_PUBLIC_API_URL is not set in environment variables.'
-  );
+  throw new Error("NEXT_PUBLIC_API_URL is not set in environment variables.");
 }
 
 // Log Link
 const logLink = new ApolloLink((operation, forward) => {
-  console.log('Outgoing GraphQL Request:', {
-    query: operation.query.loc?.source.body,
-    variables: operation.variables,
-  });
-
+  if (process.env.NODE_ENV === "development") {
+    console.log("🚀 GraphQL Request:", {
+      operationName: operation.operationName,
+      variables: operation.variables,
+    });
+  }
   return forward(operation);
 });
 
+// WebSocket Link for subscriptions
+const wsLink =
+  typeof window !== "undefined"
+    ? new GraphQLWsLink(
+        createClient({
+          url: WS_URL,
+          connectionParams: () => {
+            const token = getAuthToken();
+            return {
+              Authorization: token ? `JWT ${token}` : "",
+            };
+          },
+          on: {
+            connected: () => console.log("🔌 WebSocket connected"),
+            closed: () => console.log("🔌 WebSocket disconnected"),
+          },
+        })
+      )
+    : null;
+
 // Auth Link
-const authLink = setContext((_, { headers }: { headers?: Record<string, string> }) => {
+const authLink = setContext((operation, prevContext) => {
   const token = getAuthToken();
   return {
     headers: {
-      ...headers,
-      Authorization: token ? `JWT ${token}` : '',
-      'Content-Type': 'application/json',
+      ...prevContext.headers,
+      Authorization: token ? `JWT ${token}` : "",
+      "Content-Type": "application/json",
     },
   };
 });
@@ -71,15 +102,15 @@ const handleTokenRefresh = async (
   const userData = getUserData();
   const refreshToken = userData?.refreshToken;
   if (!refreshToken) {
-    throw new Error('Authentication required');
+    throw new Error("Authentication required");
   }
 
   const apiURL = API_BASE_URL;
 
   try {
     const response = await fetch(apiURL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         query: `
         mutation refreshToken($refreshToken: String!) {
@@ -90,7 +121,7 @@ const handleTokenRefresh = async (
         }
         `,
         variables: { refreshToken },
-        operationName: "refreshToken"
+        operationName: "refreshToken",
       }),
     });
 
@@ -103,7 +134,7 @@ const handleTokenRefresh = async (
       const userData = getUserData() || {};
       userData.accessToken = newAccessToken;
       userData.refreshToken = newRefreshToken;
-      localStorage.setItem('userData', JSON.stringify(userData));
+      localStorage.setItem("userData", JSON.stringify(userData));
     }
 
     if (newAccessToken) {
@@ -117,10 +148,10 @@ const handleTokenRefresh = async (
 
       return forward(operation);
     } else {
-      throw new Error('Failed to refresh token');
+      throw new Error("Failed to refresh token");
     }
   } catch (error) {
-    console.error('Token refresh failed:', error);
+    console.error("Token refresh failed:", error);
     throw error;
   }
 };
@@ -130,12 +161,13 @@ const refreshLink = new ApolloLink((operation, forward) => {
     forward(operation).subscribe({
       next: (result) => {
         const hasExpiredError = result?.errors?.some(
-          (error: any) =>
-            error.message === 'Signature has expired'
+          (error: any) => error.message === "Signature has expired"
         );
         if (hasExpiredError) {
           handleTokenRefresh(operation, forward)
-            .then((refreshedObservable) => refreshedObservable.subscribe(observer))
+            .then((refreshedObservable) =>
+              refreshedObservable.subscribe(observer)
+            )
             .catch((error) => observer.error(error));
         } else {
           observer.next(result);
@@ -143,9 +175,11 @@ const refreshLink = new ApolloLink((operation, forward) => {
         }
       },
       error: (error) => {
-        if (error.message.includes('Signature has expired')) {
+        if (error.message.includes("Signature has expired")) {
           handleTokenRefresh(operation, forward)
-            .then((refreshedObservable) => refreshedObservable.subscribe(observer))
+            .then((refreshedObservable) =>
+              refreshedObservable.subscribe(observer)
+            )
             .catch((refreshError) => observer.error(refreshError));
         } else {
           observer.error(error);
@@ -156,21 +190,55 @@ const refreshLink = new ApolloLink((operation, forward) => {
 });
 
 // Error Link
-const errorLink = onError(({ graphQLErrors, networkError }) => {
-  if (graphQLErrors) {
-    graphQLErrors.forEach((err) => {
-      console.error(
-        `[GraphQL error]: Message: ${err.message}, Location: ${err.locations}, Path: ${err.path}`
-      );
-    });
+const errorLink = onError(
+  ({ graphQLErrors, networkError, operation, forward }: any) => {
+    if (graphQLErrors) {
+      graphQLErrors.forEach((err: any) => {
+        console.error(
+          `[GraphQL error]: Message: ${err.message}, Location: ${err.locations}, Path: ${err.path}`
+        );
+
+        if (err.extensions?.code === "UNAUTHENTICATED") {
+          console.log("🔒 Authentication error detected, redirecting to login");
+          clearAuth();
+          if (typeof window !== "undefined") {
+            window.location.href = "/auth/sign-in";
+          }
+        }
+      });
+    }
+    if (networkError) {
+      console.error(`[Network error]: ${networkError}`);
+
+      if ("statusCode" in networkError && networkError.statusCode === 401) {
+        console.log("🔒 401 Unauthorized, clearing tokens");
+        clearAuth();
+        if (typeof window !== "undefined") {
+          window.location.href = "/auth/sign-in";
+        }
+      }
+    }
   }
-  if (networkError) {
-    console.error(`[Network error]: ${networkError}`);
-  }
-});
+);
 
 // Use Apollo's HttpLink for proper JSON serialization
 const httpLink = new HttpLink({ uri: API_BASE_URL });
+
+// Split link for HTTP/WebSocket routing
+const splitLink =
+  typeof window !== "undefined" && wsLink
+    ? split(
+        ({ query }) => {
+          const definition = getMainDefinition(query);
+          return (
+            definition.kind === "OperationDefinition" &&
+            definition.operation === "subscription"
+          );
+        },
+        wsLink,
+        httpLink
+      )
+    : httpLink;
 
 // Combine Links
 const link = ApolloLink.from([
@@ -178,12 +246,71 @@ const link = ApolloLink.from([
   authLink,
   refreshLink,
   errorLink,
-  httpLink,
+  splitLink,
 ]);
 
 const client = new ApolloClient({
   link,
-  cache: new InMemoryCache(),
+  cache: new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          notifications: {
+            merge(existing = [], incoming) {
+              return [...existing, ...incoming];
+            },
+          },
+          businesses: {
+            merge(existing = [], incoming) {
+              return [...existing, ...incoming];
+            },
+          },
+          campaigns: {
+            merge(existing = [], incoming) {
+              return [...existing, ...incoming];
+            },
+          },
+          analytics: {
+            merge(existing = [], incoming) {
+              return [...existing, ...incoming];
+            },
+          },
+          referrals: {
+            merge(existing = [], incoming) {
+              return [...existing, ...incoming];
+            },
+          },
+          rewards: {
+            merge(existing = [], incoming) {
+              return [...existing, ...incoming];
+            },
+          },
+          support: {
+            merge(existing = [], incoming) {
+              return [...existing, ...incoming];
+            },
+          },
+          accounts: {
+            merge(existing = [], incoming) {
+              return [...existing, ...incoming];
+            },
+          },
+        },
+      },
+    },
+  }),
+  defaultOptions: {
+    watchQuery: {
+      errorPolicy: "all",
+      notifyOnNetworkStatusChange: true,
+    },
+    query: {
+      errorPolicy: "all",
+    },
+    mutate: {
+      errorPolicy: "all",
+    },
+  },
 });
 
 export default client;

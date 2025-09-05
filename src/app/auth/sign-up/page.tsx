@@ -16,7 +16,8 @@ import {
 } from "react-icons/md";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { REGISTER } from "@/apollo/mutations/auth";
 
 const isValidEmail = (email: string) =>

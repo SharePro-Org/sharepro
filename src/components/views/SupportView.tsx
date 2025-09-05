@@ -12,7 +12,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import Link from "next/link";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client/react";
 import { ALL_FAQS, CREATE_SUPPORT_REQUEST } from "@/apollo/queries/support";
 import { FAQ } from "@/apollo/types";
 

@@ -7,7 +7,8 @@ import { Dropdown, Button } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import { Filter } from "@/components/Filter";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
+
 import { GET_BUSINESS_CAMPAIGNS } from "@/apollo/queries/campaigns";
 import CampaignsTable from "@/components/dashboard/CampaignsTable";
 import { useAtom } from "jotai";

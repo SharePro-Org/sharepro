@@ -2,7 +2,8 @@
 
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import React, { useEffect, useState } from "react";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
+
 import { GET_CAMPAIGN_ANALYTICS_BY_CAMPAIGN } from "@/apollo/queries/campaigns";
 import { ArrowLeft, ArrowRight, RefreshCwIcon } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";

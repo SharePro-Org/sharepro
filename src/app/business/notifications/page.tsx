@@ -5,9 +5,61 @@ import { ArrowLeft, UserCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { BsCurrencyDollar } from "react-icons/bs";
+import { useQuery } from "@apollo/client/react";
+import { GET_NOTIFICATIONS } from "@/apollo/queries/notification";
+
+type Notification = {
+  id: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+  notificationType: string;
+  business?: {
+    name: string;
+  };
+};
+
+type NotificationsQueryData = {
+  notifications: {
+    edges: { node: Notification }[];
+  };
+};
 
 const notifications = () => {
   const router = useRouter();
+
+  const { data, loading, error } = useQuery<NotificationsQueryData>(GET_NOTIFICATIONS, {
+    variables: {
+      first: 20, // Load 20 notifications initially
+      unreadOnly: false,
+    },
+    fetchPolicy: "network-only",
+  });
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <section className="bg-white rounded-md md:p-6 p-3">
+          <div className="text-center py-8">Loading notifications...</div>
+        </section>
+      </DashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <section className="bg-white rounded-md md:p-6 p-3">
+          <div className="text-center py-8 text-red-500">
+            Error loading notifications: {error.message}
+          </div>
+        </section>
+      </DashboardLayout>
+    );
+  }
+
+  const notificationsData = (data as any)?.notifications?.edges || [];
 
   return (
     <DashboardLayout>
@@ -23,30 +75,57 @@ const notifications = () => {
         </button>
 
         <>
-          <div className="p-3 border-b border-b-[#EAECF0] flex justify-between">
-            <div className="flex gap-3">
-              <button className="bg-[#ABEFC6] flex justify-center items-center w-12 h-12 text-[#067647] rounded-sm">
-                <UserCircle />
-              </button>
-              <div className="my-auto">
-                <p className="font-medium mb-1">Successfull Referral</p>
-                <p className="text-sm">Lorem ipsum dolor sit amet.</p>
-              </div>
+          {notificationsData.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              No notifications found
             </div>
-            <p className="my-auto text-sm">Just Now</p>
-          </div>
-          <div className="p-3 border-b border-b-[#EAECF0] flex justify-between">
-            <div className="flex gap-3">
-              <button className="bg-[#FEDF89] flex justify-center items-center w-12 h-12 text-[#B54708] rounded-sm">
-                <BsCurrencyDollar size={24} />
-              </button>
-              <div className="my-auto">
-                <p className="font-medium mb-1">Referral Bonus Earned</p>
-                <p className="text-sm">Lorem ipsum dolor sit amet.</p>
+          ) : (
+            notificationsData.map(({ node: notification }: any) => (
+              <div
+                key={notification.id}
+                className={`p-3 border-b border-b-[#EAECF0] flex justify-between ${
+                  !notification.isRead ? "bg-blue-50" : ""
+                }`}
+              >
+                <div className="flex gap-3">
+                  <button
+                    className={`flex justify-center items-center w-12 h-12 rounded-sm ${
+                      notification.notificationType === "REFERRAL_SUCCESS"
+                        ? "bg-[#ABEFC6] text-[#067647]"
+                        : notification.notificationType === "BONUS_EARNED"
+                        ? "bg-[#FEDF89] text-[#B54708]"
+                        : "bg-gray-200 text-gray-600"
+                    }`}
+                  >
+                    {notification.notificationType === "REFERRAL_SUCCESS" ? (
+                      <UserCircle />
+                    ) : notification.notificationType === "BONUS_EARNED" ? (
+                      <BsCurrencyDollar size={24} />
+                    ) : (
+                      <UserCircle />
+                    )}
+                  </button>
+                  <div className="my-auto">
+                    <p className="font-medium mb-1">{notification.title}</p>
+                    <p className="text-sm">{notification.message}</p>
+                    {notification.business && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {notification.business.name}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="my-auto text-right">
+                  <p className="text-sm text-gray-500">
+                    {new Date(notification.createdAt).toLocaleDateString()}
+                  </p>
+                  {!notification.isRead && (
+                    <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mt-1"></span>
+                  )}
+                </div>
               </div>
-            </div>
-            <p className="my-auto text-sm">Just Now</p>
-          </div>
+            ))
+          )}
         </>
       </section>
     </DashboardLayout>

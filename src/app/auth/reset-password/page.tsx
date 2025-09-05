@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { MdOutlineLock } from "react-icons/md";
 import { FaChevronLeft } from "react-icons/fa6";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { RESET_PASSWORD } from "@/apollo/mutations/auth";
 import { useSearchParams } from "next/navigation";
 
