@@ -29,14 +29,14 @@ const settings = () => {
           {/* Payouts Section */}
           <h2 className="text-lg font-semibold text-primary mb-2">Payouts</h2>
           <div className="space-y-4 mb-8 text-[#030229B2]">
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <span>Send rewards automatically</span>
               <Switch defaultChecked />
             </div>
             <div className="flex items-center justify-between">
               <span>Manually approve bulk rewards</span>
               <Switch defaultChecked />
-            </div>
+            </div> */}
             <div className="flex items-center justify-between">
               <span>Device/IP validation</span>
               <Switch defaultChecked />
@@ -76,7 +76,7 @@ const settings = () => {
                 />
               </div>
             </div>
-            <div className="mb-2">
+            {/* <div className="mb-2">
               <span className="font-medium">Send Payouts via:</span>
 
               <div className="flex items-center gap-6 mt-2">
@@ -104,11 +104,11 @@ const settings = () => {
             <div className="flex items-center justify-between">
               <span>Flag suspicious transactions</span>
               <Switch />
-            </div>
+            </div> */}
           </div>
 
           {/* Rewards Section */}
-          <h2 className="text-lg font-semibold text-primary mb-2">Rewards</h2>
+          {/* <h2 className="text-lg font-semibold text-primary mb-2">Rewards</h2>
           <div className="space-y-4 mb-8 text-[#030229B2]">
             <div className="flex items-center justify-between">
               <span>Send airtime rewards automatically</span>
@@ -118,7 +118,7 @@ const settings = () => {
               <span>Automatically create vouchers for discount rewards</span>
               <Switch defaultChecked />
             </div>
-          </div>
+          </div> */}
 
           {/* Notifications and Alerts Section */}
           <h2 className="text-lg font-semibold text-primary mb-2">
