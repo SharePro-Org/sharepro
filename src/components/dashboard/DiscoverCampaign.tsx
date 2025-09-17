@@ -4,7 +4,8 @@ import { Calendar, Copy, Check } from "lucide-react";
 import React, { useState, useCallback } from "react";
 import { GiPriceTag } from "react-icons/gi";
 import { MdCampaign } from "react-icons/md";
-import { useMutation, useQuery } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client/react";
+
 import { AVAILABLE_CAMPAIGNS } from "@/apollo/queries/user";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";

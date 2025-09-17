@@ -61,6 +61,17 @@ export default function DashboardLayout({
   const [darkMode, setDarkMode] = useState(false);
   const pathname = usePathname();
 
+  // Function to redirect user if visiting subroute out of their role
+  function redirectIfUnauthorized(userType: string, pathname: string) {
+    if (userType === "ADMIN" && !pathname.startsWith("/admin")) {
+      window.location.replace("/admin/dashboard");
+    } else if (userType === "VIEWER" && !pathname.startsWith("/user")) {
+      window.location.replace("/user/dashboard");
+    } else if ((userType === "OWNER" || userType === "MEMBERS") && !pathname.startsWith("/business")) {
+      window.location.replace("/business/dashboard");
+    }
+  }
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       // Redirect if userData is not in localStorage
@@ -73,13 +84,21 @@ export default function DashboardLayout({
         }
         return;
       }
+      try {
+        const { userType } = JSON.parse(userData);
+        redirectIfUnauthorized(userType, pathname);
+      } catch (e) {
+        // fallback: if userData is malformed, redirect to sign-in
+        window.location.replace("/auth/sign-in");
+        return;
+      }
       if (window.innerWidth >= 768) {
         setSidebarOpen(true);
       }
       const stored = localStorage.getItem("theme");
       if (stored === "dark") setDarkMode(true);
     }
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     if (darkMode) {
@@ -108,8 +127,8 @@ export default function DashboardLayout({
           pt-[42px] transition-all
           min-h-screen
         `}
-        // Sidebar width: 224px + 2*16px (ml-6, px-2, border) ≈ 256px
-        // Navbar height: py-4 (16px), px-8, font size ≈ 76px
+      // Sidebar width: 224px + 2*16px (ml-6, px-2, border) ≈ 256px
+      // Navbar height: py-4 (16px), px-8, font size ≈ 76px
       >
         <div className="mt-14 px-4 md:px-4 lg:px-4 max-w-full">{children}</div>
       </div>

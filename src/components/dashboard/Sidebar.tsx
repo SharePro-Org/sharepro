@@ -21,6 +21,7 @@ import {
   LogOut,
 } from "lucide-react";
 import { useState } from "react";
+import { hr } from "@uiw/react-md-editor";
 
 const links = [
   { label: "Dashboard", href: "/business/dashboard", icon: LayoutDashboard },
@@ -47,6 +48,15 @@ const userLinks = [
   { label: "Account", href: "/user/account", icon: User },
   { label: "Help & Support", href: "/user/support", icon: HelpCircle },
   // { label: "Logout", href: "/user/auth/login", icon: LogOut },
+];
+
+const adminLinks = [
+  { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+  { label: "Business", href: "/admin/business", icon: Megaphone },
+  { label: "Customers", href: "/admin/customers", icon: Wallet },
+  { label: "User Management", href: "/admin/user-management", icon: Users },
+  { label: 'Knowledge Base', href: '/admin/knowledge-base', icon: HelpCircle },
+  { label: "Account", href: "/admin/account", icon: User },
 ];
 
 export default function Sidebar({
@@ -80,12 +90,12 @@ export default function Sidebar({
     >
       <nav className="flex-1 overflow-y-auto pt-4 pb-4 hide-scrollbar">
         <ul className="space-y-2">
-          {(pathname.startsWith("/user") ? userLinks : links).map((item) => {
+          {(pathname.startsWith("/user") ? userLinks : pathname.startsWith("/admin") ? adminLinks : links).map((item) => {
             const Icon = item.icon;
             let active = false;
             if (item.href === "/") {
               active = pathname === "/";
-            } else if (item.href.startsWith("/business/") || item.href.startsWith("/user/")) {
+            } else if (item.href.startsWith("/business/") || item.href.startsWith("/user/") || item.href.startsWith("/admin/")) {
               // Unify logic for business and user routes
               const pathSeg = pathname.split("/")[2];
               const linkSeg = item.href.split("/")[2];

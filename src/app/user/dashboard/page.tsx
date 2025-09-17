@@ -4,7 +4,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import DiscoverCampaign from "@/components/dashboard/DiscoverCampaign";
 import UserDashboardTable from "@/components/dashboard/UserDashboardTable";
 import { USER_DASHBOARD_SUMMARY } from "@/apollo/queries/user";
-import { useQuery } from "@apollo/client/react";
+import { useQuery, useMutation } from "@apollo/client/react";
 
 import { Calendar, Users, XIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -26,34 +26,48 @@ const userDashboard = () => {
     walletBalance: "₦0.00",
   });
 
-  const { data, loading, error } = useQuery(USER_DASHBOARD_SUMMARY, {
+  interface UserDashboardSummaryData {
+    userDashboardSummary: {
+      totalRewardsEarned: number;
+      recentRewardChange: number;
+      recentRewardPercentage: number;
+      totalCampaignsJoined: number;
+      totalReferrals: number;
+      pendingActions: number;
+      walletBalance: number;
+      // Add any other fields as needed
+    };
+  }
+
+  const { data, loading, error } = useQuery<UserDashboardSummaryData>(USER_DASHBOARD_SUMMARY, {
     variables: { userId: user?.userId },
     skip: !user?.userId,
-    onCompleted: (data) => {
-      if (data?.userDashboardSummary) {
-        const dashboardData = data.userDashboardSummary;
-        setSummary({
-          totalRewardsEarned: formatCurrency(
-            dashboardData.totalRewardsEarned || 0
-          ),
-          recentRewardChange: formatCurrency(
-            dashboardData.recentRewardChange || 0
-          ),
-          recentRewardPercentage: dashboardData.recentRewardPercentage || 0,
-          totalCampaignsJoined: dashboardData.totalCampaignsJoined || 0,
-          ongoingCampaigns: Math.ceil(
-            (dashboardData.totalCampaignsJoined || 0) / 2
-          ), // Estimate, replace with actual data if available
-          totalReferrals: dashboardData.totalReferrals || 0,
-          convertedReferrals: Math.floor(
-            (dashboardData.totalReferrals || 0) * 0.1
-          ), // Estimate, replace with actual data if available
-          pendingActions: dashboardData.pendingActions || 0,
-          walletBalance: formatCurrency(dashboardData.walletBalance || 0),
-        });
-      }
-    },
   });
+
+  useEffect(() => {
+    if (data?.userDashboardSummary) {
+      const dashboardData = data.userDashboardSummary;
+      setSummary({
+        totalRewardsEarned: formatCurrency(
+          dashboardData.totalRewardsEarned || 0
+        ),
+        recentRewardChange: formatCurrency(
+          dashboardData.recentRewardChange || 0
+        ),
+        recentRewardPercentage: dashboardData.recentRewardPercentage || 0,
+        totalCampaignsJoined: dashboardData.totalCampaignsJoined || 0,
+        ongoingCampaigns: Math.ceil(
+          (dashboardData.totalCampaignsJoined || 0) / 2
+        ), // Estimate, replace with actual data if available
+        totalReferrals: dashboardData.totalReferrals || 0,
+        convertedReferrals: Math.floor(
+          (dashboardData.totalReferrals || 0) * 0.1
+        ), // Estimate, replace with actual data if available
+        pendingActions: dashboardData.pendingActions || 0,
+        walletBalance: formatCurrency(dashboardData.walletBalance || 0),
+      });
+    }
+  }, [data]);
 
   // Format currency to display as naira
   const formatCurrency = (amount: number): string => {
