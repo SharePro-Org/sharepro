@@ -112,6 +112,14 @@ const ComboRewards = ({ id }: { id: string | null }) => {
     },
   });
 
+  type CreateCampaignRewardResponse = {
+    createCampaignReward?: {
+      success: boolean;
+      message?: string;
+      campaign?: any;
+    };
+  };
+
   const handleSubmit = async () => {
     const tier = tiers[0]; // You may want to support multiple tiers
 
@@ -158,12 +166,14 @@ const ComboRewards = ({ id }: { id: string | null }) => {
         },
       });
 
-      if (data?.createCampaignReward?.success) {
-        setCampaignData(data.createCampaignReward.campaign);
+      const response = data as CreateCampaignRewardResponse;
+
+      if (response?.createCampaignReward?.success) {
+        setCampaignData(response.createCampaignReward.campaign);
         setSuccess(true);
       } else {
         message.error(
-          data?.createCampaignReward?.message ||
+          response?.createCampaignReward?.message ||
             "Failed to create loyalty reward."
         );
       }

@@ -14,7 +14,14 @@ export default function OtpPage() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(59);
   const [otpError, setOtpError] = useState("");
-  const [verifyEmail, { loading }] = useMutation(VERIFY_EMAIL);
+  interface VerifyEmailResponse {
+    verifyEmailToken?: {
+      success: boolean;
+      message?: string;
+    };
+  }
+
+  const [verifyEmail, { loading }] = useMutation<VerifyEmailResponse>(VERIFY_EMAIL);
   const inputRefs = Array.from({ length: 6 }, () =>
     useRef<HTMLInputElement>(null)
   );

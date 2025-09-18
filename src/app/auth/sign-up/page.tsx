@@ -110,7 +110,8 @@ export default function BusinessSignUp() {
             password,
           },
         },
-      });
+      }) as { data: { register?: { success?: boolean; message?: string } } };
+
       if (data?.register?.success) {
         router.push(
           `/auth/verify-email?email=${encodeURIComponent(businessEmail)}`

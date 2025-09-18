@@ -13,11 +13,15 @@ const walkthroughs = () => {
   const [selectedCategory, setSelectedCategory] = useState("All Tutorials");
   const [searchQuery, setSearchQuery] = useState("");
 
+  interface WalkthroughVideosQueryData {
+    walkthroughVideos: WalkthroughVideo[];
+  }
+
   const {
     data: videosData,
     loading: videosLoading,
     error: videosError,
-  } = useQuery(ALL_WALKTHROUGH_VIDEOS);
+  } = useQuery<WalkthroughVideosQueryData>(ALL_WALKTHROUGH_VIDEOS);
 
   const handleGoBack = () => {
     router.back();

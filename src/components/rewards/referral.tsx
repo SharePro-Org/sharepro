@@ -91,7 +91,20 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
   // Common state
   const [currency, setCurrency] = useState("NGN");
 
-  const [createReferralReward, { loading }] = useMutation(
+  interface CreateCampaignRewardResponse {
+    createCampaignReward?: {
+      success: boolean;
+      message?: string;
+      campaign?: {
+        referralLink?: string;
+        id?: string;
+        name?: string;
+        type?: string;
+      };
+    };
+  }
+
+  const [createReferralReward, { loading }] = useMutation<CreateCampaignRewardResponse>(
     CREATE_REFERRAL_REWARD
   );
 

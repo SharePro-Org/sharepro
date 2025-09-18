@@ -114,6 +114,14 @@ const SignupComp = () => {
     if (!isFormValid) return;
     setLoading(true);
     try {
+      type RegisterInvitedMemberResponse = {
+        registerInvitedMember?: {
+          success?: boolean;
+          message?: string;
+          errors?: string[];
+        };
+      };
+
       const response = await registerInvitedMember({
         variables: {
           input: {
@@ -126,7 +134,8 @@ const SignupComp = () => {
           },
         },
       });
-      const result = response.data?.registerInvitedMember;
+
+      const result = (response.data as RegisterInvitedMemberResponse)?.registerInvitedMember;
       if (result?.success) {
         setSuccessMessage(result.message || "Account created!");
         router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);

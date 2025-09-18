@@ -8,12 +8,19 @@ import { Label } from '@/components/ui/label';
 import AuthLayout from '@/components/AuthLayout';
 import { HiOutlineMail } from "react-icons/hi";
 import { FaChevronLeft } from "react-icons/fa6";
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client/react';
 import { FORGOT_PASSWORD } from '@/apollo/mutations/auth';
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
+
+type ForgotPasswordMutationResult = {
+  forgotPassword?: {
+    success: boolean;
+    message?: string;
+  };
+};
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -22,7 +29,7 @@ export default function ForgotPassword() {
   const [error, setError] = useState('');
   const [touched, setTouched] = useState(false);
   const [success, setSuccess] = useState('');
-  const [forgotPassword, { loading }] = useMutation(FORGOT_PASSWORD);
+  const [forgotPassword, { loading }] = useMutation<ForgotPasswordMutationResult>(FORGOT_PASSWORD);
 
   const canContinue = isValidEmail(email);
 

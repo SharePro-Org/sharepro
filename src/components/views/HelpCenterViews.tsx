@@ -17,14 +17,33 @@ import {
 import { useQuery } from "@apollo/client/react";
 
 
+type FaqCategory = {
+  category: string;
+  categoryDisplay: string;
+};
+
+type FaqCategoriesData = {
+  faqCategories: FaqCategory[];
+};
+
+type Faq = {
+  id: string;
+  question: string;
+  answer: string;
+};
+
+type FaqsByCategoryData = {
+  faqsByCategory: Faq[];
+};
+
 const HelpCenterView = () => {
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: categoriesData, loading: categoriesLoading } =
-    useQuery(GET_FAQ_CATEGORIES);
-  const { data: faqsData, loading: faqsLoading } = useQuery(
+    useQuery<FaqCategoriesData>(GET_FAQ_CATEGORIES);
+  const { data: faqsData, loading: faqsLoading } = useQuery<FaqsByCategoryData>(
     GET_FAQS_BY_CATEGORY,
     {
       variables: { category: selectedCategory },
@@ -74,7 +93,7 @@ const HelpCenterView = () => {
             <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
             Loading categories...
           </div>
-        ) : categoriesData?.faqCategories?.length > 0 ? (
+        ) : categoriesData?.faqCategories?.length && categoriesData.faqCategories.length > 0 ? (
           <Accordion
             type="single"
             collapsible
@@ -112,9 +131,9 @@ const HelpCenterView = () => {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
                 Loading FAQs...
               </div>
-            ) : faqsData?.faqsByCategory?.length > 0 ? (
+            ) : (faqsData?.faqsByCategory?.length ?? 0) > 0 ? (
               <Accordion type="single" collapsible className="w-full">
-                {faqsData.faqsByCategory
+                {faqsData?.faqsByCategory
                   .filter(
                     (faq: any) =>
                       faq.question

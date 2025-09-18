@@ -13,12 +13,19 @@ import TopRightLeftSection from "../../../../../public/assets/auth/top-right-lef
 import BottomLeftLeftSection from "../../../../../public/assets/auth/bottom-left-left-section.svg";
 import Image from "next/image";
 
+type VerifyEmailResponse = {
+  verifyEmailToken: {
+    success: boolean;
+    message?: string;
+  };
+};
+
 export default function OtpPage() {
   const router = useRouter();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(59);
   const [otpError, setOtpError] = useState("");
-  const [verifyEmail, { loading }] = useMutation(VERIFY_EMAIL);
+  const [verifyEmail, { loading }] = useMutation<VerifyEmailResponse>(VERIFY_EMAIL);
   const inputRefs = Array.from({ length: 6 }, () =>
     useRef<HTMLInputElement>(null)
   );

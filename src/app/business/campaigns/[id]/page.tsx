@@ -92,21 +92,27 @@ const singleCampaign = () => {
   const [campaignAnalytics, setCampaignAnalytics] =
     useState<CampaignAnalyticsType | null>(null);
 
+  // Define the expected shape of the query result
+  type CampaignAnalyticsQueryResult = {
+    campaignAnalyticsByCampaign?: CampaignAnalyticsType[];
+  };
+
   // Fetch campaign analytics
   const {
     data: analyticsData,
     loading: analyticsLoading,
     error: analyticsError,
     refetch,
-  } = useQuery(GET_CAMPAIGN_ANALYTICS_BY_CAMPAIGN, {
+  } = useQuery<CampaignAnalyticsQueryResult>(GET_CAMPAIGN_ANALYTICS_BY_CAMPAIGN, {
     variables: { campaignId },
     skip: !campaignId,
-    onCompleted: (data) => {
-      // console.log("Analytics Data:", data.campaignAnalyticsByCampaign[0]);
-      setCampaignAnalytics(data.campaignAnalyticsByCampaign[0]);
-      // console.log("Campaign Analytics:", campaignAnalytics);
-    },
   });
+
+  useEffect(() => {
+    if (analyticsData && analyticsData.campaignAnalyticsByCampaign) {
+      setCampaignAnalytics(analyticsData.campaignAnalyticsByCampaign[0]);
+    }
+  }, [analyticsData]);
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
 

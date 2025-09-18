@@ -78,6 +78,14 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
     }
   );
 
+  type CreateCampaignRewardResult = {
+    createCampaignReward?: {
+      success: boolean;
+      message?: string;
+      campaign?: any;
+    };
+  };
+
   const handleSubmit = async () => {
     const campaignId = id;
     const tier = tiers[0]; // You may want to support multiple tiers
@@ -103,7 +111,7 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
             loyaltyCampaignData,
           },
         },
-      });
+      }) as { data: CreateCampaignRewardResult };
       if (data?.createCampaignReward?.success) {
         setCampaignData(data.createCampaignReward.campaign);
         setSuccess(true);

@@ -239,14 +239,22 @@ const SignupComp = () => {
             referralCode: referralData.referralCode,
           },
         },
-      });
+      }) as {
+        data: {
+          registerUserByCode?: {
+            success?: boolean;
+            user?: { id?: string };
+            message?: string;
+          };
+        };
+      };
 
       if (data?.registerUserByCode?.success) {
         // Track registration success analytics
         const trackRegistrationSuccess = async () => {
           const successProperties = {
             eventType: "registration_success",
-            userId: data.registerUserByCode.user?.id,
+            userId: data.registerUserByCode?.user?.id,
             userEmail: email,
             firstName,
             lastName,

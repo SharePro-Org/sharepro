@@ -82,16 +82,18 @@ const DiscoverCampaign = ({
         },
       });
 
-      if (response.data?.joinCampaign?.success) {
+      const data = response.data as { joinCampaign?: { success: boolean; referralCode: string; referralLink: string; message?: string } };
+
+      if (data?.joinCampaign?.success) {
         setReferralData({
-          referralCode: response.data.joinCampaign.referralCode,
-          referralLink: response.data.joinCampaign.referralLink,
+          referralCode: data.joinCampaign.referralCode,
+          referralLink: data.joinCampaign.referralLink,
         });
         setOpen(false);
         setJoined(true);
       } else {
         setJoinError(
-          response.data?.joinCampaign?.message || "Failed to join campaign"
+          data?.joinCampaign?.message || "Failed to join campaign"
         );
       }
     } catch (e: any) {
@@ -123,7 +125,10 @@ const DiscoverCampaign = ({
   const [copiedLink, setCopiedLink] = useState(false);
 
   // Get campaigns and slice if max is provided
-  const campaigns: Campaign[] = data?.availableCampaigns || [];
+  const campaigns: Campaign[] =
+    (data && typeof data === "object" && data !== null && "availableCampaigns" in data
+      ? (data as { availableCampaigns: Campaign[] }).availableCampaigns
+      : []);
   const displayCampaigns = max ? campaigns.slice(0, max) : campaigns;
   const campaignsToShow = displayCampaigns;
 

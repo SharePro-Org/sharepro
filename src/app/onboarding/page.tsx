@@ -204,7 +204,14 @@ const Onboarding: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>("pro");
   const [showModal, setShowModal] = useState(false);
 
-  const [onboardingBusiness, { loading }] = useMutation(ONBOARDING_BUSINESS);
+  interface OnboardingBusinessResponse {
+    onboardingBusiness?: {
+      success: boolean;
+      message?: string;
+    };
+  }
+
+  const [onboardingBusiness, { loading }] = useMutation<OnboardingBusinessResponse>(ONBOARDING_BUSINESS);
 
   const handleSubmit = async () => {
     try {

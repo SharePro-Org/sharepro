@@ -40,14 +40,14 @@ const NewCampaignContent = () => {
   }, [user]);
 
   const [createCampaign, { loading }] = useMutation(CREATE_CAMPAIGN, {
-    onCompleted: (data) => {
-      if (data.createCampaign.success) {
+    onCompleted: (data: any) => {
+      if (data?.createCampaign?.success) {
         setSuccess(true);
         setErrorMsg("");
         setCampaignId(data.createCampaign.campaign.id);
       } else {
         setErrorMsg(
-          data.createCampaign.message || "Failed to create campaign."
+          data?.createCampaign?.message || "Failed to create campaign."
         );
         // setSuccessMsg("");
       }
