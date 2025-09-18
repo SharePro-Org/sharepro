@@ -1,8 +1,28 @@
+'use client';
+
+import CampaignsTable from '@/components/dashboard/CampaignsTable';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { Flame, HeartIcon, MessageCircleReply, Users } from 'lucide-react';
+import { ArrowRight, Flame, HeartIcon, MessageCircleReply, Users } from 'lucide-react';
+import Link from 'next/link';
 import React from 'react';
+import { useQuery } from "@apollo/client/react";
+import { BUSINESSES } from "@/apollo/queries/admin";
+type Business = {
+    id: string;
+    name: string;
+    businessType?: string;
+    email?: string;
+    createdAt?: string;
+};
+
+type BusinessesQueryResult = {
+    businesses: Business[];
+};
 
 const adminDashboard = () => {
+
+    const { data: businessesData, loading: businessesLoading, error: businessesError } = useQuery<BusinessesQueryResult>(BUSINESSES);
+
     return (
         <DashboardLayout>
             <section>
@@ -74,23 +94,29 @@ const adminDashboard = () => {
                                 <thead>
                                     <tr className="bg-[#D1DAF4] text-black">
                                         <th className="px-4 py-3 font-medium text-left">Business Name</th>
-                                        <th className="px-4 py-3 font-medium text-left">Active Campaigns</th>
-                                        <th className="px-4 py-3 font-medium text-left">Invited Users</th>
+                                        <th className="px-4 py-3 font-medium text-left">Business Type</th>
+                                        <th className="px-4 py-3 font-medium text-left">Email</th>
                                         <th className="px-4 py-3 font-medium text-left">Date Joined</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {[1, 2, 3, 4, 5, 6, 7].map((item) => (
-                                        <tr
-                                            key={item}
-                                            className="border-b border-[#E2E8F0] py-6 last:border-0"
-                                        >
-                                            <td className="py-3 px-4">John Doe</td>
-                                            <td className="py-3 px-4">Loyalty</td>
-                                            <td className="py-3 px-4">10</td>
-                                            <td className="py-3 px-4">2023-10-01</td>
-                                        </tr>
-                                    ))}
+                                    {businessesLoading ? (
+                                        <tr><td colSpan={4} className="py-3 px-4 text-center">Loading...</td></tr>
+                                    ) : businessesError ? (
+                                        <tr><td colSpan={4} className="py-3 px-4 text-center text-red-500">Error loading businesses</td></tr>
+                                    ) : (
+                                        (businessesData?.businesses?.slice(0, 5) || []).map((business: any) => (
+                                            <tr
+                                                key={business.id}
+                                                className="border-b border-[#E2E8F0] py-6 last:border-0"
+                                            >
+                                                <td className="py-3 px-4">{business.name}</td>
+                                                <td className="py-3 px-4">{business.businessType || '-'}</td>
+                                                <td className="py-3 px-4">{business.email || '-'}</td>
+                                                <td className="py-3 px-4">{business.createdAt ? new Date(business.createdAt).toLocaleDateString() : '-'}</td>
+                                            </tr>
+                                        ))
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -127,6 +153,27 @@ const adminDashboard = () => {
                         </div>
                     </div>
                 </div>
+                <section className="bg-white p-4 mt-5 rounded-md">
+                    <div className="lg:flex justify-between">
+                        <p className="text-black font-semibold my-auto text-base">
+                            My Campaigns
+                        </p>
+                        <div className="flex gap-4">
+                            {/* <RangePicker /> */}
+                            <Link
+                                href={"/admin/campaigns"}
+                                className="my-auto cursor-pointer"
+                            >
+                                <button className="flex my-auto gap-2 text-sm text-primary cursor-pointer">
+                                    <span className="my-auto">View All </span>
+                                    <ArrowRight size={15} className="my-auto" />
+                                </button>
+                            </Link>
+                        </div>
+                    </div>
+                    {/* Filter component */}
+                    <CampaignsTable num={6} />
+                </section>
             </section>
         </DashboardLayout>
     );
