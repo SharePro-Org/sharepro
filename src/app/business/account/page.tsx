@@ -50,12 +50,23 @@ const account = () => {
     tagline: "",
   });
 
+  type BusinessQueryResult = {
+    business?: {
+      name?: string;
+      phone?: string;
+      email?: string;
+      website?: string;
+      tagline?: string;
+      // Add other fields as needed
+    };
+  };
+
   const {
     data: userData,
     loading: userLoading,
     error: userError,
     refetch: refetchUser,
-  } = useQuery(GET_BUSINESS, {
+  } = useQuery<BusinessQueryResult>(GET_BUSINESS, {
     variables: { id: businessId },
     skip: !businessId,
   });
@@ -79,6 +90,14 @@ const account = () => {
     }
   }, [userData]);
 
+  type InviteMemberResponse = {
+    inviteMember?: {
+      success?: boolean;
+      message?: string;
+      error?: string;
+    };
+  };
+
   const handleInviteUser = async () => {
     setInviteLoading(true);
     setInviteError(null);
@@ -94,16 +113,17 @@ const account = () => {
           },
         },
       });
-      if (response.data?.inviteMember?.success) {
+      const data = response.data as InviteMemberResponse;
+      if (data?.inviteMember?.success) {
         setInviteSuccess(
-          response.data.inviteMember.message || "Invite sent successfully!"
+          data.inviteMember.message || "Invite sent successfully!"
         );
         setInviteName("");
         setInviteEmail("");
         setInviteRole("");
       } else {
         setInviteError(
-          response.data?.inviteMember?.error || "Failed to send invite."
+          data?.inviteMember?.error || "Failed to send invite."
         );
       }
     } catch (err: any) {
@@ -113,12 +133,22 @@ const account = () => {
     }
   };
 
+  type MembersQueryResult = {
+    businessMembers?: Array<{
+      inviterName?: string;
+      memberEmail?: string;
+      role?: string;
+      status?: string;
+      // Add other member fields as needed
+    }>;
+  };
+
   const {
     data: membersData,
     loading: membersLoading,
     error: membersError,
     refetch: refetchMembers,
-  } = useQuery(LIST_INVITED_MEMBERS, {
+  } = useQuery<MembersQueryResult>(LIST_INVITED_MEMBERS, {
     variables: { businessId },
     skip: !businessId,
   });
@@ -335,7 +365,7 @@ const account = () => {
                               Error loading members.
                             </td>
                           </tr>
-                        ) : membersData?.businessMembers?.length > 0 ? (
+                        ) : Array.isArray(membersData?.businessMembers) && membersData.businessMembers.length > 0 ? (
                           membersData.businessMembers.map(
                             (member: any, idx: number) => (
                               <tr key={idx}>
