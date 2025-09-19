@@ -100,3 +100,8 @@
   background-position: center;
   background-repeat: no-repeat;
 }
+
+
+.custom-kb-table .ant-table-thead>tr>th {
+  background: #D1DAF4 !important;
+}
