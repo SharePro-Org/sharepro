@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { hr } from "@uiw/react-md-editor";
+import { FaUserGroup } from "react-icons/fa6";
 
 const links = [
   { label: "Dashboard", href: "/business/dashboard", icon: LayoutDashboard },
@@ -55,6 +56,7 @@ const adminLinks = [
   { label: "Business", href: "/admin/business", icon: Megaphone },
   { label: "Customers", href: "/admin/customers", icon: Wallet },
   { label: "User Management", href: "/admin/user-management", icon: Users },
+  { label: 'System Permissions', href: '/admin/system-permissions', icon: FaUserGroup },
   { label: 'Knowledge Base', href: '/admin/knowledge-base', icon: HelpCircle },
   { label: "Account", href: "/admin/account", icon: User },
 ];

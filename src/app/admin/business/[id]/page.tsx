@@ -280,7 +280,7 @@ export default function BusinessProfilePage() {
                 </div>
 
                 {/* Recent Payouts Section */}
-                <div className="bg-white rounded-md p-4 mb-6">
+                {/* <div className="bg-white rounded-md p-4 mb-6">
                     <div className="flex justify-between items-center mb-2">
                         <div className="font-semibold text-base">Recent Payouts</div>
                         <div>
@@ -330,7 +330,7 @@ export default function BusinessProfilePage() {
                             </tbody>
                         </table>
                     </div>
-                </div>
+                </div> */}
             </div>
         </DashboardLayout>
     );
