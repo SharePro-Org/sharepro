@@ -72,33 +72,33 @@ export default function DashboardLayout({
     }
   }
 
-  // useEffect(() => {
-  //   if (typeof window !== "undefined") {
-  //     // Redirect if userData is not in localStorage
-  //     const userData = localStorage.getItem("userData");
-  //     if (!userData) {
-  //       if (pathname.startsWith("/user")) {
-  //         window.location.replace("/user/auth/login");
-  //       } else {
-  //         window.location.replace("/auth/sign-in");
-  //       }
-  //       return;
-  //     }
-  //     try {
-  //       const { userType } = JSON.parse(userData);
-  //       redirectIfUnauthorized(userType, pathname);
-  //     } catch (e) {
-  //       // fallback: if userData is malformed, redirect to sign-in
-  //       window.location.replace("/auth/sign-in");
-  //       return;
-  //     }
-  //     if (window.innerWidth >= 768) {
-  //       setSidebarOpen(true);
-  //     }
-  //     const stored = localStorage.getItem("theme");
-  //     if (stored === "dark") setDarkMode(true);
-  //   }
-  // }, [pathname]);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Redirect if userData is not in localStorage
+      const userData = localStorage.getItem("userData");
+      if (!userData) {
+        if (pathname.startsWith("/user")) {
+          window.location.replace("/user/auth/login");
+        } else {
+          window.location.replace("/auth/sign-in");
+        }
+        return;
+      }
+      try {
+        const { userType } = JSON.parse(userData);
+        redirectIfUnauthorized(userType, pathname);
+      } catch (e) {
+        // fallback: if userData is malformed, redirect to sign-in
+        window.location.replace("/auth/sign-in");
+        return;
+      }
+      if (window.innerWidth >= 768) {
+        setSidebarOpen(true);
+      }
+      const stored = localStorage.getItem("theme");
+      if (stored === "dark") setDarkMode(true);
+    }
+  }, [pathname]);
 
   useEffect(() => {
     if (darkMode) {
