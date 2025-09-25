@@ -5,16 +5,99 @@ import { Button, Dropdown, Input, Table } from 'antd';
 import { CaretDownOutlined, FilterOutlined, MoreOutlined } from '@ant-design/icons';
 import React from 'react';
 import { Flame, HeartIcon, MessageCircleReply, SearchIcon, Users } from 'lucide-react';
+import { useQuery } from '@apollo/client/react';
+import { ALL_USERS } from '@/apollo/queries/admin';
 
-const mockCustomers = [
-    { rank: 1, name: "Jane Mary", points: 3000, purchases: 24, amount: "₦8,000", redeemed: "₦8,000", badge: "Gold" },
-    { rank: 2, name: "Obi Ann", points: 3000, purchases: 21, amount: "₦6,500", redeemed: "₦6,500", badge: "Silver" },
-    { rank: 3, name: "Ade Nuella", points: 3000, purchases: 17, amount: "₦5,000", redeemed: "₦5,000", badge: "Bronze" },
-    { rank: 4, name: "Fola Kayode", points: 2000, purchases: 9, amount: "₦3,000", redeemed: "₦3,000", badge: "-" },
-    { rank: 5, name: "Daniel Tayo", points: 1000, purchases: 6, amount: "₦2,000", redeemed: "₦2,000", badge: "-" },
+const columns = [
+    {
+        title: "Rank",
+        dataIndex: "rank",
+        key: "rank",
+        render: (rank: number) => rank <= 3 ? `🥇 ${rank}` : rank,
+    },
+    {
+        title: "Customer's Name",
+        dataIndex: "name",
+        key: "name",
+    },
+    {
+        title: "Email",
+        dataIndex: "email",
+        key: "email",
+    },
+    {
+        title: "Points",
+        dataIndex: "points",
+        key: "points",
+    },
+    {
+        title: "Purchases",
+        dataIndex: "purchases",
+        key: "purchases",
+    },
+    {
+        title: "Amount",
+        dataIndex: "amount",
+        key: "amount",
+    },
+    {
+        title: "Redeemed",
+        dataIndex: "redeemed",
+        key: "redeemed",
+    },
+    {
+        title: "Badge",
+        dataIndex: "badge",
+        key: "badge",
+    },
+    {
+        title: "Action",
+        key: "action",
+        render: () => (
+            <Dropdown
+                menu={{ items: [{ key: "view", label: "View Customer" }] }}
+                trigger={["click"]}
+            >
+                <Button type="text"><MoreOutlined /></Button>
+            </Dropdown>
+        ),
+    },
 ];
 
+type UserProfile = {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+};
+
+type User = {
+    userProfile?: UserProfile;
+    // add other fields if needed
+};
+
+type AllUsersQueryData = {
+    allUsers: User[];
+};
+
 const CustomersPage = () => {
+    const { data, loading, error } = useQuery<AllUsersQueryData>(ALL_USERS);
+    const [search, setSearch] = React.useState('');
+    // Map ALL_USERS to table data
+    const allCustomers = (data?.allUsers || []).map((user: User, idx: number) => ({
+        rank: idx + 1,
+        name: `${user.userProfile?.firstName || ''} ${user.userProfile?.lastName || ''}`,
+        email: user.userProfile?.email || '-',
+        points: '-',
+        purchases: '-',
+        amount: '-',
+        redeemed: '-',
+        badge: '-',
+        key: user.userProfile?.email || idx,
+    }));
+    const customers = allCustomers.filter(c =>
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        c.email.toLowerCase().includes(search.toLowerCase())
+    );
     return (
         <DashboardLayout>
             <>
@@ -26,7 +109,7 @@ const CustomersPage = () => {
                                 <Users fill="#FFC327" className="text-[#FFC327]" />
                             </div>
                             <div className="ml-4">
-                                <div className="text-lg font-bold">12.5K</div>
+                                <div className="text-lg font-bold">{allCustomers.length}</div>
                                 <div className="text-xs text-gray-500">Total Customers</div>
                             </div>
                         </div>
@@ -40,7 +123,7 @@ const CustomersPage = () => {
                             <div className="ml-4">
                                 <div className="text-lg font-bold">4</div>
                                 <div className="text-xs text-gray-500">Inactive Customers</div>
-                              
+
                             </div>
                         </div>
                     </div>
@@ -82,10 +165,11 @@ const CustomersPage = () => {
                         <div className="relative md:mt-0 mt-2">
                             <input
                                 type="text"
+                                value={search}
+                                onChange={e => setSearch(e.target.value)}
                                 className="bg-[#F9FAFB] md:w-72 w-full border border-[#E4E7EC] p-3 rounded-sm pl-8 text-sm"
-                                placeholder="Search by Name"
+                                placeholder="Search by Name or Email"
                             />
-
                             <SearchIcon
                                 size={16}
                                 className="absolute top-4 left-3 text-gray-500"
@@ -93,47 +177,15 @@ const CustomersPage = () => {
                         </div>
                     </header>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="bg-[#D1DAF4] text-black">
-                                    <th className="px-4 py-3 font-medium text-left">Rank</th>
-                                    <th className="px-4 py-3 font-medium text-left">Customer's Name</th>
-                                    <th className="px-4 py-3 font-medium text-left">Points</th>
-                                    <th className="px-4 py-3 font-medium text-left">Purchases</th>
-                                    <th className="px-4 py-3 font-medium text-left">Amount</th>
-                                    <th className="px-4 py-3 font-medium text-left">Redeemed</th>
-                                    <th className="px-4 py-3 font-medium text-left">Badge</th>
-                                    <th className="px-4 py-3 font-medium text-left">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {mockCustomers.map((c, i) => (
-                                    <tr key={i} className="border-b border-[#E2E8F0] py-2 last:border-0">
-                                        <td className="px-4 py-3">{c.rank <= 3 ? `🥇 ${c.rank}` : c.rank}</td>
-                                        <td className="px-4 py-3">{c.name}</td>
-                                        <td className="px-4 py-3">{c.points}</td>
-                                        <td className="px-4 py-3">{c.purchases}</td>
-                                        <td className="px-4 py-3">{c.amount}</td>
-                                        <td className="px-4 py-3">{c.redeemed}</td>
-                                        <td className="px-4 py-3">{c.badge}</td>
-                                        <td className="px-4 py-3">
-                                            <Dropdown
-                                                menu={{
-                                                    items: [
-                                                        { key: "view", label: "View Customer" },
-                                                    ],
-                                                }}
-                                                trigger={["click"]}
-                                            >
-                                                <Button type="text"><MoreOutlined /></Button>
-                                            </Dropdown>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                    <Table
+                        columns={columns}
+                        dataSource={customers}
+                        loading={loading}
+                        pagination={{ pageSize: 10 }}
+                        scroll={{ x: true }}
+                        className="custom-kb-table"
+                        rowClassName={() => "border-b border-[#E2E8F0] py-2 last:border-0"}
+                    />
                 </div>
             </>
         </DashboardLayout>

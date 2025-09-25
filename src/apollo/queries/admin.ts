@@ -132,3 +132,21 @@ export const BUSINESS_MEMBERS = gql`
     }
   }
 `;
+
+
+export const ALL_USERS = gql`
+  query allUsers {
+    allUsers {
+      userProfile {
+        email
+        firstName
+        lastName
+        createdAt
+        userType
+        updatedAt
+        timezone
+        location
+      }
+    }
+  }
+`;

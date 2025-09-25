@@ -6,7 +6,7 @@ import { ArrowRight, Flame, HeartIcon, MessageCircleReply, Users } from 'lucide-
 import Link from 'next/link';
 import React from 'react';
 import { useQuery } from "@apollo/client/react";
-import { BUSINESSES } from "@/apollo/queries/admin";
+import { BUSINESSES, ALL_USERS } from "@/apollo/queries/admin";
 type Business = {
     id: string;
     name: string;
@@ -22,6 +22,22 @@ type BusinessesQueryResult = {
 const adminDashboard = () => {
 
     const { data: businessesData, loading: businessesLoading, error: businessesError } = useQuery<BusinessesQueryResult>(BUSINESSES);
+    type UserProfile = {
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+        createdAt?: string;
+    };
+
+    type User = {
+        userProfile?: UserProfile;
+    };
+
+    type UsersQueryResult = {
+        allUsers: User[];
+    };
+
+    const { data: usersData, loading: usersLoading, error: usersError } = useQuery<UsersQueryResult>(ALL_USERS);
 
     return (
         <DashboardLayout>
@@ -131,23 +147,29 @@ const adminDashboard = () => {
                                         <th className="px-4 py-3 font-medium text-left">Customer Name</th>
                                         <th className="px-4 py-3 font-medium text-left">Loyalty Campaigns</th>
                                         <th className="px-4 py-3 font-medium text-left">Referral Campaigns</th>
-                                        <th className="px-4 py-3 font-medium text-left">Referrals</th>
+                                        <th className="px-4 py-3 font-medium text-left">Email</th>
                                         <th className="px-4 py-3 font-medium text-left">Date Joined</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {[1, 2, 3, 4, 5].map((item) => (
-                                        <tr
-                                            key={item}
-                                            className="border-b border-[#E2E8F0] py-6 last:border-0"
-                                        >
-                                            <td className="py-3 px-4">John Doe</td>
-                                            <td className="py-3 px-4">10</td>
-                                            <td className="py-3 px-4">10</td>
-                                            <td className='py-3 px-4'>20</td>
-                                            <td className="py-3 px-4">2023-10-01</td>
-                                        </tr>
-                                    ))}
+                                    {usersLoading ? (
+                                        <tr><td colSpan={5} className="py-3 px-4 text-center">Loading...</td></tr>
+                                    ) : usersError ? (
+                                        <tr><td colSpan={5} className="py-3 px-4 text-center text-red-500">Error loading users</td></tr>
+                                    ) : (
+                                        (usersData?.allUsers?.slice(0, 5) || []).map((user: any, idx: number) => (
+                                            <tr
+                                                key={user.userProfile?.email || idx}
+                                                className="border-b border-[#E2E8F0] py-6 last:border-0"
+                                            >
+                                                <td className="py-3 px-4">{user.userProfile?.firstName} {user.userProfile?.lastName}</td>
+                                                <td className="py-3 px-4">-</td>
+                                                <td className="py-3 px-4">-</td>
+                                                <td className='py-3 px-4'>{user.userProfile?.email}</td>
+                                                <td className="py-3 px-4">{user.userProfile?.createdAt ? new Date(user.userProfile.createdAt).toLocaleDateString() : '-'}</td>
+                                            </tr>
+                                        ))
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -156,7 +178,7 @@ const adminDashboard = () => {
                 <section className="bg-white p-4 mt-5 rounded-md">
                     <div className="lg:flex justify-between">
                         <p className="text-black font-semibold my-auto text-base">
-                            My Campaigns
+                            Campaigns
                         </p>
                         <div className="flex gap-4">
                             {/* <RangePicker /> */}
