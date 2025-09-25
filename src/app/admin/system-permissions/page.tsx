@@ -427,7 +427,7 @@ const SystemPermissionsPage: React.FC = () => {
                                 key: 'user',
                                 render: (profile: User['userProfile'], record: User) => (
                                     <div>
-                                        <div className="font-medium text-base">{profile.firstName} {profile.lastName}</div>
+                                        <div className="font-medium text-base">{profile?.firstName} {profile?.lastName}</div>
                                         <div className="text-xs text-gray-500">{record.email}</div>
                                     </div>
                                 ),
@@ -484,7 +484,7 @@ const SystemPermissionsPage: React.FC = () => {
                                 <option value="">Select a user</option>
                                 {usersData?.allUsers.map((user) => (
                                     <option key={user.id} value={user.id}>
-                                        {user.userProfile.firstName} {user.userProfile.lastName} ({user.email})
+                                        {user?.userProfile?.firstName} {user?.userProfile?.lastName} ({user.email})
                                     </option>
                                 ))}
                             </select>
@@ -542,7 +542,7 @@ const SystemPermissionsPage: React.FC = () => {
                     open={openAddRoleModal}
                     onOpenChange={() => setOpenAddRoleModal(false)}
                 >
-                    <DialogContent className="">
+                    <DialogContent className="" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
                         <h2 className="text-center font-medium">Add Roles</h2>
                         <div>
                             <label htmlFor="role-name" className="mb-2 text-[#030229CC] text-sm">Role Name *</label>
