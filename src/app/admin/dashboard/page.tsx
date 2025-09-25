@@ -50,9 +50,9 @@ const adminDashboard = () => {
                                 <Users fill="#FFC327" className="text-[#FFC327]" />
                             </div>
                             <div className="ml-4">
-                                <div className="text-lg font-bold">12.5K</div>
+                                <div className="text-lg font-bold">{businessesData?.businesses.length || 0}</div>
                                 <div className="text-xs text-gray-500">Total Businesses</div>
-                                <div className="text-xs text-red-600 mt-1 font-bold">12% ↑</div>
+                                {/* <div className="text-xs text-red-600 mt-1 font-bold">12% ↑</div> */}
                             </div>
                         </div>
                     </div>
@@ -63,11 +63,11 @@ const adminDashboard = () => {
                                 <HeartIcon fill="#5B93FF" className="text-[#5B93FF]" />
                             </div>
                             <div className="ml-4">
-                                <div className="text-lg font-bold">4</div>
+                                <div className="text-lg font-bold">{0}</div>
                                 <div className="text-xs text-gray-500">Ongoing Campaigns</div>
-                                <div className="text-xs text-green-600 mt-1 font-bold">
+                                {/* <div className="text-xs text-green-600 mt-1 font-bold">
                                     12% ↑
-                                </div>
+                                </div> */}
                             </div>
                         </div>
                     </div>
@@ -80,11 +80,11 @@ const adminDashboard = () => {
                                 <Flame className="text-[#FF8F6B]" fill="#FF8F6B" />
                             </div>
                             <div className="ml-4">
-                                <div className="text-lg font-bold">30K</div>
+                                <div className="text-lg font-bold">{usersData?.allUsers.length || 0}</div>
                                 <div className="text-xs text-gray-500">Users Referred</div>
-                                <div className="text-xs text-green-600 mt-1 font-bold">
+                                {/* <div className="text-xs text-green-600 mt-1 font-bold">
                                     12% ↑
-                                </div>
+                                </div> */}
                             </div>
                         </div>
                     </div>
@@ -97,7 +97,7 @@ const adminDashboard = () => {
                             <div className="ml-4">
                                 <div className="text-lg font-bold">32.03%</div>
                                 <div className="text-xs text-gray-500">Paid Rewards</div>
-                                <div className="text-xs text-red-600 mt-1 font-bold">12% ↑</div>
+                                {/* <div className="text-xs text-red-600 mt-1 font-bold">12% ↑</div> */}
                             </div>
                         </div>
                     </div>
