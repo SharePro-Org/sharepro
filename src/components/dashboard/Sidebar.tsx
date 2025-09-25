@@ -55,7 +55,7 @@ const adminLinks = [
   { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "Business", href: "/admin/business", icon: Megaphone },
   { label: "Customers", href: "/admin/customers", icon: Wallet },
-  { label: "User Management", href: "/admin/user-management", icon: Users },
+  // { label: "User Management", href: "/admin/user-management", icon: Users },
   { label: 'System Permissions', href: '/admin/system-permissions', icon: FaUserGroup },
   { label: 'Knowledge Base', href: '/admin/knowledge-base', icon: HelpCircle },
   { label: "Account", href: "/admin/account", icon: User },

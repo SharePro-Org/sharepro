@@ -6,7 +6,7 @@ import { Button, Dropdown } from 'antd';
 import { ArrowLeft, RefreshCwIcon } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { useQuery } from '@apollo/client/react';
-import { BUSINESS } from '@/apollo/queries/admin';
+import { BUSINESS, BUSINESS_MEMBERS } from '@/apollo/queries/admin';
 
 type Business = {
     id: string;
@@ -74,12 +74,17 @@ export default function BusinessProfilePage() {
     const params = useParams();
     const businessId = typeof params?.id === 'string' ? params.id : '';
 
-    const { data, loading, error } = useQuery<BusinessData>(BUSINESS, {
+    const { data, loading, error, refetch } = useQuery<BusinessData>(BUSINESS, {
         variables: { id: businessId },
+        skip: !businessId
+    });
+    const { data: membersData, loading: membersLoading, error: membersError, refetch: refetchMembers } = useQuery<any>(BUSINESS_MEMBERS, {
+        variables: { businessId },
         skip: !businessId
     });
 
     const business = data?.business;
+    const members = membersData?.businessMembers || [];
 
     return (
         <DashboardLayout>
@@ -96,11 +101,13 @@ export default function BusinessProfilePage() {
                     </button>
                     <button
                         className="flex text-primary items-center gap-2"
-                    // onClick={() => refetch()}
-                    // disabled={analyticsLoading}
+                        onClick={async () => {
+                            await Promise.all([refetch(), refetchMembers()]);
+                        }}
+                        disabled={loading || membersLoading}
                     >
                         <RefreshCwIcon size={15} />
-                        <span className="text-sm">Refresh</span>
+                        <span className="text-sm">{(loading || membersLoading) ? "Refreshing..." : "Refresh"}</span>
                     </button>
                 </div>
                 <div className="bg-[#D1DAF4] p-2 rounded-md flex justify-between">
@@ -179,9 +186,17 @@ export default function BusinessProfilePage() {
                                     <tr>
                                         <td colSpan={9} className="px-4 py-3 text-center text-red-500">Error loading campaigns</td>
                                     </tr>
-                                ) : business?.campaigns?.length === 0 ? (
+                                ) : business === null || business?.campaigns?.length === 0 ? (
                                     <tr>
-                                        <td colSpan={9} className="px-4 py-3 text-center">No campaigns found</td>
+                                        <td colSpan={9} className="px-4 py-12 text-center">
+                                            <div className="flex flex-col items-center justify-center">
+                                                <svg className="h-10 w-10 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                </svg>
+                                                <h3 className="mt-2 text-lg font-medium text-gray-900">No campaigns found</h3>
+                                                {/* <p className="mt-1 text-sm text-gray-500">Start a campaign to see it listed here.</p> */}
+                                            </div>
+                                        </td>
                                     </tr>
                                 ) : (
                                     business?.campaigns?.map((campaign, i) => (
@@ -251,29 +266,36 @@ export default function BusinessProfilePage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {mockCustomers.map((c, i) => (
-                                    <tr key={i} className="border-b border-[#E2E8F0] py-2 last:border-0">
-                                        <td className="px-4 py-3">{c.rank <= 3 ? `🥇 ${c.rank}` : c.rank}</td>
-                                        <td className="px-4 py-3">{c.name}</td>
-                                        <td className="px-4 py-3">{c.points}</td>
-                                        <td className="px-4 py-3">{c.purchases}</td>
-                                        <td className="px-4 py-3">{c.amount}</td>
-                                        <td className="px-4 py-3">{c.redeemed}</td>
-                                        <td className="px-4 py-3">{c.badge}</td>
-                                        <td className="px-4 py-3">
-                                            <Dropdown
-                                                menu={{
-                                                    items: [
-                                                        { key: "view", label: "View Customer" },
-                                                    ],
-                                                }}
-                                                trigger={["click"]}
-                                            >
-                                                <Button type="text"><MoreOutlined /></Button>
-                                            </Dropdown>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {membersLoading ? (
+                                    <tr><td colSpan={7} className="px-4 py-3 text-center">Loading...</td></tr>
+                                ) : membersError ? (
+                                    <tr><td colSpan={7} className="px-4 py-3 text-center text-red-500">Error loading members</td></tr>
+                                ) : members.length === 0 ? (
+                                    <tr><td colSpan={7} className="px-4 py-3 text-center">No customers found</td></tr>
+                                ) : (
+                                    members.map((m: any, i: number) => (
+                                        <tr key={i} className="border-b border-[#E2E8F0] py-2 last:border-0">
+                                            <td className="px-4 py-3">{i + 1}</td>
+                                            <td className="px-4 py-3">{m.user?.userProfile?.firstName} {m.user?.userProfile?.lastName}</td>
+                                            <td className="px-4 py-3">{m.user?.userProfile?.email}</td>
+                                            <td className="px-4 py-3">{m.role}</td>
+                                            <td className="px-4 py-3">{m.joinedAt ? new Date(m.joinedAt).toLocaleDateString() : '-'}</td>
+                                            <td className="px-4 py-3">{m.isActive ? 'Active' : 'Inactive'}</td>
+                                            <td className="px-4 py-3">
+                                                <Dropdown
+                                                    menu={{
+                                                        items: [
+                                                            { key: "view", label: "View Customer" },
+                                                        ],
+                                                    }}
+                                                    trigger={["click"]}
+                                                >
+                                                    <Button type="text"><MoreOutlined /></Button>
+                                                </Dropdown>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
