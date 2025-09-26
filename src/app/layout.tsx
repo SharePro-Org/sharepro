@@ -6,8 +6,8 @@ import Providers from "./Providers";
 
 
 export const metadata: Metadata = {
-  title: "Sharepro",
-  description: "",
+  title: "Sharepro - Referral & Loyalty Program",
+  description: "Boost your business with Sharepro's referral and loyalty program management platform.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
