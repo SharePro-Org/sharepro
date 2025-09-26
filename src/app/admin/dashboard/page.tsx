@@ -145,8 +145,8 @@ const adminDashboard = () => {
                                 <thead>
                                     <tr className="bg-[#D1DAF4] text-black">
                                         <th className="px-4 py-3 font-medium text-left">Customer Name</th>
-                                        <th className="px-4 py-3 font-medium text-left">Loyalty Campaigns</th>
-                                        <th className="px-4 py-3 font-medium text-left">Referral Campaigns</th>
+                                        {/* <th className="px-4 py-3 font-medium text-left">Loyalty Campaigns</th>
+                                        <th className="px-4 py-3 font-medium text-left">Referral Campaigns</th> */}
                                         <th className="px-4 py-3 font-medium text-left">Email</th>
                                         <th className="px-4 py-3 font-medium text-left">Date Joined</th>
                                     </tr>
@@ -163,8 +163,8 @@ const adminDashboard = () => {
                                                 className="border-b border-[#E2E8F0] py-6 last:border-0"
                                             >
                                                 <td className="py-3 px-4">{user.userProfile?.firstName} {user.userProfile?.lastName}</td>
-                                                <td className="py-3 px-4">-</td>
-                                                <td className="py-3 px-4">-</td>
+                                                {/* <td className="py-3 px-4">-</td>
+                                                <td className="py-3 px-4">-</td> */}
                                                 <td className='py-3 px-4'>{user.userProfile?.email}</td>
                                                 <td className="py-3 px-4">{user.userProfile?.createdAt ? new Date(user.userProfile.createdAt).toLocaleDateString() : '-'}</td>
                                             </tr>

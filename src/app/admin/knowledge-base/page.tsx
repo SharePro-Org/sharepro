@@ -9,7 +9,6 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { SearchIcon } from 'lucide-react';
 import { useQuery } from '@apollo/client/react';
 import { FAQS, WALKTHROUGH_VIDEOS } from '@/apollo/queries/faq';
-import { FAQ_CATEGORIES } from '@/apollo/queries/faq';
 
 const actionItems = [
     { key: 'edit', label: 'Edit' },
@@ -126,15 +125,18 @@ const videoColumns = [
     },
 ];
 
+const CATEGORY_CHOICES = [
+    ['general', 'General'],
+    ['account', 'Account & Profile'],
+    ['campaigns', 'Campaigns'],
+    ['referrals', 'Referrals'],
+    ['rewards', 'Rewards & Payments'],
+    ['technical', 'Technical Support'],
+    ['billing', 'Billing'],
+    ['business', 'Business Features'],
+] as const;
+
 const KnowledgeBasePage = () => {
-    interface FaqCategory {
-        category: string;
-        categoryDisplay: string;
-    }
-    interface FaqCategoriesQuery {
-        faqCategories: FaqCategory[];
-    }
-    const { data: faqCategoriesData = { faqCategories: [] }, loading: faqCategoriesLoading } = useQuery<FaqCategoriesQuery>(FAQ_CATEGORIES);
     const [activeTab, setActiveTab] = useState<string>('1');
     const [openUploadModal, setOpenUploadModal] = useState(false);
     const [search, setSearch] = useState('');
@@ -320,13 +322,9 @@ const KnowledgeBasePage = () => {
                                         required
                                     >
                                         <option value="">Select category</option>
-                                        {faqCategoriesLoading ? (
-                                            <option disabled>Loading...</option>
-                                        ) : (
-                                            faqCategoriesData.faqCategories.map((cat: any) => (
-                                                <option key={cat.category} value={cat.category}>{cat.categoryDisplay}</option>
-                                            ))
-                                        )}
+                                        {CATEGORY_CHOICES.map(([value, label]) => (
+                                            <option key={value} value={value}>{label}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </>
@@ -367,13 +365,9 @@ const KnowledgeBasePage = () => {
                                         required
                                     >
                                         <option value="">Select category</option>
-                                        {faqCategoriesLoading ? (
-                                            <option disabled>Loading...</option>
-                                        ) : (
-                                            faqCategoriesData.faqCategories.map((cat: any) => (
-                                                <option key={cat.category} value={cat.category}>{cat.categoryDisplay}</option>
-                                            ))
-                                        )}
+                                        {CATEGORY_CHOICES.map(([value, label]) => (
+                                            <option key={value} value={value}>{label}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div>

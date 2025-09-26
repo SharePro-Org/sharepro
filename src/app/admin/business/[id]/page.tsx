@@ -3,7 +3,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import React from 'react';
 import { MoreOutlined } from '@ant-design/icons';
 import { Button, Dropdown } from 'antd';
-import { ArrowLeft, RefreshCwIcon } from 'lucide-react';
+import { ArrowLeft, RefreshCwIcon, SearchIcon } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { useQuery } from '@apollo/client/react';
 import { BUSINESS, BUSINESS_MEMBERS } from '@/apollo/queries/admin';
@@ -73,6 +73,27 @@ export default function BusinessProfilePage() {
     const router = useRouter();
     const params = useParams();
     const businessId = typeof params?.id === 'string' ? params.id : '';
+    const [searchCampaign, setSearchCampaign] = React.useState('');
+    const [searchCustomer, setSearchCustomer] = React.useState('');
+
+    const filterCampaigns = (campaigns: Business['campaigns']) => {
+        if (!searchCampaign) return campaigns;
+        const searchTerm = searchCampaign.toLowerCase();
+        return campaigns.filter(campaign =>
+            campaign.name.toLowerCase().includes(searchTerm) ||
+            campaign.campaignType.toLowerCase().includes(searchTerm)
+        );
+    };
+
+    const filterMembers = (members: any[]) => {
+        if (!searchCustomer) return members;
+        const searchTerm = searchCustomer.toLowerCase();
+        return members.filter(member => {
+            const fullName = `${member.user?.userProfile?.firstName} ${member.user?.userProfile?.lastName}`.toLowerCase();
+            const email = member.user?.userProfile?.email?.toLowerCase() || '';
+            return fullName.includes(searchTerm) || email.includes(searchTerm);
+        });
+    };
 
     const { data, loading, error, refetch } = useQuery<BusinessData>(BUSINESS, {
         variables: { id: businessId },
@@ -153,13 +174,22 @@ export default function BusinessProfilePage() {
                     </div>
                 </div>
 
-
                 {/* Campaigns Section */}
                 <div className="bg-white rounded-md p-4 my-6">
                     <div className="flex justify-between items-center mb-2">
                         <div className="font-semibold text-base">Campaigns</div>
-                        <div>
-
+                        <div className="relative md:mt-0 mt-2">
+                            <input
+                                type="text"
+                                value={searchCampaign}
+                                onChange={e => setSearchCampaign(e.target.value)}
+                                className="bg-[#F9FAFB] md:w-[400px] w-full border border-[#E4E7EC] p-3 rounded-sm pl-8 text-sm"
+                                placeholder="Search by campaign name or type"
+                            />
+                            <SearchIcon
+                                size={16}
+                                className="absolute top-4 left-3 text-gray-500"
+                            />
                         </div>
                     </div>
                     <div className="overflow-x-auto">
@@ -199,7 +229,7 @@ export default function BusinessProfilePage() {
                                         </td>
                                     </tr>
                                 ) : (
-                                    business?.campaigns?.map((campaign, i) => (
+                                    filterCampaigns(business?.campaigns || [])?.map((campaign, i) => (
                                         <tr key={campaign.id || i} className="border-b border-[#E2E8F0] py-2 last:border-0">
                                             <td className="px-4 py-3">{campaign.name}</td>
                                             {/* <td className="px-4 py-3">{campaign.id}</td> */}
@@ -247,8 +277,22 @@ export default function BusinessProfilePage() {
                 <div className="bg-white rounded-md p-4 mb-6">
                     <div className="flex justify-between items-center mb-2">
                         <div className="font-semibold text-base">Customers</div>
-                        <div>
+                        {/* <div>
                             <Button>View All</Button>
+                        </div> */}
+
+                        <div className="relative md:mt-0 mt-2">
+                            <input
+                                type="text"
+                                value={searchCustomer}
+                                onChange={e => setSearchCustomer(e.target.value)}
+                                className="bg-[#F9FAFB] md:w-[400px] w-full border border-[#E4E7EC] p-3 rounded-sm pl-8 text-sm"
+                                placeholder="Search by customer name or email"
+                            />
+                            <SearchIcon
+                                size={16}
+                                className="absolute top-4 left-3 text-gray-500"
+                            />
                         </div>
                     </div>
                     <div className="overflow-x-auto">
@@ -273,7 +317,7 @@ export default function BusinessProfilePage() {
                                 ) : members.length === 0 ? (
                                     <tr><td colSpan={7} className="px-4 py-3 text-center">No customers found</td></tr>
                                 ) : (
-                                    members.map((m: any, i: number) => (
+                                    filterMembers(members).map((m: any, i: number) => (
                                         <tr key={i} className="border-b border-[#E2E8F0] py-2 last:border-0">
                                             <td className="px-4 py-3">{i + 1}</td>
                                             <td className="px-4 py-3">{m.user?.userProfile?.firstName} {m.user?.userProfile?.lastName}</td>
