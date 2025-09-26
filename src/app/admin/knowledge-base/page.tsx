@@ -144,7 +144,23 @@ const KnowledgeBasePage = () => {
     const [faqQuestion, setFaqQuestion] = useState('');
     const [faqAnswer, setFaqAnswer] = useState('');
     const [faqCategory, setFaqCategory] = useState('');
+    const [videoFile, setVideoFile] = useState<File | null>(null);
+    const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+    const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState<string>('');
+    const [videoTitle, setVideoTitle] = useState('');
+    const [videoDescription, setVideoDescription] = useState('');
+    const [videoCategory, setVideoCategory] = useState('');
     const [createFaq, { loading: faqUploading }] = useMutation(CREATE_FAQ);
+    const { CREATE_WALKTHROUGH_VIDEO } = require('@/apollo/mutations/faq');
+    interface CreateWalkthroughVideoResult {
+        createWalkthroughVideo: {
+            success: boolean;
+            message?: string;
+        };
+    }
+    const [createVideo, { loading: videoUploading }] = useMutation<CreateWalkthroughVideoResult>(CREATE_WALKTHROUGH_VIDEO);
+    const [faqError, setFaqError] = useState<string | null>(null);
+    const [videoError, setVideoError] = useState<string | null>(null);
 
     interface Faq {
         question: string;
@@ -256,21 +272,64 @@ const KnowledgeBasePage = () => {
                     <form
                         onSubmit={async (e) => {
                             e.preventDefault();
+                            setFaqError(null);
+                            setVideoError(null);
                             if (uploadType === 'faq') {
-                                await createFaq({
-                                    variables: {
-                                        answer: faqAnswer,
-                                        category: faqCategory,
-                                        question: faqQuestion,
-                                    },
-                                });
-                                setOpenUploadModal(false);
-                                setFaqQuestion('');
-                                setFaqAnswer('');
-                                setFaqCategory('');
-                                setUploadType('');
+                                try {
+                                    await createFaq({
+                                        variables: {
+                                            answer: faqAnswer,
+                                            category: faqCategory,
+                                            question: faqQuestion,
+                                        },
+                                    });
+                                    setOpenUploadModal(false);
+                                    setFaqQuestion('');
+                                    setFaqAnswer('');
+                                    setFaqCategory('');
+                                    setUploadType('');
+                                } catch (err: any) {
+                                    setFaqError(err?.message || 'Failed to upload FAQ');
+                                }
                             }
-                            // TODO: handle video upload mutation here
+                            if (uploadType === 'video') {
+                                try {
+                                    const getBase64 = (file: File | null) => {
+                                        return new Promise<string>((resolve, reject) => {
+                                            if (!file) return resolve('');
+                                            const reader = new FileReader();
+                                            reader.onload = () => resolve(reader.result as string);
+                                            reader.onerror = reject;
+                                            reader.readAsDataURL(file);
+                                        });
+                                    };
+                                    const videoBase64 = await getBase64(videoFile);
+                                    const thumbnailBase64 = await getBase64(thumbnailFile);
+                                    const res = await createVideo({
+                                        variables: {
+                                            category: videoCategory,
+                                            name: videoTitle,
+                                            description: videoDescription,
+                                            thumbnailUrl: thumbnailBase64,
+                                            videoUrl: videoBase64,
+                                        },
+                                    });
+                                    if (res?.data?.createWalkthroughVideo?.success) {
+                                        setOpenUploadModal(false);
+                                        setVideoFile(null);
+                                        setThumbnailFile(null);
+                                        setThumbnailPreviewUrl('');
+                                        setVideoTitle('');
+                                        setVideoDescription('');
+                                        setVideoCategory('');
+                                        setUploadType('');
+                                    } else {
+                                        setVideoError(res?.data?.createWalkthroughVideo?.message || 'Failed to upload video');
+                                    }
+                                } catch (err: any) {
+                                    setVideoError(err?.message || 'Failed to upload video');
+                                }
+                            }
                         }}
                     >
                         <div>
@@ -338,8 +397,8 @@ const KnowledgeBasePage = () => {
                                         id="video-title"
                                         className="border border-[#E5E5EA] rounded-md p-3 w-full"
                                         placeholder="Video title"
-                                        // value={videoTitle}
-                                        // onChange={e => setVideoTitle(e.target.value)}
+                                        value={videoTitle}
+                                        onChange={e => setVideoTitle(e.target.value)}
                                         required
                                     />
                                 </div>
@@ -350,8 +409,8 @@ const KnowledgeBasePage = () => {
                                         id="video-description"
                                         className="border border-[#E5E5EA] rounded-md p-3 w-full"
                                         placeholder="Video description"
-                                        // value={videoDescription}
-                                        // onChange={e => setVideoDescription(e.target.value)}
+                                        value={videoDescription}
+                                        onChange={e => setVideoDescription(e.target.value)}
                                         required
                                     />
                                 </div>
@@ -360,8 +419,8 @@ const KnowledgeBasePage = () => {
                                     <select
                                         id="video-category"
                                         className="border border-[#E5E5EA] rounded-md p-3 w-full"
-                                        // value={videoCategory}
-                                        // onChange={e => setVideoCategory(e.target.value)}
+                                        value={videoCategory}
+                                        onChange={e => setVideoCategory(e.target.value)}
                                         required
                                     >
                                         <option value="">Select category</option>
@@ -370,34 +429,90 @@ const KnowledgeBasePage = () => {
                                         ))}
                                     </select>
                                 </div>
-                                <div>
-                                    <label htmlFor="video-file" className="mb-2 text-[#030229CC] text-sm">Video File</label>
-                                    <input
-                                        type="file"
-                                        id="video-file"
-                                        className="border border-[#E5E5EA] rounded-md p-3 w-full"
-                                        accept="video/*"
-                                        required
-                                    />
+                                <div className="flex gap-4 mt-4">
+                                    <div className="flex-1">
+                                        <label htmlFor="video-file" className="mb-2 text-[#030229CC] text-sm">Video File</label>
+                                        <div className="border-2 border-dashed border-[#E5E5EA] rounded-md p-6 w-full flex flex-col items-center justify-center bg-[#F9FAFB] hover:border-primary transition cursor-pointer"
+                                            onClick={() => document.getElementById('video-file')?.click()}>
+                                            <span className="text-gray-500 mb-2">Click to upload</span>
+                                            <input
+                                                type="file"
+                                                id="video-file"
+                                                className="hidden"
+                                                accept="video/*"
+                                                required
+                                                onChange={e => {
+                                                    const file = e.target.files?.[0] || null;
+                                                    setVideoFile(file);
+                                                }}
+                                            />
+                                            <span className="text-xs text-gray-400">MP4, MOV, AVI, etc.</span>
+                                            {videoFile && (
+                                                <span className="text-xs text-primary mt-2">Selected: {videoFile.name}</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex-1">
+                                        <label htmlFor="video-thumbnail" className="mb-2 text-[#030229CC] text-sm">Thumbnail</label>
+                                        <div className="border-2 border-dashed border-[#E5E5EA] rounded-md p-6 w-full flex flex-col items-center justify-center bg-[#F9FAFB] hover:border-primary transition cursor-pointer"
+                                            onClick={() => document.getElementById('video-thumbnail')?.click()}>
+                                            <span className="text-gray-500 mb-2">Click to upload</span>
+                                            <input
+                                                type="file"
+                                                id="video-thumbnail"
+                                                className="hidden"
+                                                accept="image/*"
+                                                required
+                                                onChange={e => {
+                                                    const file = e.target.files?.[0] || null;
+                                                    setThumbnailFile(file);
+                                                    if (file) {
+                                                        const reader = new FileReader();
+                                                        reader.onload = (ev) => {
+                                                            setThumbnailPreviewUrl(ev.target?.result as string);
+                                                        };
+                                                        reader.readAsDataURL(file);
+                                                    } else {
+                                                        setThumbnailPreviewUrl('');
+                                                    }
+                                                }}
+                                            />
+                                            <span className="text-xs text-gray-400">JPG, PNG, etc.</span>
+                                            {thumbnailFile && (
+                                                <span className="text-xs text-primary mt-2">Selected: {thumbnailFile.name}</span>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label htmlFor="video-thumbnail" className="mb-2 text-[#030229CC] text-sm">Thumbnail</label>
-                                    <input
-                                        type="file"
-                                        id="video-thumbnail"
-                                        className="border border-[#E5E5EA] rounded-md p-3 w-full"
-                                        accept="image/*"
-                                        required
-                                    />
-                                </div>
+                                {thumbnailPreviewUrl && (
+                                    <div className="mt-2 text-center">
+                                        <img src={thumbnailPreviewUrl} alt="Thumbnail Preview" className="max-h-32 mx-auto rounded-md" />
+                                    </div>
+                                )}
                             </>
+                        )}
+                        {faqError && (
+                            <div className="text-red-500 text-sm text-center mb-2">{faqError}</div>
+                        )}
+                        {videoError && (
+                            <div className="text-red-500 text-sm text-center mb-2">{videoError}</div>
                         )}
                         <div className="text-center mt-4">
                             <button
                                 type="submit"
-                                className="p-3 bg-primary rounded-md text-white w-full"
-                                disabled={faqUploading}
-                            >{faqUploading ? 'Uploading...' : 'Upload'}</button>
+                                className="p-3 bg-primary rounded-md text-white w-full flex items-center justify-center gap-2"
+                                disabled={faqUploading || videoUploading}
+                            >
+                                {(faqUploading || videoUploading) && (
+                                    <span className="animate-spin inline-block mr-2">
+                                        <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25" />
+                                            <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="4" className="opacity-75" />
+                                        </svg>
+                                    </span>
+                                )}
+                                {faqUploading || videoUploading ? 'Uploading...' : 'Upload'}
+                            </button>
                         </div>
                     </form>
                 </DialogContent>
