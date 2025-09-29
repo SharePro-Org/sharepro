@@ -157,7 +157,7 @@ const adminDashboard = () => {
                                     ) : usersError ? (
                                         <tr><td colSpan={5} className="py-3 px-4 text-center text-red-500">Error loading users</td></tr>
                                     ) : (
-                                        (usersData?.allUsers?.slice(0, 5) || []).map((user: any, idx: number) => (
+                                        (usersData?.allUsers?.filter((user: any) => user.userProfile?.userType === 'VIEWER').slice(0, 5) || []).map((user: any, idx: number) => (
                                             <tr
                                                 key={user.userProfile?.email || idx}
                                                 className="border-b border-[#E2E8F0] py-6 last:border-0"

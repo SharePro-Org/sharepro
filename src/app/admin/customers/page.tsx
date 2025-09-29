@@ -68,6 +68,7 @@ type UserProfile = {
     firstName?: string;
     lastName?: string;
     email?: string;
+    userType?: string;
 };
 
 type User = {
@@ -83,17 +84,19 @@ const CustomersPage = () => {
     const { data, loading, error } = useQuery<AllUsersQueryData>(ALL_USERS);
     const [search, setSearch] = React.useState('');
     // Map ALL_USERS to table data
-    const allCustomers = (data?.allUsers || []).map((user: User, idx: number) => ({
-        rank: idx + 1,
-        name: `${user.userProfile?.firstName || ''} ${user.userProfile?.lastName || ''}`,
-        email: user.userProfile?.email || '-',
-        points: '-',
-        purchases: '-',
-        amount: '-',
-        redeemed: '-',
-        badge: '-',
-        key: user.userProfile?.email || idx,
-    }));
+    const allCustomers = (data?.allUsers || [])
+        .filter((user: User) => user.userProfile?.userType === 'VIEWER')
+        .map((user: User, idx: number) => ({
+            rank: idx + 1,
+            name: `${user.userProfile?.firstName || ''} ${user.userProfile?.lastName || ''}`,
+            email: user.userProfile?.email || '-',
+            points: '-',
+            purchases: '-',
+            amount: '-',
+            redeemed: '-',
+            badge: '-',
+            key: user.userProfile?.email || idx,
+        }));
     const customers = allCustomers.filter(c =>
         c.name.toLowerCase().includes(search.toLowerCase()) ||
         c.email.toLowerCase().includes(search.toLowerCase())

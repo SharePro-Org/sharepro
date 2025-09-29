@@ -57,20 +57,20 @@ const logLink = new ApolloLink((operation, forward) => {
 const wsLink =
   typeof window !== "undefined"
     ? new GraphQLWsLink(
-        createClient({
-          url: WS_URL,
-          connectionParams: () => {
-            const token = getAuthToken();
-            return {
-              Authorization: token ? `JWT ${token}` : "",
-            };
-          },
-          on: {
-            connected: () => console.log("🔌 WebSocket connected"),
-            closed: () => console.log("🔌 WebSocket disconnected"),
-          },
-        })
-      )
+      createClient({
+        url: WS_URL,
+        connectionParams: () => {
+          const token = getAuthToken();
+          return {
+            Authorization: token ? `JWT ${token}` : "",
+          };
+        },
+        on: {
+          connected: () => console.log("🔌 WebSocket connected"),
+          closed: () => console.log("🔌 WebSocket disconnected"),
+        },
+      })
+    )
     : null;
 
 // Auth Link
@@ -228,16 +228,16 @@ const httpLink = new HttpLink({ uri: API_BASE_URL });
 const splitLink =
   typeof window !== "undefined" && wsLink
     ? split(
-        ({ query }) => {
-          const definition = getMainDefinition(query);
-          return (
-            definition.kind === "OperationDefinition" &&
-            definition.operation === "subscription"
-          );
-        },
-        wsLink,
-        httpLink
-      )
+      ({ query }) => {
+        const definition = getMainDefinition(query);
+        return (
+          definition.kind === "OperationDefinition" &&
+          definition.operation === "subscription"
+        );
+      },
+      wsLink,
+      httpLink
+    )
     : httpLink;
 
 // Combine Links
@@ -256,8 +256,13 @@ const client = new ApolloClient({
       Query: {
         fields: {
           notifications: {
-            merge(existing = [], incoming) {
-              return [...existing, ...incoming];
+            keyArgs: ["unreadOnly", "notificationType"],
+            merge(existing = { edges: [], pageInfo: {} }, incoming) {
+              if (!incoming) return existing;
+              return {
+                ...incoming,
+                edges: [...(existing.edges || []), ...(incoming.edges || [])],
+              };
             },
           },
           businesses: {

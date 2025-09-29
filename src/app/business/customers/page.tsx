@@ -81,7 +81,7 @@ const customers = () => {
         <section className="bg-white p-4 rounded-md mt-4 border border-[#E2E8F0]">
           <div className="flex justify-between">
             <div>
-              <p className="font-medium">Loyalty Tiers</p>
+              <p className="font-medium">Customers</p>
               <p className="text-sm text-[#030229B2]">
                 Identify your most loyal customers.
               </p>
@@ -99,10 +99,10 @@ const customers = () => {
                   className="absolute top-4 left-3 text-gray-500"
                 />
               </div>
-              <button className="flex my-auto gap-2 text-sm text-primary cursor-pointer">
+              {/* <button className="flex my-auto gap-2 text-sm text-primary cursor-pointer">
                 <span className="my-auto">View All </span>
                 <ArrowRight size={15} className="my-auto" />
-              </button>
+              </button> */}
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -154,7 +154,7 @@ const customers = () => {
           </div>
         </section>
 
-        <section className="bg-white p-4 rounded-md mt-4 border border-[#E2E8F0]">
+        {/* <section className="bg-white p-4 rounded-md mt-4 border border-[#E2E8F0]">
           <div className="flex justify-between">
             <div>
               <p className="font-medium">Top Referrers</p>
@@ -228,7 +228,7 @@ const customers = () => {
               </tbody>
             </table>
           </div>
-        </section>
+        </section> */}
       </>
     </DashboardLayout>
   );

@@ -49,7 +49,6 @@ export const GET_NOTIFICATIONS = gql`
         startCursor
         endCursor
       }
-      totalCount
       unreadCount
     }
   }

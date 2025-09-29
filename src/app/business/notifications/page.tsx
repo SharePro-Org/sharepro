@@ -5,8 +5,9 @@ import { ArrowLeft, UserCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { BsCurrencyDollar } from "react-icons/bs";
-import { useQuery } from "@apollo/client/react";
+import { useQuery, useMutation } from "@apollo/client/react";
 import { GET_NOTIFICATIONS } from "@/apollo/queries/notification";
+import { MARK_NOTIFICATION_AS_READ } from "@/apollo/mutations/notification";
 
 type Notification = {
   id: string;
@@ -22,12 +23,60 @@ type Notification = {
 
 type NotificationsQueryData = {
   notifications: {
-    edges: { node: Notification }[];
+    edges: {
+      node: Notification;
+      cursor: string;
+    }[];
+    pageInfo: {
+      hasNextPage: boolean;
+      hasPreviousPage: boolean;
+      startCursor: string;
+      endCursor: string;
+    };
+    unreadCount: number;
   };
 };
 
 const notifications = () => {
   const router = useRouter();
+
+  type MarkNotificationAsReadResult = {
+    markNotificationAsRead?: {
+      success: boolean;
+      notification: Notification;
+    };
+  };
+
+  const [markAsRead] = useMutation<MarkNotificationAsReadResult>(MARK_NOTIFICATION_AS_READ, {
+    onError: (error) => {
+      console.error('Error marking notification as read:', error);
+    },
+    update: (cache, { data: mutationData }) => {
+      if (mutationData?.markNotificationAsRead?.success) {
+        const updatedNotification = mutationData.markNotificationAsRead.notification;
+        cache.modify({
+          fields: {
+            notifications: (existingData = { edges: [] }) => {
+              const updatedEdges = existingData.edges.map((edge: any) => {
+                if (edge.node.id === updatedNotification.id) {
+                  return {
+                    ...edge,
+                    node: { ...edge.node, isRead: true, readAt: new Date().toISOString() }
+                  };
+                }
+                return edge;
+              });
+              return { ...existingData, edges: updatedEdges };
+            }
+          }
+        });
+      }
+    }
+  });
+
+  const handleNotificationClick = (notificationId: string) => {
+    markAsRead({ variables: { notificationId } });
+  };
 
   const { data, loading, error } = useQuery<NotificationsQueryData>(GET_NOTIFICATIONS, {
     variables: {
@@ -48,6 +97,7 @@ const notifications = () => {
   }
 
   if (error) {
+    console.error('GraphQL Error:', error);
     return (
       <DashboardLayout>
         <section className="bg-white rounded-md md:p-6 p-3">
@@ -59,7 +109,10 @@ const notifications = () => {
     );
   }
 
-  const notificationsData = (data as any)?.notifications?.edges || [];
+  console.log('Raw GraphQL Response:', data);
+  const notificationsData = data?.notifications?.edges?.map(edge => edge.node) || [];
+  console.log('Processed Notifications:', notificationsData);
+  console.log("Notifications Data:", notificationsData);
 
   return (
     <DashboardLayout>
@@ -80,24 +133,23 @@ const notifications = () => {
               No notifications found
             </div>
           ) : (
-            notificationsData.map(({ node: notification }: any) => (
+            notificationsData.map((notification: Notification) => (
               <div
                 key={notification.id}
-                className={`p-3 border-b border-b-[#EAECF0] flex justify-between ${
-                  !notification.isRead ? "bg-blue-50" : ""
-                }`}
+                onClick={() => handleNotificationClick(notification.id)}
+                className={`p-3 border-b border-b-[#EAECF0] flex justify-between ${!notification.isRead ? "bg-blue-50" : ""
+                  } cursor-pointer hover:bg-gray-50 transition-colors`}
               >
                 <div className="flex gap-3">
                   <button
-                    className={`flex justify-center items-center w-12 h-12 rounded-sm ${
-                      notification.notificationType === "REFERRAL_SUCCESS"
-                        ? "bg-[#ABEFC6] text-[#067647]"
-                        : notification.notificationType === "BONUS_EARNED"
+                    className={`flex justify-center items-center w-12 h-12 rounded-sm ${notification.notificationType === "REFERRAL_SUCCESS"
+                      ? "bg-[#ABEFC6] text-[#067647]"
+                      : notification.notificationType === "SUCCESS" || "INFO"
                         ? "bg-[#FEDF89] text-[#B54708]"
                         : "bg-gray-200 text-gray-600"
-                    }`}
+                      }`}
                   >
-                    {notification.notificationType === "REFERRAL_SUCCESS" ? (
+                    {notification.notificationType === "SUCCESS" || "INFO" ? (
                       <UserCircle />
                     ) : notification.notificationType === "BONUS_EARNED" ? (
                       <BsCurrencyDollar size={24} />
