@@ -150,25 +150,25 @@ const billingsSubscription = () => {
             <div className="bg-[#ECF3FF] w-[65%] rounded-md p-3">
               <div className="flex justify-between">
                 <div className="flex gap-3">
-                  <p className="font-semibold">{billingSummary.billingSummary.currentPlan.name}</p>
+                  <p className="font-semibold">{billingSummary?.billingSummary?.currentPlan?.name}</p>
                   <span className="my-auto text-sm">
-                    Renews on {new Date(billingSummary.billingSummary.nextBillingDate).toLocaleDateString('en-US', {
+                    Renews on {new Date(billingSummary?.billingSummary?.nextBillingDate).toLocaleDateString('en-US', {
                       day: 'numeric',
                       month: 'short',
                       year: 'numeric'
                     })}
                   </span>
                 </div>
-                <button className={`text-sm text-white rounded-sm p-1 px-4 ${billingSummary.billingSummary.subscriptionStatus === 'active' ? 'bg-[#27AE60]' :
-                  billingSummary.billingSummary.subscriptionStatus === 'trial' ? 'bg-blue-500' :
+                <button className={`text-sm text-white rounded-sm p-1 px-4 ${billingSummary?.billingSummary?.subscriptionStatus === 'active' ? 'bg-[#27AE60]' :
+                  billingSummary?.billingSummary?.subscriptionStatus === 'trial' ? 'bg-blue-500' :
                     'bg-yellow-500'
                   }`}>
-                  {billingSummary.billingSummary.subscriptionStatus.charAt(0).toUpperCase() +
-                    billingSummary.billingSummary.subscriptionStatus.slice(1)}
+                  {billingSummary?.billingSummary?.subscriptionStatus?.charAt(0).toUpperCase() +
+                    billingSummary?.billingSummary?.subscriptionStatus?.slice(1)}
                 </button>
               </div>
               <p className="text-sm my-2">
-                {billingSummary.billingSummary.currentPlan.description ||
+                {billingSummary?.billingSummary?.currentPlan?.description ||
                   'Access to premium features based on your current plan.'}
               </p>
               <div className="flex gap-2">
@@ -176,9 +176,9 @@ const billingsSubscription = () => {
                   {new Intl.NumberFormat('en-NG', {
                     style: 'currency',
                     currency: 'NGN'
-                  }).format(billingSummary.billingSummary.currentPlan.price)}
+                  }).format(billingSummary?.billingSummary?.currentPlan?.price)}
                 </p>
-                <span className="text-sm">/{billingSummary.billingSummary.currentPlan.billablePeriods}</span>
+                <span className="text-sm">/{billingSummary?.billingSummary?.currentPlan?.billablePeriods}</span>
               </div>
             </div>
           ) : (

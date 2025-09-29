@@ -129,6 +129,7 @@ export const ONBOARDING_BUSINESS = gql`
     onboardingBusiness(input: $input) {
       message
       success
+      errors
     }
   }
 `;

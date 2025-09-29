@@ -11,6 +11,23 @@ export const GET_NOTIFICATION_STATS = gql`
   }
 `;
 
+export const GET_NOTIFICATION_PREFERENCES = gql`
+  query GetNotificationPreferences {
+    notificationPreferences {
+      emailBusiness
+      emailCampaigns
+      emailReferrals
+      emailRewards
+      emailSystem
+      realtimeBusiness
+      realtimeCampaigns
+      realtimeReferrals
+      realtimeRewards
+      realtimeSystem
+    }
+  }
+`;
+
 export const GET_NOTIFICATIONS = gql`
   query GetNotifications(
     $first: Int
@@ -53,3 +70,4 @@ export const GET_NOTIFICATIONS = gql`
     }
   }
 `;
+

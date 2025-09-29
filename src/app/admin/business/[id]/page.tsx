@@ -33,33 +33,6 @@ type BusinessData = {
     business: Business;
 };
 
-const mockBusiness = {
-    name: "GlovBox LTD",
-    walletBalance: 25560.2,
-    planType: "Free",
-    allCampaigns: 15,
-    activeCampaigns: 2,
-    customers: 20,
-    rewardsPaid: 20,
-};
-
-
-const mockCustomers = [
-    { rank: 1, name: "Jane Mary", points: 3000, purchases: 24, amount: "₦8,000", redeemed: "₦8,000", badge: "Gold" },
-    { rank: 2, name: "Obi Ann", points: 3000, purchases: 21, amount: "₦6,500", redeemed: "₦6,500", badge: "Silver" },
-    { rank: 3, name: "Ade Nuella", points: 3000, purchases: 17, amount: "₦5,000", redeemed: "₦5,000", badge: "Bronze" },
-    { rank: 4, name: "Fola Kayode", points: 2000, purchases: 9, amount: "₦3,000", redeemed: "₦3,000", badge: "-" },
-    { rank: 5, name: "Daniel Tayo", points: 1000, purchases: 6, amount: "₦2,000", redeemed: "₦2,000", badge: "-" },
-];
-
-const mockPayouts = [
-    { campaign: "Shp2Earn", type: "Referral reward", amount: "10,000", reward: "Airtime", user: "John Busco", status: "Pending", date: "10-04-2025" },
-    { campaign: "Shp2Earn", type: "Referral reward", amount: "10,000", reward: "Airtime", user: "John Busco", status: "Paid", date: "10-04-2025" },
-    { campaign: "Shp2Earn", type: "Referral reward", amount: "10,000", reward: "Airtime", user: "John Busco", status: "Failed", date: "10-04-2025" },
-    { campaign: "Shp2Earn", type: "Referral reward", amount: "10,000", reward: "Airtime", user: "John Busco", status: "Paid", date: "10-04-2025" },
-    { campaign: "Shp2Earn", type: "Referral reward", amount: "10,000", reward: "Airtime", user: "John Busco", status: "Failed", date: "10-04-2025" },
-];
-
 const statusColors: Record<string, string> = {
     active: "bg-green-500 text-white",
     completed: "bg-blue-500 text-white",
@@ -318,18 +291,45 @@ export default function BusinessProfilePage() {
                                     <tr><td colSpan={7} className="px-4 py-3 text-center">No customers found</td></tr>
                                 ) : (
                                     filterMembers(members).map((m: any, i: number) => (
-                                        <tr key={i} className="border-b border-[#E2E8F0] py-2 last:border-0">
+                                        <tr key={i} className="border-b border-[#E2E8F0] py-2 last:border-0 hover:bg-gray-50">
                                             <td className="px-4 py-3">{i + 1}</td>
                                             <td className="px-4 py-3">{m.user?.userProfile?.firstName} {m.user?.userProfile?.lastName}</td>
-                                            <td className="px-4 py-3">{m.user?.userProfile?.email}</td>
-                                            <td className="px-4 py-3">{m.role}</td>
-                                            <td className="px-4 py-3">{m.joinedAt ? new Date(m.joinedAt).toLocaleDateString() : '-'}</td>
-                                            <td className="px-4 py-3">{m.isActive ? 'Active' : 'Inactive'}</td>
+                                            <td className="px-4 py-3">{m.user?.totalRewards || 0}</td>
+                                            <td className="px-4 py-3">{m.user?.totalCampaignsJoined || 0}</td>
+                                            <td className="px-4 py-3">₦{m.user?.totalRewardsEarned?.toLocaleString() || '0'}</td>
+                                            <td className="px-4 py-3">{m.user?.redeemedRewards || 0}</td>
+                                            <td className="px-4 py-3">
+                                                <span className={`inline-block px-2 py-1 rounded-full text-xs ${m.user?.totalReferrals > 100
+                                                        ? 'bg-purple-100 text-purple-800'
+                                                        : m.user?.totalReferrals > 50
+                                                            ? 'bg-blue-100 text-blue-800'
+                                                            : m.user?.totalReferrals > 20
+                                                                ? 'bg-green-100 text-green-800'
+                                                                : 'bg-gray-100 text-gray-800'
+                                                    }`}>
+                                                    {m.user?.totalReferrals > 100
+                                                        ? 'Diamond'
+                                                        : m.user?.totalReferrals > 50
+                                                            ? 'Platinum'
+                                                            : m.user?.totalReferrals > 20
+                                                                ? 'Gold'
+                                                                : 'Silver'}
+                                                </span>
+                                            </td>
                                             <td className="px-4 py-3">
                                                 <Dropdown
                                                     menu={{
                                                         items: [
-                                                            { key: "view", label: "View Customer" },
+                                                            {
+                                                                key: "view",
+                                                                label: "View Customer",
+                                                                onClick: () => router.push(`/admin/customers/${m.user?.userProfile?.id}`)
+                                                            },
+                                                            {
+                                                                key: "rewards",
+                                                                label: "View Rewards",
+                                                                onClick: () => router.push(`/admin/customers/${m.user?.userProfile?.id}/rewards`)
+                                                            }
                                                         ],
                                                     }}
                                                     trigger={["click"]}

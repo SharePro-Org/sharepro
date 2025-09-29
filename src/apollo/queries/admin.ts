@@ -127,7 +127,11 @@ export const BUSINESS_MEMBERS = gql`
           createdAt
           lastName
           email
+          id
         }
+        totalCampaignsJoined
+        totalReferrals
+        totalRewardsEarned
       }
     }
   }
