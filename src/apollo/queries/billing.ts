@@ -62,14 +62,19 @@ export const GET_MY_SUBSCRIPTION = gql`
 export const GET_PAYMENT_METHODS = gql`
   query GetPaymentMethods {
     myPaymentMethods {
-      id
-      type
-      isDefault
       cardBrand
-      cardLast4
       cardExpMonth
       cardExpYear
+      cardLast4
+      createdAt
+      isDefault
+      type
       displayName
+      deletedAt
+      id
+      isDeleted
+      stripePaymentMethodId
+      updatedAt
     }
   }
 `;
@@ -94,3 +99,5 @@ export const GET_INVOICES = gql`
     }
   }
 `;
+
+

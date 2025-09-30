@@ -48,15 +48,16 @@ export const UPDATE_SUBSCRIPTION = gql`
 `;
 
 export const ADD_PAYMENT_METHOD = gql`
-  mutation AddPaymentMethod($input: CreatePaymentMethodInput!) {
+  mutation AddPaymentMethod($input: PaystackPaymentMethodInput!) {
     addPaymentMethod(input: $input) {
-      success
-      message
-      paymentMethod {
-        id
-        displayName
-      }
-      errors
+      checkOutData {
+      checkoutUrl
+      reference
+    }
+    message
+    errors
+    success
     }
   }
 `;
+

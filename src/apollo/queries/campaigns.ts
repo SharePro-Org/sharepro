@@ -47,9 +47,9 @@ export const GET_BUSINESS_CAMPAIGNS = gql`
   }
 `;
 
-export const GET_CAMPAIGN_ANALYTICS_BY_CAMPAIGN = gql`
-  query GetCampaignAnalyticsByCampaign($campaignId: UUID!) {
-    campaignAnalyticsByCampaign(campaignId: $campaignId) {
+export const GET_CAMPAIGN_ANALYTICS = gql`
+  query GetCampaignAnalytics($campaignId: UUID!) {
+    campaignAnalytics(id: $campaignId) {
       clickThroughRate
       clicks
       conversionRate
@@ -141,3 +141,5 @@ export const GET_CAMPAIGN_ANALYTICS_BY_CAMPAIGN = gql`
     }
   }
 `;
+
+

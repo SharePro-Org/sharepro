@@ -3,12 +3,14 @@
 import { Plan } from "@/apollo/types";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import React, { useState } from "react";
-import { useQuery } from "@apollo/client/react";
+import { useMutation, useQuery } from "@apollo/client/react";
 import { GET_INVOICES, GET_BILLING_SUMMARY, GET_PLANS } from "@/apollo/queries/billing";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 
 import Image from "next/image";
 import userCheck from "../../../../public/assets/Check.svg";
+import { ADD_PAYMENT_METHOD, UPDATE_SUBSCRIPTION } from "@/apollo/mutations/billing";
 interface Invoice {
   id: string;
   status: string;
@@ -56,6 +58,8 @@ interface BillingSummaryData {
 const billingsSubscription = () => {
   const [open, setOpen] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [isDefault, setIsDefault] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState("card");
 
   const { data: billingSummary, loading: summaryLoading } = useQuery<BillingSummaryData>(GET_BILLING_SUMMARY);
 
@@ -67,46 +71,49 @@ const billingsSubscription = () => {
   });
 
   const invoices = data?.myInvoices;
-  const [cardData, setCardData] = useState({
-    nameOnCard: "",
-    cardNumber: "",
-    expiryDate: "",
-    cvv: "",
-    billingAddress: "",
+
+  const [addPaymentMethod, { loading: addingPaymentMethod }] = useMutation(ADD_PAYMENT_METHOD, {
+    onCompleted: (data: any) => {
+      if (data?.addPaymentMethod?.success) {
+        // setSuccess(true);
+
+      } else {
+
+      }
+    },
+    onError: (error) => {
+      console.error("Error adding payment method:", error);
+    },
   });
 
-  const handleCardInputChange = (field: string, value: string) => {
-    setCardData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+  const [updateSubscription, { loading: updatingSubscription }] = useMutation(UPDATE_SUBSCRIPTION, {
+    onCompleted: (data: any) => {
+      if (data?.updateSubscription?.success) {
+        // setSuccess(true);
+
+      } else {
+
+      }
+    },
+    onError: (error) => {
+      console.error("Error adding payment method:", error);
+    },
+  });
 
   const handleCardSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Card data submitted:", cardData);
     // Handle card submission here
-    setSuccess(true);
-    setOpen(false);
-  };
+    addPaymentMethod({
+      variables: {
+        input: {
+          methodType: "card",
+          isDefault
+        }
+      }
+    })
 
-  const formatCardNumber = (value: string) => {
-    // Remove all non-digits and add spaces every 4 digits
-    const digits = value.replace(/\D/g, "");
-    const formatted = digits.replace(/(\d{4})(?=\d)/g, "$1 ");
-    return formatted;
-  };
-
-  const formatExpiryDate = (value: string) => {
-    // Format as MM/YY
-    const digits = value.replace(/\D/g, "");
-    if (digits.length >= 2) {
-      return (
-        digits.substring(0, 2) +
-        (digits.length > 2 ? "/" + digits.substring(2, 4) : "")
-      );
-    }
-    return digits;
+    // setSuccess(true);
+    // setOpen(false);
   };
 
   // Fetch all available plans from API
@@ -126,6 +133,17 @@ const billingsSubscription = () => {
   }
 
   const { data: plansData, loading: plansLoading, error: plansError } = useQuery<{ plans: PlanAPI[] }>(GET_PLANS);
+
+  function handleUpgradePlan(id: string): void {
+    updateSubscription({
+      variables: {
+        input: {
+          planId: id,
+          subscriptionId: billingSummary?.billingSummary ? billingSummary?.billingSummary?.currentPlan?.id : ''
+        }
+      }
+    })
+  }
 
   return (
     <DashboardLayout>
@@ -247,7 +265,7 @@ const billingsSubscription = () => {
                 </ul>
                 <div className="flex justify-between mt-2">
                   <span></span>
-                  <button className="text-sm text-primary">Upgrade Plan</button>
+                  <button onClick={() => handleUpgradePlan(plan.id)} className="text-sm text-primary">Upgrade Plan</button>
                 </div>
               </div>
             ))
@@ -369,8 +387,28 @@ const billingsSubscription = () => {
             </div>
 
             <form onSubmit={handleCardSubmit} className="space-y-4">
-              {/* Name on Card */}
+
               <div>
+                <label htmlFor="paymentMethod" className="block text-sm font-medium mb-2">
+                  Payment Method *
+                </label>
+                <select onChange={(e) => setPaymentMethod(e.target.value)} value={paymentMethod} className="w-full border border-[#E4E7EC] rounded-md p-3 text-sm"
+                  name="paymentMethod" id="paymentMethod">
+                  <option value="card">Credit/Debit Card</option>
+                  <option value="bank">Bank Transfer</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2"
+                  htmlFor="">Make default</label>
+                <Switch
+                  checked={isDefault}
+                  onChange={(checked: boolean) => setIsDefault(checked)}
+                  disabled={addingPaymentMethod}
+                />
+              </div>
+              {/* Name on Card */}
+              {/* <div>
                 <label
                   htmlFor="nameOnCard"
                   className="block text-sm font-medium mb-2"
@@ -388,10 +426,10 @@ const billingsSubscription = () => {
                   placeholder="John Doe"
                   required
                 />
-              </div>
+              </div> */}
 
               {/* Card Number */}
-              <div>
+              {/* <div>
                 <label
                   htmlFor="cardNumber"
                   className="block text-sm font-medium mb-2"
@@ -413,10 +451,10 @@ const billingsSubscription = () => {
                   maxLength={19}
                   required
                 />
-              </div>
+              </div> */}
 
               {/* Expiry Date and CVV */}
-              <div className="grid grid-cols-2 gap-4">
+              {/* <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label
                     htmlFor="expiryDate"
@@ -461,10 +499,10 @@ const billingsSubscription = () => {
                     required
                   />
                 </div>
-              </div>
+              </div> */}
 
               {/* Billing Address (Optional) */}
-              <div>
+              {/* <div>
                 <label
                   htmlFor="billingAddress"
                   className="block text-sm font-medium mb-2"
@@ -482,7 +520,7 @@ const billingsSubscription = () => {
                   placeholder="Enter your billing address..."
                   rows={2}
                 />
-              </div>
+              </div> */}
 
               {/* Submit Buttons */}
               <div className="flex justify-end gap-3 pt-4">
@@ -490,7 +528,7 @@ const billingsSubscription = () => {
                   type="submit"
                   className="px-6 w-full py-3 bg-primary text-white rounded-md text-sm hover:bg-primary/90 transition-colors"
                 >
-                  Add Card
+                  {addingPaymentMethod ? "Adding..." : "Add Card"}
                 </button>
               </div>
             </form>

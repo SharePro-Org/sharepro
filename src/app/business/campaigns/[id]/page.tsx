@@ -4,7 +4,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import React, { useEffect, useState } from "react";
 import { useQuery } from "@apollo/client/react";
 
-import { GET_CAMPAIGN_ANALYTICS_BY_CAMPAIGN } from "@/apollo/queries/campaigns";
+import { GET_CAMPAIGN_ANALYTICS } from "@/apollo/queries/campaigns";
 import { ArrowLeft, ArrowRight, RefreshCwIcon } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { Dropdown, Button } from "antd";
@@ -94,7 +94,7 @@ const singleCampaign = () => {
 
   // Define the expected shape of the query result
   type CampaignAnalyticsQueryResult = {
-    campaignAnalyticsByCampaign?: CampaignAnalyticsType[];
+    campaignAnalytics?: CampaignAnalyticsType;
   };
 
   // Fetch campaign analytics
@@ -103,14 +103,14 @@ const singleCampaign = () => {
     loading: analyticsLoading,
     error: analyticsError,
     refetch,
-  } = useQuery<CampaignAnalyticsQueryResult>(GET_CAMPAIGN_ANALYTICS_BY_CAMPAIGN, {
+  } = useQuery<CampaignAnalyticsQueryResult>(GET_CAMPAIGN_ANALYTICS, {
     variables: { campaignId },
     skip: !campaignId,
   });
 
   useEffect(() => {
-    if (analyticsData && analyticsData.campaignAnalyticsByCampaign) {
-      setCampaignAnalytics(analyticsData.campaignAnalyticsByCampaign[0]);
+    if (analyticsData?.campaignAnalytics) {
+      setCampaignAnalytics(analyticsData.campaignAnalytics);
     }
   }, [analyticsData]);
   const router = useRouter();
@@ -263,14 +263,14 @@ const singleCampaign = () => {
               </div>
             </div>
             <div className="w-44 flex justify-between">
-              <Link
+              {/* <Link
                 className="my-auto"
                 href={`/business/campaigns/${campaignId}/payouts`}
               >
                 <button className="p-3 my-auto text-sm bg-primary text-white rounded-md">
                   View Payouts
                 </button>
-              </Link>
+              </Link> */}
               <Dropdown
                 menu={{
                   items: [
@@ -278,7 +278,7 @@ const singleCampaign = () => {
                     { key: "edit", label: "Edit Campaign" },
                     { key: "end", label: "End Campaign" },
                     { key: "settings", label: "Campaign Settings" },
-                    { key: "payouts", label: "Vew Payouts" },
+                    { key: "payouts", label: "View Payouts" },
                     { key: "download", label: "Download Report" },
                   ],
                 }}
@@ -372,14 +372,14 @@ const singleCampaign = () => {
                   </li>
                   {campaignAnalytics.campaign.referralRewards
                     .loyaltyTierBenefits && (
-                    <li>
-                      Users can unlock tier benefits:{" "}
-                      {
-                        campaignAnalytics.campaign.referralRewards
-                          .loyaltyTierBenefits
-                      }
-                    </li>
-                  )}
+                      <li>
+                        Users can unlock tier benefits:{" "}
+                        {
+                          campaignAnalytics.campaign.referralRewards
+                            .loyaltyTierBenefits
+                        }
+                      </li>
+                    )}
                   <li>
                     Rewards are redeemed at{" "}
                     {campaignAnalytics.campaign.referralRewards
@@ -409,14 +409,14 @@ const singleCampaign = () => {
                   </li>
                   {campaignAnalytics.campaign.loyaltyRewards
                     .loyaltyTierBenefits && (
-                    <li>
-                      Users can unlock tier benefits:{" "}
-                      {
-                        campaignAnalytics.campaign.loyaltyRewards
-                          .loyaltyTierBenefits
-                      }
-                    </li>
-                  )}
+                      <li>
+                        Users can unlock tier benefits:{" "}
+                        {
+                          campaignAnalytics.campaign.loyaltyRewards
+                            .loyaltyTierBenefits
+                        }
+                      </li>
+                    )}
                 </ul>
               )}
             {campaignAnalytics?.campaign?.campaignType === "COMBO" &&
@@ -463,14 +463,14 @@ const singleCampaign = () => {
                   </li>
                   {campaignAnalytics.campaign.comboRewards
                     .loyaltyTierBenefits && (
-                    <li>
-                      Users can unlock tier benefits:{" "}
-                      {
-                        campaignAnalytics.campaign.comboRewards
-                          .loyaltyTierBenefits
-                      }
-                    </li>
-                  )}
+                      <li>
+                        Users can unlock tier benefits:{" "}
+                        {
+                          campaignAnalytics.campaign.comboRewards
+                            .loyaltyTierBenefits
+                        }
+                      </li>
+                    )}
                 </ul>
               )}
             {!campaignAnalytics?.campaign?.campaignType && (
@@ -539,13 +539,13 @@ const singleCampaign = () => {
             </div>
           </div>
         </section>
-        <section className="bg-white p-3 rounded-md mt-4">
+        {/* <section className="bg-white p-3 rounded-md mt-4">
           <div className="lg:flex justify-between">
             <p className="text-black font-medium my-auto text-base">
               Recent Payouts
             </p>
             <div className="flex gap-4">
-              {/* <RangePicker /> */}
+              {/* <RangePicker /> 
               <Filter />
               <Link
                 href={`/business/campaigns/${campaignId}/payouts`}
@@ -559,7 +559,7 @@ const singleCampaign = () => {
             </div>
           </div>
           <CampaignsTable type="payout" num={4} />
-        </section>
+        </section> */}
       </>
     </DashboardLayout>
   );

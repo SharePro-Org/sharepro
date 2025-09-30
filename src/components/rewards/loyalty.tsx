@@ -54,8 +54,8 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
   ];
 
   const redemptionTypes = [
-    { label: "Wallet", value: "wallet" },
-    { label: "Checkout", value: "checkout" },
+    // { label: "Wallet", value: "wallet" },
+    // { label: "Checkout", value: "checkout" },
     { label: "Manual claim", value: "manual-claim" },
     { label: "Voucher", value: "voucher" },
   ];
@@ -63,7 +63,7 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
   const rewardTypes = [
     { label: "Discount", value: "discount" },
     { label: "Airtime", value: "airtime" },
-    { label: "Cashback", value: "cashback" },
+    // { label: "Cashback", value: "cashback" },
   ];
 
   const currencyOptions = Country.getAllCountries();
