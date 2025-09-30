@@ -614,7 +614,7 @@ const ComboRewards = ({ id }: { id: string | null }) => {
 
           <div>
             <Label htmlFor="validity" className="block mb-2 text-sm">
-              Limit (optional)
+              Limit
             </Label>
             <div className="grid grid-cols-2 w-full gap-3">
               <div className="flex gap-3">

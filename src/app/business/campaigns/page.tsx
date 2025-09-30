@@ -65,7 +65,7 @@ const campaigns = () => {
             <p className="text-black font-semibold text-base">My Campaigns</p>
             <div className="lg:flex gap-4">
               {/* <RangePicker /> */}
-              <Filter />
+              {/* <Filter /> */}
               <Link href="/business/campaigns/create">
                 <button className="bg-primary p-3 md:w-auto w-full cursor-pointer my-auto rounded-sm text-white text-sm px-6">
                   Create Campaign

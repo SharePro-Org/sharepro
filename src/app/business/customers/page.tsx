@@ -194,7 +194,7 @@ const customers = () => {
                               {
                                 key: "view",
                                 label: "View activity",
-                                onClick: () => router.push(`/business/customers/${member.user.userProfile.id}`),
+                                // onClick: () => router.push(`/business/customers/${member.user.userProfile.id}`),
                               },
                             ],
                           }}

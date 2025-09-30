@@ -4,11 +4,20 @@ import { gql } from "@apollo/client";
 export const GET_BUSINESS_ANALYTICS = gql`
 	query GetBusinessAnalytics($businessId: UUID!) {
 		businessAnalyticsByBusiness(businessId: $businessId) {
-			totalViews
+			activeCampaigns
+			activeUsers
+			campaignPerformance
+			newReferrals
+			newUsers
+			returningUsers
+			referralConversionRate
+			successfulReferrals
 			totalClicks
 			totalConversions
 			totalRevenue
-			referralConversionRate
+			totalRewardsPaid
+			totalSignups
+			totalViews
 			date
 		}
 	}

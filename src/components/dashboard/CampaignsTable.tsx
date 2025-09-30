@@ -202,7 +202,7 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
                             ),
                           disabled: activateLoading,
                         },
-                        { key: "edit", label: "Edit Campaign" },
+                        // { key: "edit", label: "Edit Campaign" },
                         {
                           key: "view",
                           label: "View Campaign",
