@@ -84,6 +84,7 @@ export const GET_INVOICES = gql`
     myInvoices(limit: $limit, offset: $offset) {
       id
       status
+      invoiceNumber
       amountDue
       amountPaid
       currency

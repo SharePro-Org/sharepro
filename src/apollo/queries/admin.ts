@@ -154,3 +154,21 @@ export const ALL_USERS = gql`
     }
   }
 `;
+
+export const BUSINESS_USERS = gql`
+  query businessUsers($businessId: UUID!) {
+    users(businessId: $businessId) {
+      email
+      firstName
+      isActive
+      id
+      businessName
+      dateJoined
+      totalCampaignsJoined
+      totalReferrals
+      totalRewardsEarned
+      phone
+      lastName
+      isVerified
+  }
+}`

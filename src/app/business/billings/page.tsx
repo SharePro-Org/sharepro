@@ -19,6 +19,7 @@ interface Invoice {
   currency: string;
   issueDate: string;
   dueDate: string;
+  invoiceNumber: string;
   createdAt: string;
   subscription: {
     id: string;
@@ -76,7 +77,7 @@ const billingsSubscription = () => {
     onCompleted: (data: any) => {
       if (data?.addPaymentMethod?.success) {
         // setSuccess(true);
-
+        window.location.href = data?.addPaymentMethod?.checkOutData?.checkoutUrl;
       } else {
 
       }
@@ -322,7 +323,7 @@ const billingsSubscription = () => {
                 <th className="px-4 py-3 font-medium text-left">Amount</th>
                 <th className="px-4 py-3 font-medium text-left">Due Date</th>
                 <th className="px-4 py-3 font-medium text-left">Status</th>
-                <th className="px-4 py-3 font-medium text-left">Invoice</th>
+                <th className="px-4 py-3 font-medium text-left">Invoice No</th>
               </tr>
             </thead>
             <tbody>
@@ -362,11 +363,12 @@ const billingsSubscription = () => {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      {invoice.status === 'paid' && (
+                      {invoice.invoiceNumber}
+                      {/* {invoice.status === 'paid' && (
                         <button className="text-primary text-sm hover:underline">
                           Download
                         </button>
-                      )}
+                      )} */}
                     </td>
                   </tr>
                 ))
