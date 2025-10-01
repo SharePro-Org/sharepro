@@ -55,11 +55,11 @@ const analytics = () => {
     series: [
       {
         name: "series1",
-        data: [31, 40, 28, 51, 42, 109, 100],
+        data: [0, 0, 0, 0, 0, 0, 0],
       },
       {
         name: "series2",
-        data: [11, 32, 45, 32, 34, 52, 41],
+        data: [0, 0, 0, 0, 0, 0, 0],
       },
     ],
     options: defaultOptions,
@@ -69,11 +69,11 @@ const analytics = () => {
     series: [
       {
         name: "Clicks",
-        data: [44, 55, 57, 56, 61],
+        data: [0, 0, 0, 0, 0],
       },
       {
         name: "Conversions",
-        data: [35, 41, 36, 26, 45],
+        data: [0, 0, 0, 0, 0],
       },
     ],
     options: {

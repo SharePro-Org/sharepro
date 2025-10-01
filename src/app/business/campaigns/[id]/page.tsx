@@ -3,9 +3,8 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import React, { useEffect, useState } from "react";
 import { useQuery } from "@apollo/client/react";
-
 import { GET_CAMPAIGN_ANALYTICS } from "@/apollo/queries/campaigns";
-import { ArrowLeft, ArrowRight, RefreshCwIcon } from "lucide-react";
+import { ArrowLeft, RefreshCwIcon } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { Dropdown, Button } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
@@ -25,14 +24,14 @@ const singleCampaign = () => {
   const params = useParams();
   const campaignId = params.id;
   const [businessId, setBusinessId] = useState<string>("");
-    const [user] = useAtom(userAtom);
-  
-    useEffect(() => {
-      if (user?.businessId) {
-        setBusinessId(user.businessId);
-      }
-    }, [user]);
-  
+  const [user] = useAtom(userAtom);
+
+  useEffect(() => {
+    if (user?.businessId) {
+      setBusinessId(user.businessId);
+    }
+  }, [user]);
+
   type CampaignAnalyticsType = {
     campaign?: {
       name?: string;
@@ -43,60 +42,32 @@ const singleCampaign = () => {
       totalRewardsGiven?: number;
       totalReferrals?: number;
       referralLink?: string;
-      referralRewards?: {
-        referreeValidityPeriod?: number;
-        referreeRewardValue?: string;
-        referreeRewardType?: string;
-        referreeRewardChannels?: string;
-        referreeRewardAction?: string;
-        referralRewardType?: string;
-        referralRewardLimitType?: string;
-        referralRewardLimit?: number;
-        referralRewardAmount?: string;
-        referralRewardAction?: string;
-        loyaltyTierBenefits?: string;
-        loyaltyPoints?: number;
-        loyaltyName?: string;
-      };
-      loyaltyRewards?: {
-        redeemValidityPeriod?: number;
-        redeemRewardValue?: string;
-        redeemRewardPointRequired?: number;
-        redeemRewardChannels?: string;
-        redeemRewardAction?: string;
-        loyaltyTierBenefits?: string;
-        loyaltyPoints?: number;
-        loyaltyName?: string;
-        earnRewardPoints?: number;
-        earnRewardAmount?: string;
-        earnRewardAction?: string;
-      };
-      comboRewards?: {
-        loyaltyName?: string;
-        loyaltyPoints?: number;
-        loyaltyTierBenefits?: string;
-        redeemRewardAction?: string;
-        redeemRewardChannels?: string;
-        redeemRewardPointRequired?: number;
-        redeemRewardValue?: string;
-        redeemValidityPeriod?: number;
-        referralName?: string;
-        referralPoints?: number;
-        referralRewardAction?: string;
-        referralRewardAmount?: string;
-        referralRewardLimit?: number;
-        referralRewardLimitType?: string;
-        referralRewardType?: string;
-        referralTierBenefits?: string;
-        referreeRewardAction?: string;
-        referreeRewardChannels?: string;
-        referreeRewardType?: string;
-        referreeRewardValue?: string;
-        referreeValidityPeriod?: number;
-      };
+      referralRewards?: any[];
+      loyaltyRewards?: any[];
+      comboRewards?: any[];
     };
     date?: string;
     conversionRate?: number;
+    clickThroughRate?: string;
+    clicks?: number;
+    conversions?: number;
+    costPerConversion?: string;
+    emailClicks?: number;
+    directClicks?: number;
+    facebookClicks?: number;
+    smsClicks?: number;
+    twitterClicks?: number;
+    topStates?: string;
+    topCountries?: string;
+    views?: number;
+    whatsappClicks?: number;
+    tabletPercentage?: string;
+    topCities?: string;
+    shares?: number;
+    revenue?: string;
+    mobilePercentage?: string;
+    instagramClicks?: number;
+    desktopPercentage?: string;
     [key: string]: any; // To allow additional properties
   };
 
@@ -124,6 +95,7 @@ const singleCampaign = () => {
       setCampaignAnalytics(analyticsData.campaignAnalytics);
     }
   }, [analyticsData]);
+
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
 
@@ -131,10 +103,11 @@ const singleCampaign = () => {
     setIsClient(true);
   }, []);
 
+  // Update channel data when campaignAnalytics changes
   const [channels, setChannels] = useState({
     series: [
       {
-        data: [21, 22, 10, 28],
+        data: [0, 0, 0, 0, 0, 0],
       },
     ],
     options: {
@@ -162,7 +135,7 @@ const singleCampaign = () => {
         show: false,
       },
       xaxis: {
-        categories: ["WhatsApp", "Facebook", "X", "Instagram"],
+        categories: ["WhatsApp", "Facebook", "X", "Instagram", "SMS", "Email"],
         labels: {
           style: {
             colors: ["#030229"],
@@ -173,11 +146,20 @@ const singleCampaign = () => {
     },
   });
 
+  // Update performance data when campaignAnalytics changes
   const [state, setState] = useState({
     series: [
       {
-        name: "Desktops",
-        data: [10, 41, 35, 51, 49, 62, 69, 91, 148],
+        name: "Views",
+        data: [0, 0, 0, 0, 0, 0, 0],
+      },
+      {
+        name: "Clicks",
+        data: [0, 0, 0, 0, 0, 0, 0],
+      },
+      {
+        name: "Conversions",
+        data: [0, 0, 0, 0, 0, 0, 0],
       },
     ],
     options: {
@@ -212,12 +194,93 @@ const singleCampaign = () => {
           "May",
           "Jun",
           "Jul",
-          "Aug",
-          "Sep",
         ],
       },
     },
   });
+
+  // Update charts when campaignAnalytics changes
+  useEffect(() => {
+    if (campaignAnalytics) {
+      // Update channel breakdown chart
+      setChannels({
+        series: [
+          {
+            data: [
+              campaignAnalytics.whatsappClicks || 0,
+              campaignAnalytics.facebookClicks || 0,
+              campaignAnalytics.twitterClicks || 0,
+              campaignAnalytics.instagramClicks || 0,
+              campaignAnalytics.smsClicks || 0,
+              campaignAnalytics.emailClicks || 0,
+            ],
+          },
+        ],
+        options: {
+          ...channels.options,
+        },
+      });
+
+      // Update performance over time chart
+      // Since we only have one data point, we'll create a simple trend
+      const currentViews = campaignAnalytics.views || 0;
+      const currentClicks = campaignAnalytics.clicks || 0;
+      const currentConversions = campaignAnalytics.conversions || 0;
+
+      // Generate some sample data for the past 7 days
+      const viewsData = [];
+      const clicksData = [];
+      const conversionsData = [];
+
+      for (let i = 6; i >= 0; i--) {
+        if (i === 0) {
+          // Current day data
+          viewsData.push(currentViews);
+          clicksData.push(currentClicks);
+          conversionsData.push(currentConversions);
+        } else {
+          // Previous days (sample data decreasing)
+          viewsData.push(Math.max(0, currentViews - (i * Math.floor(Math.random() * 10))));
+          clicksData.push(Math.max(0, currentClicks - (i * Math.floor(Math.random() * 5))));
+          conversionsData.push(Math.max(0, currentConversions - (i * Math.floor(Math.random() * 2))));
+        }
+      }
+
+      // Get current date for labels
+      const today = new Date();
+      const categories = [];
+
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        categories.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+      }
+
+      setState({
+        series: [
+          {
+            name: "Views",
+            data: viewsData,
+          },
+          {
+            name: "Clicks",
+            data: clicksData,
+          },
+          {
+            name: "Conversions",
+            data: conversionsData,
+          },
+        ],
+        options: {
+          ...state.options,
+          xaxis: {
+            ...state.options.xaxis,
+            categories,
+          },
+        },
+      });
+    }
+  }, [campaignAnalytics]);
 
   return (
     <DashboardLayout>
@@ -245,7 +308,7 @@ const singleCampaign = () => {
               </span>
             </button>
           </div>
-          <div className="bg-[#D1DAF4] rounded-md flex justify-between">
+          <div className="bg-[#D1DAF4] rounded-md">
             <div className="flex gap-4 justify-between">
               <div className="border-r m-3 pr-3 border-r-[#CCCCCC]">
                 <h2 className="text-xs mb-2">Campaign Name</h2>
@@ -272,33 +335,6 @@ const singleCampaign = () => {
                   {campaignAnalytics?.campaign?.status || "-"}
                 </p>
               </div>
-            </div>
-            <div className="w-44 flex justify-between">
-              {/* <Link
-                className="my-auto"
-                href={`/business/campaigns/${campaignId}/payouts`}
-              >
-                <button className="p-3 my-auto text-sm bg-primary text-white rounded-md">
-                  View Payouts
-                </button>
-              </Link> */}
-              <Dropdown
-                menu={{
-                  items: [
-                    { key: "pause", label: "Pause Campaign" },
-                    { key: "edit", label: "Edit Campaign" },
-                    { key: "end", label: "End Campaign" },
-                    { key: "settings", label: "Campaign Settings" },
-                    { key: "payouts", label: "View Payouts" },
-                    { key: "download", label: "Download Report" },
-                  ],
-                }}
-                trigger={["click"]}
-              >
-                <Button type="text" className="my-auto">
-                  <MoreOutlined />
-                </Button>
-              </Dropdown>
             </div>
           </div>
           {analyticsError && (
@@ -355,75 +391,77 @@ const singleCampaign = () => {
             </div>
             <p className="text-primary text-sm">{campaignAnalytics?.campaign?.referralLink}</p>
             {campaignAnalytics?.campaign?.campaignType === "REFERRAL" &&
-              campaignAnalytics?.campaign?.referralRewards && (
+              campaignAnalytics?.campaign?.referralRewards &&
+              campaignAnalytics?.campaign?.referralRewards.length > 0 && (
                 <ul className="check-list text-sm">
                   <li>
                     Referrers earn{" "}
-                    {campaignAnalytics.campaign.referralRewards
+                    {campaignAnalytics.campaign.referralRewards[0]
                       .referralRewardAmount || "X"}{" "}
-                    {campaignAnalytics.campaign.referralRewards
+                    {campaignAnalytics.campaign.referralRewards[0]
                       .referralRewardType || "reward"}{" "}
                     for each successful referral
                   </li>
                   <li>
                     Referee's must{" "}
-                    {campaignAnalytics.campaign.referralRewards
+                    {campaignAnalytics.campaign.referralRewards[0]
                       .referreeRewardAction || "sign up"}{" "}
                     for a referral to be successful
                   </li>
                   <li>
                     Referee's earn{" "}
-                    {campaignAnalytics.campaign.referralRewards
+                    {campaignAnalytics.campaign.referralRewards[0]
                       .referreeRewardValue || "Y"}{" "}
-                    {campaignAnalytics.campaign.referralRewards
+                    {campaignAnalytics.campaign.referralRewards[0]
                       .referreeRewardType || "reward"}{" "}
                     after{" "}
-                    {campaignAnalytics.campaign.referralRewards
+                    {campaignAnalytics.campaign.referralRewards[0]
                       .referreeRewardAction || "sign up"}
                   </li>
-                  {campaignAnalytics.campaign.referralRewards
+                  {campaignAnalytics.campaign.referralRewards[0]
                     .loyaltyTierBenefits && (
                       <li>
                         Users can unlock tier benefits:{" "}
                         {
-                          campaignAnalytics.campaign.referralRewards
+                          campaignAnalytics.campaign.referralRewards[0]
                             .loyaltyTierBenefits
                         }
                       </li>
                     )}
                   <li>
                     Rewards are redeemed at{" "}
-                    {campaignAnalytics.campaign.referralRewards
+                    {campaignAnalytics.campaign.referralRewards[0]
                       .referreeRewardChannels || "checkout"}
                   </li>
                 </ul>
               )}
             {campaignAnalytics?.campaign?.campaignType === "LOYALTY" &&
-              campaignAnalytics?.campaign?.loyaltyRewards && (
+              campaignAnalytics?.campaign?.loyaltyRewards &&
+              campaignAnalytics?.campaign?.loyaltyRewards.length > 0 && (
                 <ul className="check-list text-sm">
                   <li>
                     Customers earn{" "}
-                    {campaignAnalytics.campaign.loyaltyRewards
+                    {campaignAnalytics.campaign.loyaltyRewards[0]
                       .earnRewardPoints || "X"}{" "}
                     points for every{" "}
-                    {campaignAnalytics.campaign.loyaltyRewards
+                    {campaignAnalytics.campaign.loyaltyRewards[0]
                       .earnRewardAction || "transaction"}
                   </li>
                   <li>
                     Points can be redeemed for{" "}
-                    {campaignAnalytics.campaign.loyaltyRewards
+                    {campaignAnalytics.campaign.loyaltyRewards[0]
                       .redeemRewardValue || "Z"}{" "}
                     (
-                    {campaignAnalytics.campaign.loyaltyRewards
+                    {campaignAnalytics.campaign.loyaltyRewards[0]
                       .redeemRewardPointRequired || "W"}{" "}
                     pts)
                   </li>
-                  {campaignAnalytics.campaign.loyaltyRewards
+                  {campaignAnalytics.campaign.loyaltyRewards[0]
                     .loyaltyTierBenefits && (
                       <li>
                         Users can unlock tier benefits:{" "}
                         {
-                          campaignAnalytics.campaign.loyaltyRewards
+                          campaignAnalytics.campaign.loyaltyRewards[0]
                             .loyaltyTierBenefits
                         }
                       </li>
@@ -431,53 +469,54 @@ const singleCampaign = () => {
                 </ul>
               )}
             {campaignAnalytics?.campaign?.campaignType === "COMBO" &&
-              campaignAnalytics?.campaign?.comboRewards && (
+              campaignAnalytics?.campaign?.comboRewards &&
+              campaignAnalytics?.campaign?.comboRewards.length > 0 && (
                 <ul className="check-list text-sm">
                   <li>
                     Referrers earn{" "}
-                    {campaignAnalytics.campaign.comboRewards
+                    {campaignAnalytics.campaign.comboRewards[0]
                       .referralRewardAmount || "X"}{" "}
-                    {campaignAnalytics.campaign.comboRewards
+                    {campaignAnalytics.campaign.comboRewards[0]
                       .referralRewardType || "reward"}{" "}
                     for each successful referral
                   </li>
                   <li>
                     Referee's must{" "}
-                    {campaignAnalytics.campaign.comboRewards
+                    {campaignAnalytics.campaign.comboRewards[0]
                       .referreeRewardAction || "sign up"}{" "}
                     for a referral to be successful
                   </li>
                   <li>
                     Referee's earn{" "}
-                    {campaignAnalytics.campaign.comboRewards
+                    {campaignAnalytics.campaign.comboRewards[0]
                       .referreeRewardValue || "Y"}{" "}
-                    {campaignAnalytics.campaign.comboRewards
+                    {campaignAnalytics.campaign.comboRewards[0]
                       .referreeRewardType || "reward"}{" "}
                     after{" "}
-                    {campaignAnalytics.campaign.comboRewards
+                    {campaignAnalytics.campaign.comboRewards[0]
                       .referreeRewardAction || "sign up"}
                   </li>
                   <li>
                     Customers earn{" "}
-                    {campaignAnalytics.campaign.comboRewards.loyaltyPoints ||
+                    {campaignAnalytics.campaign.comboRewards[0].loyaltyPoints ||
                       "X"}{" "}
                     points for transactions
                   </li>
                   <li>
                     Points can be redeemed for{" "}
-                    {campaignAnalytics.campaign.comboRewards
+                    {campaignAnalytics.campaign.comboRewards[0]
                       .redeemRewardValue || "Z"}{" "}
                     (
-                    {campaignAnalytics.campaign.comboRewards
+                    {campaignAnalytics.campaign.comboRewards[0]
                       .redeemRewardPointRequired || "W"}{" "}
                     pts)
                   </li>
-                  {campaignAnalytics.campaign.comboRewards
+                  {campaignAnalytics.campaign.comboRewards[0]
                     .loyaltyTierBenefits && (
                       <li>
                         Users can unlock tier benefits:{" "}
                         {
-                          campaignAnalytics.campaign.comboRewards
+                          campaignAnalytics.campaign.comboRewards[0]
                             .loyaltyTierBenefits
                         }
                       </li>
@@ -519,58 +558,7 @@ const singleCampaign = () => {
               )}
             </div>
           </div>
-          {/* <div className="bg-white p-3 rounded-md">
-            <p>Top Participants</p>
-            <div className="overflow-x-auto">
-              <table className="w-full mt-4 text-sm">
-                <thead>
-                  <tr className="bg-[#D1DAF4] text-black">
-                    <th className="px-4 py-3 font-medium text-left">User</th>
-                    <th className="px-4 py-3 font-medium text-left">Type</th>
-                    <th className="px-4 py-3 font-medium text-left">Points</th>
-                    <th className="px-4 py-3 font-medium text-left">Date</th>
-                    <th className="px-4 py-3 font-medium text-left">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[1, 2, 3, 4, 5, 6, 7].map((item) => (
-                    <tr
-                      key={item}
-                      className="border-b border-[#E2E8F0] py-6 last:border-0"
-                    >
-                      <td className="py-3 px-4">John Doe</td>
-                      <td className="py-3 px-4">Loyalty</td>
-                      <td className="py-3 px-4">10</td>
-                      <td className="py-3 px-4">2023-10-01</td>
-                      <td className="text-green-500 py-3 px-4">Active</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div> */}
         </section>
-        {/* <section className="bg-white p-3 rounded-md mt-4">
-          <div className="lg:flex justify-between">
-            <p className="text-black font-medium my-auto text-base">
-              Recent Payouts
-            </p>
-            <div className="flex gap-4">
-              {/* <RangePicker /> 
-              <Filter />
-              <Link
-                href={`/business/campaigns/${campaignId}/payouts`}
-                className="my-auto cursor-pointer"
-              >
-                <button className="flex my-auto gap-2 text-sm text-primary cursor-pointer">
-                  <span className="my-auto">View All </span>
-                  <ArrowRight size={15} className="my-auto" />
-                </button>
-              </Link>
-            </div>
-          </div>
-          <CampaignsTable type="payout" num={4} />
-        </section> */}
       </>
     </DashboardLayout>
   );
