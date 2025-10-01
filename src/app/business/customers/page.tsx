@@ -157,7 +157,7 @@ const customers = () => {
                   <th className="px-4 py-3 font-medium text-left">Campaigns Joined</th>
                   <th className="px-4 py-3 font-medium text-left">Total Referrals</th>
                   <th className="px-4 py-3 font-medium text-left">Total Rewards</th>
-                  <th className="px-4 py-3 font-medium text-left">Action</th>
+                  {/* <th className="px-4 py-3 font-medium text-left">Action</th> */}
                 </tr>
               </thead>
               <tbody>
@@ -187,14 +187,14 @@ const customers = () => {
                         ₦{member.user.totalRewardsEarned.toLocaleString()}
                       </td>
 
-                      <td>
+                      {/* <td>
                         <Dropdown
                           menu={{
                             items: [
                               {
                                 key: "view",
                                 label: "View activity",
-                                // onClick: () => router.push(`/business/customers/${member.user.userProfile.id}`),
+                                onClick: () => router.push(`/business/customers/${member.user.userProfile.id}`),
                               },
                             ],
                           }}
@@ -204,7 +204,7 @@ const customers = () => {
                             <MoreOutlined />
                           </Button>
                         </Dropdown>
-                      </td>
+                      </td> */}
                     </tr>
                   ))
                 )}

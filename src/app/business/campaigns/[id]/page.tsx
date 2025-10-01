@@ -13,6 +13,8 @@ import dynamic from "next/dynamic";
 import CampaignsTable from "@/components/dashboard/CampaignsTable";
 import Link from "next/link";
 import { Filter } from "@/components/Filter";
+import { userAtom } from "@/store/User";
+import { useAtom } from "jotai";
 
 // Dynamic import for ReactApexChart with SSR disabled
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
@@ -22,6 +24,15 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 const singleCampaign = () => {
   const params = useParams();
   const campaignId = params.id;
+  const [businessId, setBusinessId] = useState<string>("");
+    const [user] = useAtom(userAtom);
+  
+    useEffect(() => {
+      if (user?.businessId) {
+        setBusinessId(user.businessId);
+      }
+    }, [user]);
+  
   type CampaignAnalyticsType = {
     campaign?: {
       name?: string;
@@ -104,8 +115,8 @@ const singleCampaign = () => {
     error: analyticsError,
     refetch,
   } = useQuery<CampaignAnalyticsQueryResult>(GET_CAMPAIGN_ANALYTICS, {
-    variables: { campaignId },
-    skip: !campaignId,
+    variables: { id: campaignId, businessId },
+    skip: !campaignId || !businessId,
   });
 
   useEffect(() => {
@@ -494,7 +505,7 @@ const singleCampaign = () => {
               </div>
             </div>
           </div>
-          <div className="bg-white p-3 rounded-md">
+          <div className="bg-white p-3 col-span-2 rounded-md">
             <p>Performance Overtime</p>
             <div id="chart">
               {isClient && (
@@ -508,7 +519,7 @@ const singleCampaign = () => {
               )}
             </div>
           </div>
-          <div className="bg-white p-3 rounded-md">
+          {/* <div className="bg-white p-3 rounded-md">
             <p>Top Participants</p>
             <div className="overflow-x-auto">
               <table className="w-full mt-4 text-sm">
@@ -537,7 +548,7 @@ const singleCampaign = () => {
                 </tbody>
               </table>
             </div>
-          </div>
+          </div> */}
         </section>
         {/* <section className="bg-white p-3 rounded-md mt-4">
           <div className="lg:flex justify-between">

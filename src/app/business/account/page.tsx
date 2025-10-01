@@ -261,14 +261,14 @@ const account = () => {
                       </p>
                       <p className="font-medium">{userData?.business?.phone}</p>
                     </div>
-                    <div>
+                    {/* <div>
                       <p className="text-sm text-[#030229B2] mb-2">Type</p>
                       <p className="font-medium">hello</p>
                     </div>
                     <div>
                       <p className="text-sm text-[#030229B2] mb-2">Category</p>
                       <p className="font-medium">hello</p>
-                    </div>
+                    </div> */}
                     <div>
                       <p className="text-sm text-[#030229B2] mb-2">
                         Website/Social media
@@ -285,7 +285,7 @@ const account = () => {
                     </div>
                   </div>
                 </div>
-                <div className="border border-[#E5E5EA] rounded-sm p-4">
+                {/* <div className="border border-[#E5E5EA] rounded-sm p-4">
                   <div className="border-b border-b-[#E5E5EA] flex py-3 mb-3 justify-between">
                     <p className="font-medium my-auto">Address Information</p>
                     <button
@@ -311,7 +311,7 @@ const account = () => {
                       <p className="font-medium">hello</p>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
             )}
             {active === "users" && (

@@ -5,7 +5,7 @@ import { Users } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useQuery } from "@apollo/client/react";
-import { GET_BUSINESS_ANALYTICS } from "@/apollo/queries/analytics";
+import { GET_BUSINESS_ANALYTICS, GET_CAMPAIGN_ANALYTICS_SUMMARY } from "@/apollo/queries/analytics";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
 
@@ -27,7 +27,31 @@ const analytics = () => {
       setBusinessId(user.businessId);
     }
   }, [user]);
-  const [state, setState] = useState({
+
+  // Default chart options
+  const defaultOptions = {
+    chart: {
+      height: 350,
+      type: "area" as const,
+    },
+    colors: ["#5977D9", "#A16AD4"],
+    dataLabels: {
+      enabled: false,
+    },
+    stroke: {
+      curve: "smooth" as const,
+    },
+    xaxis: {
+      type: "datetime" as const,
+    },
+    tooltip: {
+      x: {
+        format: "dd/MM/yy",
+      },
+    },
+  };
+
+  const [chartData, setChartData] = useState<any>({
     series: [
       {
         name: "series1",
@@ -38,48 +62,14 @@ const analytics = () => {
         data: [11, 32, 45, 32, 34, 52, 41],
       },
     ],
-    options: {
-      chart: {
-        height: 350,
-        type: "area" as const,
-      },
-      colors: ["#5977D9", "#A16AD4"],
-
-      dataLabels: {
-        enabled: false,
-      },
-      stroke: {
-        curve: "smooth" as const,
-      },
-      xaxis: {
-        type: "datetime" as const,
-        categories: [
-          "2024-01-01T00:00:00.000Z",
-          "2024-02-01T00:00:00.000Z",
-          "2024-03-01T00:00:00.000Z",
-          "2024-04-01T00:00:00.000Z",
-          "2024-05-01T00:00:00.000Z",
-          "2024-06-01T00:00:00.000Z",
-          "2024-07-01T00:00:00.000Z",
-        ],
-      },
-      tooltip: {
-        x: {
-          format: "dd/MM/yy HH:mm",
-        },
-      },
-    },
+    options: defaultOptions,
   });
 
-  const [channel, setChannel] = React.useState({
+  const [channelData, setChannelData] = useState({
     series: [
       {
-        name: "Shares",
-        data: [44, 55, 57, 56, 61],
-      },
-      {
         name: "Clicks",
-        data: [76, 85, 101, 98, 87],
+        data: [44, 55, 57, 56, 61],
       },
       {
         name: "Conversions",
@@ -91,7 +81,7 @@ const analytics = () => {
         type: "bar" as const,
         height: 350,
       },
-      colors: ["#5977D9", "#539EF0", "#A16AD4"],
+      colors: ["#5977D9", "#A16AD4"],
       plotOptions: {
         bar: {
           horizontal: false,
@@ -111,7 +101,6 @@ const analytics = () => {
       xaxis: {
         categories: ["WhatsApp", "SMS", "Instagram", "Facebook", "Twitter"],
       },
-
       fill: {
         opacity: 1,
       },
@@ -125,15 +114,43 @@ const analytics = () => {
     },
   });
 
-  // TODO: Replace with actual businessId from context/store
   type BusinessAnalyticsQueryResult = {
     businessAnalyticsByBusiness?: {
       totalViews?: number;
       totalClicks?: number;
       totalConversions?: number;
       totalRevenue?: number;
-      // Add other fields as needed
     };
+  };
+
+  type CampaignAnalyticsSummaryResult = {
+    campaignAnalyticsByCampaign?: Array<{
+      clickThroughRate: string;
+      clicks: number;
+      conversionRate: string;
+      conversions: number;
+      costPerConversion: string;
+      createdAt: string;
+      deletedAt: string | null;
+      desktopPercentage: string;
+      directClicks: number;
+      emailClicks: number;
+      facebookClicks: number;
+      id: string;
+      instagramClicks: number;
+      mobilePercentage: string;
+      revenue: string;
+      shares: number;
+      smsClicks: number;
+      tabletPercentage: string;
+      topCities: string;
+      topCountries: string;
+      topStates: string;
+      twitterClicks: number;
+      updatedAt: string;
+      whatsappClicks: number;
+      __typename: string;
+    }>;
   };
 
   const { data, loading, error } = useQuery<BusinessAnalyticsQueryResult>(GET_BUSINESS_ANALYTICS, {
@@ -141,8 +158,115 @@ const analytics = () => {
     skip: !businessId,
   });
 
-  // Default fallback values
+  const { data: analyticsSummaryData, loading: analyticsLoading } = useQuery<CampaignAnalyticsSummaryResult>(GET_CAMPAIGN_ANALYTICS_SUMMARY, {
+    variables: { businessId, campaignType: active },
+    skip: !businessId,
+  });
+
   const analyticsData = data?.businessAnalyticsByBusiness || {};
+
+  // Update chart data when analyticsSummaryData changes
+  useEffect(() => {
+    if (analyticsSummaryData?.campaignAnalyticsByCampaign && analyticsSummaryData.campaignAnalyticsByCampaign.length > 0) {
+      const campaignData = analyticsSummaryData.campaignAnalyticsByCampaign;
+
+      // Sort by date to ensure chronological order
+      const sortedData = [...campaignData].sort((a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+
+      // Format dates for x-axis
+      const categories = sortedData.map(item => {
+        const date = new Date(item.createdAt);
+        return date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+      });
+
+      // Prepare series data based on active tab
+      let seriesData: { name: string; data: number[]; }[] = [];
+
+      if (active === "referral") {
+        seriesData = [
+          {
+            name: "Clicks",
+            data: sortedData.map(item => item.clicks || 0),
+          },
+          {
+            name: "Conversions",
+            data: sortedData.map(item => item.conversions || 0),
+          },
+        ];
+      } else if (active === "loyalty") {
+        seriesData = [
+          {
+            name: "Shares",
+            data: sortedData.map(item => item.shares || 0),
+          },
+          {
+            name: "Conversions",
+            data: sortedData.map(item => item.conversions || 0),
+          },
+        ];
+      } else if (active === "combo") {
+        seriesData = [
+          {
+            name: "Clicks",
+            data: sortedData.map(item => item.clicks || 0),
+          },
+          {
+            name: "Revenue",
+            data: sortedData.map(item => parseFloat(item.revenue) || 0),
+          },
+        ];
+      }
+
+      setChartData({
+        series: seriesData,
+        options: {
+          ...defaultOptions,
+          xaxis: {
+            ...defaultOptions.xaxis,
+            categories,
+          },
+        },
+      });
+
+      // Update channel data using the latest data point
+      const latestData = sortedData[sortedData.length - 1];
+      if (latestData) {
+        setChannelData({
+          series: [
+            {
+              name: "Clicks",
+              data: [
+                latestData.whatsappClicks || 0,
+                latestData.smsClicks || 0,
+                latestData.instagramClicks || 0,
+                latestData.facebookClicks || 0,
+                latestData.twitterClicks || 0,
+              ],
+            },
+            {
+              name: "Conversions",
+              data: [
+                latestData.whatsappClicks ? Math.round(latestData.whatsappClicks * parseFloat(latestData.conversionRate || "0") / 100) : 0,
+                latestData.smsClicks ? Math.round(latestData.smsClicks * parseFloat(latestData.conversionRate || "0") / 100) : 0,
+                latestData.instagramClicks ? Math.round(latestData.instagramClicks * parseFloat(latestData.conversionRate || "0") / 100) : 0,
+                latestData.facebookClicks ? Math.round(latestData.facebookClicks * parseFloat(latestData.conversionRate || "0") / 100) : 0,
+                latestData.twitterClicks ? Math.round(latestData.twitterClicks * parseFloat(latestData.conversionRate || "0") / 100) : 0,
+              ],
+            },
+          ],
+          options: {
+            ...channelData.options,
+            xaxis: {
+              ...channelData.options.xaxis,
+              categories: ["WhatsApp", "SMS", "Instagram", "Facebook", "Twitter"],
+            },
+          },
+        });
+      }
+    }
+  }, [analyticsSummaryData, active]);
 
   useEffect(() => {
     setIsClient(true);
@@ -166,15 +290,6 @@ const analytics = () => {
               <div className="text-xl my-3 font-bold">
                 {analyticsData.totalViews ?? "-"}
               </div>
-              <div className="flex justify-between w-full mt-2">
-                <div className="text-xs text-gray-500">
-                  Referral links viewed.
-                </div>
-                {/* Example: growth rate, replace with actual data if available */}
-                <div className={`text-xs text-green-600 mt-1 font-bold`}>
-                  10% ↑
-                </div>
-              </div>
             </div>
           </div>
 
@@ -189,14 +304,6 @@ const analytics = () => {
               </div>
               <div className="text-xl my-3 font-bold">
                 {analyticsData.totalClicks ?? "-"}
-              </div>
-              <div className="flex justify-between w-full mt-2">
-                <div className="text-xs text-gray-500">
-                  Clicks on referral links.
-                </div>
-                <div className="text-xs text-green-600 mt-1 font-bold">
-                  10% ↑
-                </div>
               </div>
             </div>
           </div>
@@ -213,14 +320,6 @@ const analytics = () => {
               <div className="text-xl my-3 font-bold">
                 {analyticsData.totalConversions ?? "-"}
               </div>
-              <div className="flex justify-between w-full mt-2">
-                <div className="text-xs text-gray-500">
-                  Referral purchases made
-                </div>
-                <div className="text-xs text-green-600 mt-1 font-bold">
-                  5% ↑
-                </div>
-              </div>
             </div>
           </div>
 
@@ -236,128 +335,38 @@ const analytics = () => {
               <div className="text-xl my-3 font-bold">
                 {analyticsData.totalRevenue ?? "-"}
               </div>
-              <div className="flex justify-between w-full mt-2">
-                <div className="text-xs text-gray-500">Revenue generated</div>
-                <div className="text-xs text-green-600 mt-1 font-bold">
-                  5% ↑
-                </div>
-              </div>
             </div>
           </div>
         </div>
 
         <div className="flex p-4 text-sm gap-6 text-[#030229B2]">
-          {/* <button
-            onClick={() => setActive("general")}
-            className={`p-3 ${
-              active === "general" &&
-              "!text-secondary border-b border-b-secondary"
-            }`}
-          >
-            General
-          </button> */}
           <button
             onClick={() => setActive("referral")}
-            className={`p-3 ${
-              active === "referral" &&
+            className={`p-3 ${active === "referral" &&
               "!text-secondary border-b border-b-secondary"
-            }`}
+              }`}
           >
             Referral
           </button>
           <button
             onClick={() => setActive("loyalty")}
-            className={`p-3 ${
-              active === "loyalty" &&
+            className={`p-3 ${active === "loyalty" &&
               "!text-secondary border-b border-b-secondary"
-            }`}
+              }`}
           >
             Loyalty
           </button>
           <button
             onClick={() => setActive("combo")}
-            className={`p-3 ${
-              active === "combo" &&
+            className={`p-3 ${active === "combo" &&
               "!text-secondary border-b border-b-secondary"
-            }`}
+              }`}
           >
             Combo
           </button>
         </div>
 
         <section>
-          {active === "general" && (
-            <>
-              <section className="bg-white p-4 rounded-md mb-4 border border-[#E2E8F0]">
-                <div className="flex justify-between">
-                  <div>
-                    <p className="font-medium">Top Referrers</p>
-                    <p className="text-sm text-[#030229B2]">
-                      Identify your most impactful advocates.
-                    </p>
-                  </div>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full mt-4 text-sm">
-                    <thead>
-                      <tr className="bg-[#D1DAF4] text-black">
-                        <th className="px-4 py-3 font-medium text-left">
-                          Rank
-                        </th>
-                        <th className="px-4 py-3 font-medium text-left">
-                          Referrer
-                        </th>
-                        <th className="px-4 py-3 font-medium text-left">
-                          Referrals
-                        </th>
-                        <th className="px-4 py-3 font-medium text-left">
-                          Conversions
-                        </th>
-                        <th className="px-4 py-3 font-medium text-left">
-                          Rewards
-                        </th>
-                        <th className="px-4 py-3 font-medium text-left">
-                          Badge
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td className="px-4 black font-normal py-3">1</td>
-                        <td className="px-4 black font-normal py-3">
-                          John Doe
-                        </td>
-                        <td className="px-4 black font-normal py-3">10</td>
-                        <td className="px-4 black font-normal py-3">18</td>
-                        <td className="px-4 black font-normal py-3">#1000</td>
-                        <td className="px-4 black font-normal py-3">Gold</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-              <section className="bg-white p-4 rounded-md mb-4 border border-[#E2E8F0]">
-                <div className="flex justify-between">
-                  <div>
-                    <p className="font-medium">Channel Performance</p>
-                    <p className="text-sm text-[#030229B2]">
-                      See which channels are driving the most results
-                    </p>
-                  </div>
-                </div>
-                {isClient && (
-                  <div id="chart">
-                    <ReactApexChart
-                      options={channel.options}
-                      series={channel.series}
-                      type="bar"
-                      height={350}
-                    />
-                  </div>
-                )}
-              </section>
-            </>
-          )}
           {active === "referral" && (
             <>
               <section className="bg-white p-4 rounded-md border border-[#E2E8F0]">
@@ -370,32 +379,28 @@ const analytics = () => {
                     </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-4 gap-4 my-4">
-                  <div className="bg-[#ECF3FF] p-4 rounded-md">
-                    <p className="text-sm">Total Referrals Sent</p>
-                    <p className="text-lg">1,000</p>
-                  </div>
-                  <div className="bg-[#ECF3FF] p-4 rounded-md">
-                    <p className="text-sm">Referral Conversion</p>
-                    <p className="text-lg">1,000</p>
-                  </div>
-                  <div className="bg-[#ECF3FF] p-4 rounded-md">
-                    <p className="text-sm">Conversion Rate</p>
-                    <p className="text-lg">1,000</p>
-                  </div>
-                  <div className="bg-[#ECF3FF] p-4 rounded-md">
-                    <p className="text-sm">Referral Reward Redemptions</p>
-                    <p className="text-lg">1,000</p>
-                  </div>
-                </div>
-                <div className="border border-[#E2E8F0] rounded-md p-4 ">
+                <div className="border border-[#E2E8F0] rounded-md p-4">
                   <p className="text-sm">Engagement Over Time</p>
                   <div id="chart">
                     {isClient && (
                       <ReactApexChart
-                        options={state.options}
-                        series={state.series}
+                        options={chartData.options}
+                        series={chartData.series}
                         type="area"
+                        height={350}
+                        width={"100%"}
+                      />
+                    )}
+                  </div>
+                </div>
+                <div className="border border-[#E2E8F0] rounded-md p-4 mt-4">
+                  <p className="text-sm">Channel Performance</p>
+                  <div id="channel-chart">
+                    {isClient && (
+                      <ReactApexChart
+                        options={channelData.options}
+                        series={channelData.series}
+                        type="bar"
                         height={350}
                         width={"100%"}
                       />
@@ -417,28 +422,28 @@ const analytics = () => {
                     </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-4 my-4">
-                  <div className="bg-[#ECF3FF] p-4 rounded-md">
-                    <p className="text-sm">Total Rewards Redeemed</p>
-                    <p className="text-lg">1,000</p>
-                  </div>
-                  <div className="bg-[#ECF3FF] p-4 rounded-md">
-                    <p className="text-sm">Active Members</p>
-                    <p className="text-lg">1,000</p>
-                  </div>
-                  <div className="bg-[#ECF3FF] p-4 rounded-md">
-                    <p className="text-sm">Points Earned</p>
-                    <p className="text-lg">1,000</p>
-                  </div>
-                </div>
-                <div className="border border-[#E2E8F0] rounded-md p-4 ">
+                <div className="border border-[#E2E8F0] rounded-md p-4">
                   <p className="text-sm">Loyalty Engagement Over Time</p>
                   <div id="chart">
                     {isClient && (
                       <ReactApexChart
-                        options={state.options}
-                        series={state.series}
+                        options={chartData.options}
+                        series={chartData.series}
                         type="area"
+                        height={350}
+                        width={"100%"}
+                      />
+                    )}
+                  </div>
+                </div>
+                <div className="border border-[#E2E8F0] rounded-md p-4 mt-4">
+                  <p className="text-sm">Channel Performance</p>
+                  <div id="channel-chart">
+                    {isClient && (
+                      <ReactApexChart
+                        options={channelData.options}
+                        series={channelData.series}
+                        type="bar"
                         height={350}
                         width={"100%"}
                       />
@@ -459,40 +464,28 @@ const analytics = () => {
                     </p>
                   </div>
                 </div>
-                <div className="grid grid-cols-6 gap-4 my-4">
-                  <div className="bg-[#ECF3FF] p-4 rounded-md">
-                    <p className="text-sm">Total Participants</p>
-                    <p className="text-lg">1,000</p>
-                  </div>
-                  <div className="bg-[#ECF3FF] p-4 rounded-md">
-                    <p className="text-sm">Dual Conversions</p>
-                    <p className="text-lg">1,000</p>
-                  </div>
-                  <div className="bg-[#ECF3FF] p-4 rounded-md">
-                    <p className="text-sm">Combo Reward Redemptions</p>
-                    <p className="text-lg">1,000</p>
-                  </div>
-                  <div className="bg-[#ECF3FF] p-4 rounded-md">
-                    <p className="text-sm">Points Earned</p>
-                    <p className="text-lg">1,000</p>
-                  </div>
-                  <div className="bg-[#ECF3FF] p-4 rounded-md">
-                    <p className="text-sm">Referrals Sent</p>
-                    <p className="text-lg">1,000</p>
-                  </div>
-                  <div className="bg-[#ECF3FF] p-4 rounded-md">
-                    <p className="text-sm">Overall Conversion Rate</p>
-                    <p className="text-lg">1,000</p>
-                  </div>
-                </div>
-                <div className="border border-[#E2E8F0] rounded-md p-4 ">
+                <div className="border border-[#E2E8F0] rounded-md p-4">
                   <p className="text-sm">Engagement Over Time</p>
                   <div id="chart">
                     {isClient && (
                       <ReactApexChart
-                        options={state.options}
-                        series={state.series}
+                        options={chartData.options}
+                        series={chartData.series}
                         type="area"
+                        height={350}
+                        width={"100%"}
+                      />
+                    )}
+                  </div>
+                </div>
+                <div className="border border-[#E2E8F0] rounded-md p-4 mt-4">
+                  <p className="text-sm">Channel Performance</p>
+                  <div id="channel-chart">
+                    {isClient && (
+                      <ReactApexChart
+                        options={channelData.options}
+                        series={channelData.series}
+                        type="bar"
                         height={350}
                         width={"100%"}
                       />

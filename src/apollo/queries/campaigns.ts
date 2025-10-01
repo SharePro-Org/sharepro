@@ -48,8 +48,8 @@ export const GET_BUSINESS_CAMPAIGNS = gql`
 `;
 
 export const GET_CAMPAIGN_ANALYTICS = gql`
-  query GetCampaignAnalytics($campaignId: UUID!) {
-    campaignAnalytics(id: $campaignId) {
+  query GetCampaignAnalytics($id: UUID!, $businessId: UUID!) {
+    campaignAnalytics(id: $id, businessId: $businessId) {
       clickThroughRate
       clicks
       conversionRate

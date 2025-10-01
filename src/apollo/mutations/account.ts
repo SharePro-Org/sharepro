@@ -64,15 +64,6 @@ export const GET_BUSINESS = gql`
       phone
       onBoardingComplete
       isKycVerified
-      subscriptions {
-        isTrial
-        isActive
-        endDate
-        startDate
-        plan {
-          name
-        }
-      }
     }
   }
 `;
