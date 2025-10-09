@@ -424,7 +424,7 @@ const singleCampaign = () => {
                         Users can unlock tier benefits:{" "}
                         {
                           campaignAnalytics.campaign.referralRewards[0]
-                            .loyaltyTierBenefits
+                            .loyaltyTierBenefits.benefits
                         }
                       </li>
                     )}
@@ -462,7 +462,7 @@ const singleCampaign = () => {
                         Users can unlock tier benefits:{" "}
                         {
                           campaignAnalytics.campaign.loyaltyRewards[0]
-                            .loyaltyTierBenefits
+                            .loyaltyTierBenefits.benefits
                         }
                       </li>
                     )}
@@ -517,7 +517,7 @@ const singleCampaign = () => {
                         Users can unlock tier benefits:{" "}
                         {
                           campaignAnalytics.campaign.comboRewards[0]
-                            .loyaltyTierBenefits
+                            .loyaltyTierBenefits.benefits
                         }
                       </li>
                     )}

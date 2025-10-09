@@ -116,7 +116,7 @@ const userRewards = () => {
           </div>
         </div>
         <div className="border border-[#CCCCCC4D] rounded-md p-3 mt-3">
-          <div className="mb-3 flex justify-between">
+          <div className="mb-3 md:flex  justify-between">
             <div className="relative ml-auto md:mt-0 mt-2">
               <input
                 type="text"
@@ -129,7 +129,7 @@ const userRewards = () => {
                 className="absolute top-4 left-3 text-gray-500"
               />
             </div>
-            <div className="my-auto flex items-end ml-auto">
+            <div className="md:my-auto my-2 flex items-end ml-auto">
               <button className="bg-primary p-3 rounded-md text-white">
                 Redeem Reward
               </button>

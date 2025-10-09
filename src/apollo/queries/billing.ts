@@ -101,4 +101,11 @@ export const GET_INVOICES = gql`
   }
 `;
 
-
+export const DELETE_PAYMENT_METHOD = gql`
+  mutation DeletePaymentMethod($paymentMethodId: ID!) {
+    deletePaymentMethod(paymentMethodId: $paymentMethodId) {
+      success
+      message
+    }
+  }
+`;

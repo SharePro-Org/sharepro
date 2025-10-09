@@ -4,7 +4,7 @@ import { Plan } from "@/apollo/types";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import React, { useState } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
-import { GET_INVOICES, GET_BILLING_SUMMARY, GET_PLANS } from "@/apollo/queries/billing";
+import { GET_INVOICES, GET_BILLING_SUMMARY, GET_PLANS, DELETE_PAYMENT_METHOD } from "@/apollo/queries/billing";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 
@@ -145,6 +145,17 @@ const billingsSubscription = () => {
       }
     })
   }
+
+  const [deletePaymentMethod] = useMutation(DELETE_PAYMENT_METHOD, {
+    onCompleted: (data) => {
+     console.log("Payment method deleted:", data);
+    },
+    onError: (error) => {
+      console.error("Error deleting payment method:", error);
+    },
+  });
+
+
 
   return (
     <DashboardLayout>
@@ -305,7 +316,7 @@ const billingsSubscription = () => {
                     <p className="text-sm text-gray-500">**** **** **** {billingSummary.billingSummary.paymentMethod.cardLast4}</p>
                   </div>
                 </div>
-                <button className="text-sm text-red-500 hover:text-red-600">Remove</button>
+                <button onClick={() => deletePaymentMethod({ variables: { paymentMethodId: billingSummary?.billingSummary?.paymentMethod?.id } })} className="text-sm text-red-500 hover:text-red-600">Remove</button>
               </div>
             ) : (
               <p className="text-center text-sm text-gray-500">No Active Card</p>

@@ -160,7 +160,7 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
   };
 
   return (
-    <div>
+    <div className="overflow-x-auto">
       {type === "campaigns" ? (
         <table className="w-full mt-4 text-sm">
           <thead>

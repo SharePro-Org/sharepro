@@ -269,7 +269,7 @@ const DiscoverCampaign = ({
   return (
     <div>
       <p className="text-lg font-medium">Discover Campaigns</p>
-      <div className={` ${grid ? "grid grid-cols-2" : "flex flex-col"} gap-3`}>
+      <div className={` ${grid ? "grid md:grid-cols-2 grid-cols-1" : "flex flex-col"} gap-3`}>
         {loading ? (
           <div className="text-center py-4">Loading available campaigns...</div>
         ) : error ? (
@@ -360,7 +360,7 @@ const DiscoverCampaign = ({
               <h3 className="text-lg font-medium text-center mb-3">
                 {joining.campaignName}
               </h3>
-              <div className="grid grid-cols-4">
+              <div className="grid md:grid-cols-4 grid-cols-">
                 <div className="flex gap-2">
                   <button className="bg-[#ECF3FF] rounded-sm p-3">
                     <MdCampaign color="#A16AD4" />
@@ -395,7 +395,7 @@ const DiscoverCampaign = ({
               <h3 className="text-lg font-medium text-center mb-3">
                 {joining.campaignName}
               </h3>
-              <div className="grid grid-cols-4">
+              <div className="grid md:grid-cols-4 grid-cols-1">
                 <div className="flex gap-2">
                   <button className="bg-[#ECF3FF] rounded-sm p-3">
                     <MdCampaign color="#A16AD4" />
@@ -430,7 +430,7 @@ const DiscoverCampaign = ({
               <h3 className="text-lg font-medium text-center mb-3">
                 {joining.campaignName}
               </h3>
-              <div className="grid grid-cols-4">
+              <div className="grid md:grid-cols-4 grid-cols-1">
                 <div className="flex gap-2">
                   <button className="bg-[#ECF3FF] rounded-sm p-3">
                     <MdCampaign color="#A16AD4" />
@@ -496,7 +496,7 @@ const DiscoverCampaign = ({
             </p>
             {joining?.campaignType === "Loyalty" && (
               <div>
-                <div className="grid grid-cols-3 gap-4 mt-4 text-center">
+                <div className="grid md:grid-cols-3 grid-cols-1 gap-4 mt-4 text-center">
                   <div className="border border-[#CCCCCC] rounded-md p-4">
                     <p className="text-sm font-semibold">
                       Shop on the Business Site
@@ -505,9 +505,11 @@ const DiscoverCampaign = ({
                       Click the button below to visit the business and make a
                       purchase.
                     </p>
-                    <button className="bg-primary text-sm text-white rounded-sm p-3">
-                      Go to Website
-                    </button>
+                    <a href={joining?.websiteLink} target="_blank" rel="noopener noreferrer">
+                      <button className="bg-primary text-sm text-white rounded-sm p-3">
+                        Go to Website
+                      </button>
+                    </a>
                   </div>
                   <div className="border border-[#CCCCCC] rounded-md p-4">
                     <p className="text-sm font-semibold">
@@ -543,7 +545,7 @@ const DiscoverCampaign = ({
             {joining?.campaignType === "Combo" && (
               <>
                 <p className="text-center">Your Two Ways to Earn:</p>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 grid-cols-1 gap-4">
                   <div className="border text-center p-4 rounded-md border-[#CCCCCC]">
                     <h2 className="text-lg font-semibold ">
                       1. Make a Purchase
@@ -552,9 +554,11 @@ const DiscoverCampaign = ({
                       Click the button below to visit the business and make a
                       purchase.
                     </p>
-                    <button className="bg-primary text-sm text-white rounded-sm p-3">
-                      Go to Website
-                    </button>
+                    <a href={joining?.websiteLink} target="_blank" rel="noopener noreferrer">
+                      <button className="bg-primary text-sm text-white rounded-sm p-3">
+                        Go to Website
+                      </button>
+                   </a>
                     <p className="my-4">
                       Then submit your receipt ID for reward
                     </p>
@@ -677,7 +681,7 @@ const DiscoverCampaign = ({
             {joining?.campaignType === "Referral" && (
               <>
                 <p className="text-center mb-2">How to Earn Rewards:</p>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 grid-cols-1 gap-4">
                   <div className="border text-center p-4 rounded-md border-[#CCCCCC]">
                     <p className="text-lg mb-2">
                       Copy Your Unique Referral Link

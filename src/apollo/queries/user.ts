@@ -59,6 +59,7 @@ export const AVAILABLE_CAMPAIGNS = gql`
       rewardInfo
       maxParticipants
       description
+      websiteLink
     }
   }
 `;
