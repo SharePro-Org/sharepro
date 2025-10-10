@@ -86,7 +86,7 @@ const NewCampaignContent = () => {
                 : new Date().toISOString().split("T")[0],
               endDate: endDate ? endDate.toString().split("T")[0] : "",
               campaignType: type?.toUpperCase() || "LOYALTY",
-              // link,
+              websiteLink: link,
               // time: schedule ? time : undefined
             };
             try {
@@ -155,11 +155,10 @@ const NewCampaignContent = () => {
             <button
               type="submit"
               disabled={loading || schedule}
-              className={`bg-primary text-sm text-white py-2 px-4 rounded-sm ${
-                loading || schedule
+              className={`bg-primary text-sm text-white py-2 px-4 rounded-sm ${loading || schedule
                   ? "opacity-50 cursor-not-allowed"
                   : "cursor-pointer"
-              }`}
+                }`}
             >
               {loading ? "Creating..." : "Launch Campaign"}
             </button>
@@ -212,9 +211,8 @@ const NewCampaignContent = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className={`bg-primary my-4 md:w-32 w-full cursor-pointer text-sm text-white py-2 px-4 rounded-sm ${
-                  loading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`bg-primary my-4 md:w-32 w-full cursor-pointer text-sm text-white py-2 px-4 rounded-sm ${loading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
               >
                 {loading ? "Scheduling..." : "Schedule"}
               </button>
