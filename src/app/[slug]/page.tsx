@@ -14,6 +14,7 @@ const MicroSiteComp = () => {
   const getSignupUrl = () => {
     const campaignId = searchParams.get("cid");
     const source = searchParams.get("src");
+    const businessId = searchParams.get("businessId");
 
     let signupUrl = "/user/auth/signup";
     const params = new URLSearchParams();
@@ -24,6 +25,9 @@ const MicroSiteComp = () => {
     }
     if (source) {
       params.append("src", source);
+    }
+    if (businessId) {
+      params.append("businessId", businessId);
     }
 
     if (params.toString()) {

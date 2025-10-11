@@ -41,6 +41,8 @@ export const LOGIN = gql`
       success
       user {
         id
+        firstName
+        lastName
         email
         profile {
           userType
@@ -65,6 +67,8 @@ export const LOGIN_PHONE = gql`
       message
       user {
         id
+        firstName
+        lastName
         businessName
         email
         profile {

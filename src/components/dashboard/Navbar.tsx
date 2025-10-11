@@ -90,7 +90,7 @@ export default function Navbar({
             className="rounded-full border border-gray-200"
           />
           <span className="text-sm font-medium text-[#233E97]">
-            {user?.businessName}
+            {user?.businessName || user?.firstName || user?.lastName || 'User'}
           </span>
           {/* <svg width="14" height="8" fill="none" viewBox="0 0 14 8" className="ml-1">
             <path d="M1 1l6 6 6-6" stroke="#83859C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>

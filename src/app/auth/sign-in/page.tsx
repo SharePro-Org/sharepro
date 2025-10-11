@@ -109,6 +109,8 @@ export default function SignIn() {
                 id: string;
                 onBoardingComplete?: boolean;
               };
+              firstName?: string;
+              lastName?: string;
               phone?: string;
               profile: {
                 userType: string;
@@ -132,6 +134,8 @@ export default function SignIn() {
             phone: user?.phone || phone,
             userType: user?.profile.userType,
             onBoardingComplete,
+            firstName: user?.firstName,
+            lastName: user?.lastName,
           };
 
           localStorage.setItem("userData", JSON.stringify(userData));
@@ -162,6 +166,8 @@ export default function SignIn() {
                 id: string;
                 onBoardingComplete?: boolean;
               };
+              firstName?: string;
+              lastName?: string;
               phone?: string;
               profile: {
                 userType: string;
@@ -186,6 +192,8 @@ export default function SignIn() {
             phone: user?.phone || phone,
             userType: user?.profile.userType,
             onBoardingComplete,
+            firstName: user?.firstName,
+            lastName: user?.lastName,
           };
           localStorage.setItem("userData", JSON.stringify(userData));
           setUser(userData);

@@ -107,6 +107,8 @@ export default function SignIn() {
           message?: string;
           user?: {
             id: string;
+            firstName?: string;
+            lastName?: string;
             email?: string;
             phone?: string;
             businessName?: string;
@@ -126,6 +128,8 @@ export default function SignIn() {
             id: string;
             email?: string;
             phone?: string;
+            firstName?: string;
+            lastName?: string;
             businessName?: string;
             business?: { id: string };
             profile?: { userType?: string };
@@ -145,8 +149,11 @@ export default function SignIn() {
             email: user?.email || email,
             phone: user?.phone || phone,
             businessName: user?.businessName,
+            firstName: user?.firstName,
+            lastName: user?.lastName,
             businessId: user?.business?.id,
             userType: user?.profile?.userType,
+            
           };
 
           localStorage.setItem("userData", JSON.stringify(userData));
@@ -178,6 +185,8 @@ export default function SignIn() {
             businessName: user?.businessName,
             businessId: user?.business?.id,
             userType: user?.profile?.userType,
+            firstName: user?.firstName,
+            lastName: user?.lastName,
           };
           localStorage.setItem("userData", JSON.stringify(userData));
           setUser(userData);

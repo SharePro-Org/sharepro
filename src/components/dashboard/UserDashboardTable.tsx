@@ -11,7 +11,7 @@ import { Campaign, Reward } from "@/apollo/types";
 import { Button, Dropdown } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, SearchIcon, XCircle } from "lucide-react";
 
 // import { format } from "date-fns";
 
@@ -120,7 +120,7 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
       console.error("Claim reward error:", error);
       setClaimError(
         error.message ||
-          "An unexpected error occurred while claiming the reward"
+        "An unexpected error occurred while claiming the reward"
       );
       setModalOpen(true);
     } finally {
@@ -161,6 +161,17 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
 
   return (
     <div className="overflow-x-auto">
+      <div className="relative md:mt-0 mt-2">
+        <input
+          type="text"
+          className="bg-[#F9FAFB] md:w-96 w-full border border-[#E4E7EC] p-3 rounded-sm pl-8 text-base"
+          placeholder="Search Campaign Name"
+        />
+        <SearchIcon
+          size={16}
+          className="absolute top-4 left-3 text-gray-500"
+        />
+      </div>
       {type === "campaigns" ? (
         <table className="w-full mt-4 text-sm">
           <thead>
@@ -190,13 +201,12 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                     <td className="px-4 py-3">{campaign.campaignName}</td>
                     <td className={`px-4 py-3`}>
                       <span
-                        className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs ${
-                          campaign.campaignType.toLowerCase() === "loyalty"
+                        className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs ${campaign.campaignType.toLowerCase() === "loyalty"
                             ? "bg-[#A16AD4]"
                             : campaign.campaignType.toLowerCase() === "combo"
-                            ? "bg-[#6192AE]"
-                            : "bg-[#4C8AFF]"
-                        }`}
+                              ? "bg-[#6192AE]"
+                              : "bg-[#4C8AFF]"
+                          }`}
                       >
                         {" "}
                         {campaign.campaignType}
@@ -205,13 +215,12 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                     <td className="px-4 py-3">{campaign.rewardInfo}</td>
                     <td className="px-4 py-3">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          campaign.status === "ACTIVE"
-                            ? "bg-green-100 text-green-800"
-                            : campaign.status === "COMPLETED"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
+                        className={`px-2 py-1 rounded-full text-xs ${campaign.status === "Active"
+                            ? "bg-green-300 text-green-800"
+                            : campaign.status === "Completed"
+                              ? "bg-blue-300 text-blue-800"
+                              : "bg-gray-300 text-gray-800"
+                          }`}
                       >
                         {campaign.status}
                       </span>
@@ -289,13 +298,12 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                       </td>
                       <td className="px-4 py-3">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs ${
-                            reward.status === "Paid"
+                          className={`px-2 py-1 rounded-full text-xs ${reward.status === "Paid"
                               ? "bg-green-200 text-green-800"
                               : reward.status === "Approved"
-                              ? "bg-yellow-200 text-yellow-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
+                                ? "bg-yellow-200 text-yellow-800"
+                                : "bg-gray-100 text-gray-800"
+                            }`}
                         >
                           {reward.status}
                         </span>
@@ -306,13 +314,11 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                             reward.isClaimable &&
                             handleClaimReward(reward.rewardId)
                           }
-                          className={`text-primary underline ${
-                            !reward.isClaimable &&
+                          className={`text-primary underline ${!reward.isClaimable &&
                             "opacity-50 cursor-not-allowed"
-                          } ${
-                            claimingReward === reward.rewardId &&
+                            } ${claimingReward === reward.rewardId &&
                             "opacity-50 cursor-not-allowed"
-                          }`}
+                            }`}
                           disabled={
                             !reward.isClaimable ||
                             claimingReward === reward.rewardId
@@ -321,8 +327,8 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                           {claimingReward === reward.rewardId
                             ? "Claiming..."
                             : reward.isClaimable
-                            ? "Claim"
-                            : "View"}
+                              ? "Claim"
+                              : "View"}
                         </button>
                       </td>
                     </tr>

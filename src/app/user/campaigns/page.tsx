@@ -47,19 +47,9 @@ const userCampaigns = () => {
                   <span className="text-sm">Refresh</span>
                 </button>
               </div>
-              <div>
-                <div className="relative md:mt-0 mt-2">
-                  <input
-                    type="text"
-                    className="bg-[#F9FAFB] md:w-72 w-full border border-[#E4E7EC] p-3 rounded-sm pl-8 text-base"
-                    placeholder="Search Campaign Name"
-                  />
-                  <SearchIcon
-                    size={16}
-                    className="absolute top-4 left-3 text-gray-500"
-                  />
-                </div>
-              </div>
+              {/* <div>
+                
+              </div> */}
               <UserDashboardTable type="campaigns" />
             </>
           )}

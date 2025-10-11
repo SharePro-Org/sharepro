@@ -13,18 +13,20 @@ import { MdOutlineVisibilityOff, MdOutlineVisibility } from "react-icons/md";
 import { FiUser } from "react-icons/fi";
 import Link from "next/link";
 import Image from "next/image";
-import { useMutation } from "@apollo/client/react";
+import { useMutation, useQuery } from "@apollo/client/react";
 
 import { REGISTER_USER, TRACK_CONVERSION } from "@/apollo/mutations/auth";
 
 import TopRightLeftSection from "../../../../../public/assets/auth/top-right-left-section.svg";
 import BottomLeftLeftSection from "../../../../../public/assets/auth/bottom-left-left-section.svg";
+import { BUSINESS } from "@/apollo/queries/admin";
 
 const SignupComp = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [registerUser, { loading }] = useMutation(REGISTER_USER);
   const [trackConversion] = useMutation(TRACK_CONVERSION);
+
 
   // Form state
   const [firstName, setFirstName] = useState("");
@@ -39,12 +41,14 @@ const SignupComp = () => {
     referralCode: null as string | null,
     campaignId: null as string | null,
     source: null as string | null,
+    businessId: null as string | null,
   });
 
   useEffect(() => {
     // Extract query parameters
     const campaignId = searchParams.get("cid");
     const source = searchParams.get("src");
+    const businessId = searchParams.get("businessId");
 
     // Extract referral code from slug (stored in localStorage or query param as fallback)
     let referralCode = searchParams.get("ref"); // fallback to query param
@@ -106,6 +110,7 @@ const SignupComp = () => {
       referralCode,
       campaignId,
       source,
+      businessId,
     });
   }, [searchParams, trackConversion]);
 
@@ -388,6 +393,17 @@ const SignupComp = () => {
       setGeneralError(err.message || "Registration failed");
     }
   };
+
+  const {
+    data: userData,
+    error: userError,
+  } = useQuery<any>(BUSINESS, {
+    variables: { id: referralData.businessId },
+    skip: !referralData.businessId,
+  });
+
+  console.log("Fetched business data:", userData, userError);
+
 
   return (
     <>

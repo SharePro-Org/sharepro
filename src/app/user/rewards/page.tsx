@@ -116,7 +116,7 @@ const userRewards = () => {
           </div>
         </div>
         <div className="border border-[#CCCCCC4D] rounded-md p-3 mt-3">
-          <div className="mb-3 md:flex  justify-between">
+          {/* <div className="mb-3 md:flex  justify-between">
             <div className="relative ml-auto md:mt-0 mt-2">
               <input
                 type="text"
@@ -134,7 +134,7 @@ const userRewards = () => {
                 Redeem Reward
               </button>
             </div>
-          </div>
+          </div> */}
           <UserDashboardTable type="rewards" />
         </div>
       </section>
