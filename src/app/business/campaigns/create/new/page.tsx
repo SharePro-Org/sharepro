@@ -6,7 +6,8 @@ import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { CREATE_CAMPAIGN } from "@/apollo/mutations/campaigns";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import Image from "next/image";
@@ -39,14 +40,14 @@ const NewCampaignContent = () => {
   }, [user]);
 
   const [createCampaign, { loading }] = useMutation(CREATE_CAMPAIGN, {
-    onCompleted: (data) => {
-      if (data.createCampaign.success) {
+    onCompleted: (data: any) => {
+      if (data?.createCampaign?.success) {
         setSuccess(true);
         setErrorMsg("");
         setCampaignId(data.createCampaign.campaign.id);
       } else {
         setErrorMsg(
-          data.createCampaign.message || "Failed to create campaign."
+          data?.createCampaign?.message || "Failed to create campaign."
         );
         // setSuccessMsg("");
       }
@@ -85,7 +86,7 @@ const NewCampaignContent = () => {
                 : new Date().toISOString().split("T")[0],
               endDate: endDate ? endDate.toString().split("T")[0] : "",
               campaignType: type?.toUpperCase() || "LOYALTY",
-              // link,
+              websiteLink: link,
               // time: schedule ? time : undefined
             };
             try {
@@ -154,11 +155,10 @@ const NewCampaignContent = () => {
             <button
               type="submit"
               disabled={loading || schedule}
-              className={`bg-primary text-sm text-white py-2 px-4 rounded-sm ${
-                loading || schedule
+              className={`bg-primary text-sm text-white py-2 px-4 rounded-sm ${loading || schedule
                   ? "opacity-50 cursor-not-allowed"
                   : "cursor-pointer"
-              }`}
+                }`}
             >
               {loading ? "Creating..." : "Launch Campaign"}
             </button>
@@ -211,9 +211,8 @@ const NewCampaignContent = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className={`bg-primary my-4 md:w-32 w-full cursor-pointer text-sm text-white py-2 px-4 rounded-sm ${
-                  loading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+                className={`bg-primary my-4 md:w-32 w-full cursor-pointer text-sm text-white py-2 px-4 rounded-sm ${loading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
               >
                 {loading ? "Scheduling..." : "Schedule"}
               </button>

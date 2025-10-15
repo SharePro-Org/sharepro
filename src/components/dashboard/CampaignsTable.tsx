@@ -1,14 +1,17 @@
+'use client'
+
 import React, { useState, useEffect } from "react";
 import { Dropdown, Button, message } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client/react";
 import { GET_BUSINESS_CAMPAIGNS } from "@/apollo/queries/campaigns";
 import { ACTIVATE_CAMPAIGN } from "@/apollo/mutations/campaigns";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
 import { useRouter } from "next/navigation";
+import { CAMPAIGNS } from "@/apollo/queries/admin";
 
-const CampaignsTable = ({ type, num }: { type?: string; num?: Number }) => {
+const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
   const [user] = useAtom(userAtom);
   const [businessId, setBusinessId] = useState<string>("");
   const router = useRouter();
@@ -19,10 +22,22 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: Number }) => {
     }
   }, [user]);
 
-  const { data, loading, error } = useQuery(GET_BUSINESS_CAMPAIGNS, {
-    variables: { businessId },
-    skip: !businessId,
-  });
+  // Choose query based on userType
+  const isAdmin = user?.userType === "ADMIN";
+  interface CampaignsQueryResult {
+    campaigns?: any[];
+    businessCampaigns?: any[];
+  }
+
+  const { data, loading, error } = useQuery<CampaignsQueryResult>(
+    isAdmin ? CAMPAIGNS : GET_BUSINESS_CAMPAIGNS,
+    isAdmin
+      ? {}
+      : {
+        variables: { businessId },
+        skip: !businessId,
+      }
+  );
 
   const [activateCampaign, { loading: activateLoading }] = useMutation(
     ACTIVATE_CAMPAIGN,
@@ -30,7 +45,7 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: Number }) => {
       refetchQueries: [
         { query: GET_BUSINESS_CAMPAIGNS, variables: { businessId } },
       ],
-      onCompleted: (data) => {
+      onCompleted: (data: any) => {
         if (data.activateCampaign.success) {
           message.success(data.activateCampaign.message);
         } else {
@@ -124,9 +139,10 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: Number }) => {
             </tr>
           </thead>
           <tbody>
-            {(num
-              ? data?.businessCampaigns.slice(0, num) || []
-              : data?.businessCampaigns || []
+            {(
+              num
+                ? (isAdmin ? data?.campaigns?.slice(0, num) : data?.businessCampaigns?.slice(0, num)) || []
+                : (isAdmin ? data?.campaigns : data?.businessCampaigns) || []
             ).map((row: any, i: number) => (
               <tr
                 key={row.id || i}
@@ -135,13 +151,12 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: Number }) => {
                 <td className="px-4 font-black font-normal py-3">{row.name}</td>
                 <td className="px-4 py-3">
                   <span
-                    className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs ${
-                      row.campaignType === "LOYALTY"
-                        ? "bg-[#A16AD4]"
-                        : row.campaignType === "COMBO"
+                    className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs ${row.campaignType === "LOYALTY"
+                      ? "bg-[#A16AD4]"
+                      : row.campaignType === "COMBO"
                         ? "bg-[#6192AE]"
                         : "bg-[#4C8AFF]"
-                    }`}
+                      }`}
                   >
                     {row.campaignType || "-"}
                   </span>
@@ -165,10 +180,10 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: Number }) => {
                 <td className="px-4 black font-normal py-3">
                   {row.startDate
                     ? new Date(row.startDate).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "2-digit",
-                      })
+                      year: "numeric",
+                      month: "short",
+                      day: "2-digit",
+                    })
                     : "-"}
                 </td>
                 <td className="px-4 py-3">
@@ -187,7 +202,7 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: Number }) => {
                             ),
                           disabled: activateLoading,
                         },
-                        { key: "edit", label: "Edit Campaign" },
+                        // { key: "edit", label: "Edit Campaign" },
                         {
                           key: "view",
                           label: "View Campaign",
@@ -196,7 +211,7 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: Number }) => {
                         },
                         { key: "end", label: "End Campaign" },
                         { key: "settings", label: "Campaign Settings" },
-                        { key: "payouts", label: "Vew Payouts" },
+                        { key: "payouts", label: "View Payouts" },
                         { key: "download", label: "Download Report" },
                         {
                           key: "reward",

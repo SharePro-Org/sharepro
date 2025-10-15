@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Select } from "antd";
 import { Country } from "country-state-city";
 import { BriefcaseIcon, Clock, CurrencyIcon } from "lucide-react";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { CREATE_REFERRAL_REWARD } from "@/apollo/mutations/campaigns";
 import { message } from "antd";
 
@@ -50,8 +51,8 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
   ];
 
   const redemptionTypes = [
-    { label: "Wallet", value: "wallet" },
-    { label: "Checkout", value: "checkout" },
+    // { label: "Wallet", value: "wallet" },
+    // { label: "Checkout", value: "checkout" },
     { label: "Manual claim", value: "manual-claim" },
     { label: "Voucher", value: "voucher" },
   ];
@@ -90,7 +91,20 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
   // Common state
   const [currency, setCurrency] = useState("NGN");
 
-  const [createReferralReward, { loading }] = useMutation(
+  interface CreateCampaignRewardResponse {
+    createCampaignReward?: {
+      success: boolean;
+      message?: string;
+      campaign?: {
+        referralLink?: string;
+        id?: string;
+        name?: string;
+        type?: string;
+      };
+    };
+  }
+
+  const [createReferralReward, { loading }] = useMutation<CreateCampaignRewardResponse>(
     CREATE_REFERRAL_REWARD
   );
 

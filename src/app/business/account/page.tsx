@@ -8,7 +8,8 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { Country, City } from "country-state-city";
 import { Button, Dropdown } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
 
@@ -18,7 +19,8 @@ import {
   INVITE_MEMBER,
   UPDATE_BUSINESS,
 } from "@/apollo/mutations/account";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
+
 
 const account = () => {
   const [active, setActive] = useState("profile");
@@ -48,12 +50,23 @@ const account = () => {
     tagline: "",
   });
 
+  type BusinessQueryResult = {
+    business?: {
+      name?: string;
+      phone?: string;
+      email?: string;
+      website?: string;
+      tagline?: string;
+      // Add other fields as needed
+    };
+  };
+
   const {
     data: userData,
     loading: userLoading,
     error: userError,
     refetch: refetchUser,
-  } = useQuery(GET_BUSINESS, {
+  } = useQuery<BusinessQueryResult>(GET_BUSINESS, {
     variables: { id: businessId },
     skip: !businessId,
   });
@@ -77,6 +90,14 @@ const account = () => {
     }
   }, [userData]);
 
+  type InviteMemberResponse = {
+    inviteMember?: {
+      success?: boolean;
+      message?: string;
+      error?: string;
+    };
+  };
+
   const handleInviteUser = async () => {
     setInviteLoading(true);
     setInviteError(null);
@@ -92,16 +113,17 @@ const account = () => {
           },
         },
       });
-      if (response.data?.inviteMember?.success) {
+      const data = response.data as InviteMemberResponse;
+      if (data?.inviteMember?.success) {
         setInviteSuccess(
-          response.data.inviteMember.message || "Invite sent successfully!"
+          data.inviteMember.message || "Invite sent successfully!"
         );
         setInviteName("");
         setInviteEmail("");
         setInviteRole("");
       } else {
         setInviteError(
-          response.data?.inviteMember?.error || "Failed to send invite."
+          data?.inviteMember?.error || "Failed to send invite."
         );
       }
     } catch (err: any) {
@@ -111,12 +133,22 @@ const account = () => {
     }
   };
 
+  type MembersQueryResult = {
+    businessMembers?: Array<{
+      inviterName?: string;
+      memberEmail?: string;
+      role?: string;
+      status?: string;
+      // Add other member fields as needed
+    }>;
+  };
+
   const {
     data: membersData,
     loading: membersLoading,
     error: membersError,
     refetch: refetchMembers,
-  } = useQuery(LIST_INVITED_MEMBERS, {
+  } = useQuery<MembersQueryResult>(LIST_INVITED_MEMBERS, {
     variables: { businessId },
     skip: !businessId,
   });
@@ -229,14 +261,14 @@ const account = () => {
                       </p>
                       <p className="font-medium">{userData?.business?.phone}</p>
                     </div>
-                    <div>
+                    {/* <div>
                       <p className="text-sm text-[#030229B2] mb-2">Type</p>
                       <p className="font-medium">hello</p>
                     </div>
                     <div>
                       <p className="text-sm text-[#030229B2] mb-2">Category</p>
                       <p className="font-medium">hello</p>
-                    </div>
+                    </div> */}
                     <div>
                       <p className="text-sm text-[#030229B2] mb-2">
                         Website/Social media
@@ -253,7 +285,7 @@ const account = () => {
                     </div>
                   </div>
                 </div>
-                <div className="border border-[#E5E5EA] rounded-sm p-4">
+                {/* <div className="border border-[#E5E5EA] rounded-sm p-4">
                   <div className="border-b border-b-[#E5E5EA] flex py-3 mb-3 justify-between">
                     <p className="font-medium my-auto">Address Information</p>
                     <button
@@ -279,7 +311,7 @@ const account = () => {
                       <p className="font-medium">hello</p>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
             )}
             {active === "users" && (
@@ -333,7 +365,7 @@ const account = () => {
                               Error loading members.
                             </td>
                           </tr>
-                        ) : membersData?.businessMembers?.length > 0 ? (
+                        ) : Array.isArray(membersData?.businessMembers) && membersData.businessMembers.length > 0 ? (
                           membersData.businessMembers.map(
                             (member: any, idx: number) => (
                               <tr key={idx}>

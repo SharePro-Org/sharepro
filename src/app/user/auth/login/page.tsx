@@ -16,7 +16,8 @@ import {
 } from "react-icons/md";
 import { FcGoogle } from "react-icons/fc";
 import { cn } from "@/lib/utils";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { LOGIN, LOGIN_PHONE } from "@/apollo/mutations/auth";
 import { useSetAtom } from "jotai";
 import { userAtom } from "@/store/User";
@@ -98,8 +99,42 @@ export default function SignIn() {
     const hasError = Object.values(newErrors).some(Boolean);
     if (hasError || !canContinue) return;
     try {
+      type LoginResponse = {
+        login?: {
+          success: boolean;
+          token: string;
+          refreshToken: string;
+          message?: string;
+          user?: {
+            id: string;
+            email?: string;
+            phone?: string;
+            businessName?: string;
+            business?: { id: string };
+            profile?: { userType?: string };
+          };
+        };
+      };
+
+      type LoginPhoneResponse = {
+        loginPhone?: {
+          success: boolean;
+          token: string;
+          refreshToken: string;
+          message?: string;
+          user?: {
+            id: string;
+            email?: string;
+            phone?: string;
+            businessName?: string;
+            business?: { id: string };
+            profile?: { userType?: string };
+          };
+        };
+      };
+
       if (tab === "email") {
-        const { data } = await login({ variables: { email, password } });
+        const { data } = await login({ variables: { email, password } }) as { data: LoginResponse };
         if (data?.login?.success) {
           const user = data.login.user;
 
@@ -109,16 +144,28 @@ export default function SignIn() {
             userId: user?.id,
             email: user?.email || email,
             phone: user?.phone || phone,
+            businessName: user?.businessName,
+            businessId: user?.business?.id,
+            userType: user?.profile?.userType,
           };
 
           localStorage.setItem("userData", JSON.stringify(userData));
           setUser(userData);
-          router.push("/user/dashboard");
+          // router.push("/user/dashboard");
+          if (userData.userType === "ADMIN") {
+            router.push("/admin/dashboard");
+          } else if (userData.userType === "VIEWER") {
+            router.push("/user/dashboard");
+          } else {
+            router.push(
+              "/business/dashboard"
+            );
+          }
         } else {
           setGeneralError(data?.login?.message || "Invalid credentials");
         }
       } else {
-        const { data } = await loginPhone({ variables: { phone, password } });
+        const { data } = await loginPhone({ variables: { phone, password } }) as { data: LoginPhoneResponse };
         if (data?.loginPhone?.success) {
           const user = data.loginPhone.user;
 
@@ -128,11 +175,22 @@ export default function SignIn() {
             userId: user?.id,
             email: user?.email,
             phone: user?.phone || phone,
+            businessName: user?.businessName,
+            businessId: user?.business?.id,
+            userType: user?.profile?.userType,
           };
           localStorage.setItem("userData", JSON.stringify(userData));
           setUser(userData);
 
-          router.push("/user/dashboard");
+          if (userData.userType === "ADMIN") {
+            router.push("/admin/dashboard");
+          } else if (userData.userType === "VIEWER") {
+            router.push("/user/dashboard");
+          } else {
+            router.push(
+              "/business/dashboard"
+            );
+          }
         } else {
           setGeneralError(data?.loginPhone?.message || "Invalid credentials");
         }

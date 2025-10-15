@@ -12,7 +12,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import Link from "next/link";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client/react";
 import { ALL_FAQS, CREATE_SUPPORT_REQUEST } from "@/apollo/queries/support";
 import { FAQ } from "@/apollo/types";
 
@@ -27,13 +27,24 @@ const helpAndSupport = () => {
     screenshot: null as File | null,
   });
 
+  interface AllFaqsQueryResult {
+    faqs: FAQ[];
+  }
+
   const {
     data: faqData,
     loading: faqLoading,
     error: faqError,
-  } = useQuery(ALL_FAQS);
+  } = useQuery<AllFaqsQueryResult>(ALL_FAQS);
+  interface CreateSupportRequestResult {
+    createSupportRequest?: {
+      success: boolean;
+      errors?: string[];
+    };
+  }
+
   const [createSupportRequest, { loading: submitLoading, error: submitError }] =
-    useMutation(CREATE_SUPPORT_REQUEST);
+    useMutation<CreateSupportRequestResult>(CREATE_SUPPORT_REQUEST);
 
   const issueTypes = [
     { value: "technical", label: "Technical Issues" },

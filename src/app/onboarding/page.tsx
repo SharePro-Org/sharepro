@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Country } from "country-state-city";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import { Card } from "@/components/ui/card";
 import { CustomSelect } from "@/components/ui/custom-select";
@@ -22,7 +23,8 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import Image from "next/image";
 import userCheck from "../../../public/assets/userCheck.svg";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { ONBOARDING_BUSINESS } from "@/apollo/mutations/auth";
 
 // Shared types
@@ -97,15 +99,13 @@ const businessTypes = [
   { value: "wholesale", label: "Wholesale" },
   { value: "service", label: "Service" },
 ];
-const countries = [
-  { value: "my", label: "Malaysia" },
-  { value: "sg", label: "Singapore" },
-  { value: "id", label: "Indonesia" },
-  { value: "th", label: "Thailand" },
-  { value: "ph", label: "Philippines" },
-  { value: "ng", label: "Nigeria" },
-  { value: "gh", label: "Ghana" },
-];
+const countries = Country.getAllCountries()
+  .map(country => ({
+    value: country.isoCode,
+    label: country.name
+  }))
+  .sort((a, b) => a.label.localeCompare(b.label));
+
 const plans: Record<"monthly" | "yearly", Plan[]> = {
   monthly: [
     {
@@ -203,10 +203,21 @@ const Onboarding: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>("pro");
   const [showModal, setShowModal] = useState(false);
 
-  const [onboardingBusiness, { loading }] = useMutation(ONBOARDING_BUSINESS);
+  interface OnboardingBusinessResponse {
+    onboardingBusiness?: {
+      success: boolean;
+      message?: string;
+    };
+  }
+
+  const [onboardingBusiness, { loading }] = useMutation<OnboardingBusinessResponse>(ONBOARDING_BUSINESS);
 
   const handleSubmit = async () => {
     try {
+      // Get the full country name from the ISO code
+      const selectedCountry = Country.getAllCountries().find(c => c.isoCode === country);
+      const fullCountryName = selectedCountry ? selectedCountry.name : country;
+
       const input = {
         businessId,
         businessName,
@@ -215,9 +226,9 @@ const Onboarding: React.FC = () => {
         email,
         phone,
         address,
-        country,
-        billing: "monthly",
-        selectedPlan: "FREE",
+        country: fullCountryName, // Send the full country name
+        billing: "0",
+        selectedPlan: 'FREE',
         website,
       };
       const { data } = await onboardingBusiness({ variables: { input } });
@@ -521,10 +532,11 @@ const ContactLocationStep: React.FC<ContactLocationStepProps> = ({
               Country
             </Label>
             <CustomSelect
-              options={countries}
+              options={countries.sort((a, b) => a.label.localeCompare(b.label))}
               value={country}
               onChange={setCountry}
-              placeholder="Select a country"
+              placeholder="Search or select a country"
+              allowCustomInput
             />
           </div>
           <div className="flex justify-between pt-28">

@@ -6,7 +6,8 @@ import { Select } from "antd";
 import { BriefcaseIcon, ClockIcon, CurrencyIcon } from "lucide-react";
 import { Country } from "country-state-city";
 import Tiers from "./Tiers";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { CREATE_LOYALTY_REWARD } from "@/apollo/mutations/campaigns";
 import { message } from "antd";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
@@ -53,8 +54,8 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
   ];
 
   const redemptionTypes = [
-    { label: "Wallet", value: "wallet" },
-    { label: "Checkout", value: "checkout" },
+    // { label: "Wallet", value: "wallet" },
+    // { label: "Checkout", value: "checkout" },
     { label: "Manual claim", value: "manual-claim" },
     { label: "Voucher", value: "voucher" },
   ];
@@ -76,6 +77,14 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
       },
     }
   );
+
+  type CreateCampaignRewardResult = {
+    createCampaignReward?: {
+      success: boolean;
+      message?: string;
+      campaign?: any;
+    };
+  };
 
   const handleSubmit = async () => {
     const campaignId = id;
@@ -102,7 +111,7 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
             loyaltyCampaignData,
           },
         },
-      });
+      }) as { data: CreateCampaignRewardResult };
       if (data?.createCampaignReward?.success) {
         setCampaignData(data.createCampaignReward.campaign);
         setSuccess(true);

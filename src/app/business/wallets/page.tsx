@@ -80,7 +80,7 @@ const wallets = () => {
               Campaign Rewards
             </button>
             <button className="border border-[#CCCCCC] p-3 rounded-sm">
-              View Recent Payouts
+              View Wallet Transactions
             </button>
           </div>
         </section>
@@ -94,7 +94,7 @@ const wallets = () => {
               <EyeIcon size={20} className="text-[#CCCCCC]" />
             </div>
           </div>
-          <div className="bg-white p-4 rounded-md">
+          {/* <div className="bg-white p-4 rounded-md">
             <p className="text-sm text-[#030229B2]">Total Balance</p>
             <h1 className="text-2xl my-3 font-bold">#25,000.20</h1>
             <div className="flex justify-between">
@@ -111,9 +111,9 @@ const wallets = () => {
 
               <EyeIcon size={20} className="text-[#CCCCCC]" />
             </div>
-          </div>
+          </div> */}
         </section>
-        <section className="grid grid-cols-3 gap-4 mt-4">
+        {/* <section className="grid grid-cols-3 gap-4 mt-4">
           <div className="col-span-2 bg-white rounded-md ">
             <div className="border-b border-b-[#E4E7EC] p-2 mb-6">
               <div className="font-semibold text-black w-32 text-base">
@@ -151,7 +151,7 @@ const wallets = () => {
               )}
             </div>
           </div>
-        </section>
+        </section> */}
         <section className="bg-white p-4 rounded-md mt-4">
           <div className="lg:flex justify-between">
             <p className="text-black font-semibold my-auto text-base">
@@ -159,11 +159,11 @@ const wallets = () => {
             </p>
             <div className="flex gap-4">
               {/* <RangePicker /> */}
-              <Filter />
+              {/* <Filter /> */}
               <div className="relative md:mt-0 mt-2">
                 <input
                   type="text"
-                  className="md:w-40 w-full border border-[#E4E7EC] p-3 rounded-sm pl-8 text-sm"
+                  className="md:w-80 w-full border border-[#E4E7EC] p-3 rounded-sm pl-8 text-sm"
                   placeholder="Search Campaign Name"
                 />
 

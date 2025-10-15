@@ -6,13 +6,29 @@ import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client/react";
 import { GET_USER, UPDATE_USER } from "@/apollo/mutations/account";
+
+type UserProfile = {
+  firstName: string;
+  lastName: string;
+  phone?: string;
+};
+
+type CurrentUser = {
+  userProfile?: UserProfile;
+  email: string;
+  phone?: string;
+};
+
+type GetUserData = {
+  currentUser?: CurrentUser;
+};
 
 const account = () => {
   const [openBusinessModal, setOpenBusinessModal] = useState(false);
   const [user] = useAtom(userAtom);
-  const { data: userData, loading: userLoading, error: userError } = useQuery(GET_USER, {
+  const { data: userData, loading: userLoading, error: userError } = useQuery<GetUserData>(GET_USER, {
     variables: { id: user?.userId },
     skip: !user?.userId,
   });

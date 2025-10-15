@@ -4,7 +4,8 @@ import { Calendar, Copy, Check } from "lucide-react";
 import React, { useState, useCallback } from "react";
 import { GiPriceTag } from "react-icons/gi";
 import { MdCampaign } from "react-icons/md";
-import { useMutation, useQuery } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client/react";
+
 import { AVAILABLE_CAMPAIGNS } from "@/apollo/queries/user";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
@@ -81,16 +82,18 @@ const DiscoverCampaign = ({
         },
       });
 
-      if (response.data?.joinCampaign?.success) {
+      const data = response.data as { joinCampaign?: { success: boolean; referralCode: string; referralLink: string; message?: string } };
+
+      if (data?.joinCampaign?.success) {
         setReferralData({
-          referralCode: response.data.joinCampaign.referralCode,
-          referralLink: response.data.joinCampaign.referralLink,
+          referralCode: data.joinCampaign.referralCode,
+          referralLink: data.joinCampaign.referralLink,
         });
         setOpen(false);
         setJoined(true);
       } else {
         setJoinError(
-          response.data?.joinCampaign?.message || "Failed to join campaign"
+          data?.joinCampaign?.message || "Failed to join campaign"
         );
       }
     } catch (e: any) {
@@ -122,7 +125,10 @@ const DiscoverCampaign = ({
   const [copiedLink, setCopiedLink] = useState(false);
 
   // Get campaigns and slice if max is provided
-  const campaigns: Campaign[] = data?.availableCampaigns || [];
+  const campaigns: Campaign[] =
+    (data && typeof data === "object" && data !== null && "availableCampaigns" in data
+      ? (data as { availableCampaigns: Campaign[] }).availableCampaigns
+      : []);
   const displayCampaigns = max ? campaigns.slice(0, max) : campaigns;
   const campaignsToShow = displayCampaigns;
 
@@ -263,7 +269,7 @@ const DiscoverCampaign = ({
   return (
     <div>
       <p className="text-lg font-medium">Discover Campaigns</p>
-      <div className={` ${grid ? "grid grid-cols-2" : "flex flex-col"} gap-3`}>
+      <div className={` ${grid ? "grid md:grid-cols-2 grid-cols-1" : "flex flex-col"} gap-3`}>
         {loading ? (
           <div className="text-center py-4">Loading available campaigns...</div>
         ) : error ? (
@@ -354,7 +360,7 @@ const DiscoverCampaign = ({
               <h3 className="text-lg font-medium text-center mb-3">
                 {joining.campaignName}
               </h3>
-              <div className="grid grid-cols-4">
+              <div className="grid md:grid-cols-4 grid-cols-">
                 <div className="flex gap-2">
                   <button className="bg-[#ECF3FF] rounded-sm p-3">
                     <MdCampaign color="#A16AD4" />
@@ -389,7 +395,7 @@ const DiscoverCampaign = ({
               <h3 className="text-lg font-medium text-center mb-3">
                 {joining.campaignName}
               </h3>
-              <div className="grid grid-cols-4">
+              <div className="grid md:grid-cols-4 grid-cols-1">
                 <div className="flex gap-2">
                   <button className="bg-[#ECF3FF] rounded-sm p-3">
                     <MdCampaign color="#A16AD4" />
@@ -424,7 +430,7 @@ const DiscoverCampaign = ({
               <h3 className="text-lg font-medium text-center mb-3">
                 {joining.campaignName}
               </h3>
-              <div className="grid grid-cols-4">
+              <div className="grid md:grid-cols-4 grid-cols-1">
                 <div className="flex gap-2">
                   <button className="bg-[#ECF3FF] rounded-sm p-3">
                     <MdCampaign color="#A16AD4" />
@@ -490,7 +496,7 @@ const DiscoverCampaign = ({
             </p>
             {joining?.campaignType === "Loyalty" && (
               <div>
-                <div className="grid grid-cols-3 gap-4 mt-4 text-center">
+                <div className="grid md:grid-cols-3 grid-cols-1 gap-4 mt-4 text-center">
                   <div className="border border-[#CCCCCC] rounded-md p-4">
                     <p className="text-sm font-semibold">
                       Shop on the Business Site
@@ -499,9 +505,11 @@ const DiscoverCampaign = ({
                       Click the button below to visit the business and make a
                       purchase.
                     </p>
-                    <button className="bg-primary text-sm text-white rounded-sm p-3">
-                      Go to Website
-                    </button>
+                    <a href={joining?.websiteLink} target="_blank" rel="noopener noreferrer">
+                      <button className="bg-primary text-sm text-white rounded-sm p-3">
+                        Go to Website
+                      </button>
+                    </a>
                   </div>
                   <div className="border border-[#CCCCCC] rounded-md p-4">
                     <p className="text-sm font-semibold">
@@ -537,7 +545,7 @@ const DiscoverCampaign = ({
             {joining?.campaignType === "Combo" && (
               <>
                 <p className="text-center">Your Two Ways to Earn:</p>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 grid-cols-1 gap-4">
                   <div className="border text-center p-4 rounded-md border-[#CCCCCC]">
                     <h2 className="text-lg font-semibold ">
                       1. Make a Purchase
@@ -546,9 +554,11 @@ const DiscoverCampaign = ({
                       Click the button below to visit the business and make a
                       purchase.
                     </p>
-                    <button className="bg-primary text-sm text-white rounded-sm p-3">
-                      Go to Website
-                    </button>
+                    <a href={joining?.websiteLink} target="_blank" rel="noopener noreferrer">
+                      <button className="bg-primary text-sm text-white rounded-sm p-3">
+                        Go to Website
+                      </button>
+                   </a>
                     <p className="my-4">
                       Then submit your receipt ID for reward
                     </p>
@@ -671,7 +681,7 @@ const DiscoverCampaign = ({
             {joining?.campaignType === "Referral" && (
               <>
                 <p className="text-center mb-2">How to Earn Rewards:</p>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-2 grid-cols-1 gap-4">
                   <div className="border text-center p-4 rounded-md border-[#CCCCCC]">
                     <p className="text-lg mb-2">
                       Copy Your Unique Referral Link

@@ -3,7 +3,8 @@
 import { ArrowLeft, SearchIcon, Play, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
+
 import { ALL_WALKTHROUGH_VIDEOS } from "@/apollo/queries/support";
 import { WalkthroughVideo } from "@/apollo/types";
 
@@ -12,11 +13,15 @@ const walkthroughs = () => {
   const [selectedCategory, setSelectedCategory] = useState("All Tutorials");
   const [searchQuery, setSearchQuery] = useState("");
 
+  interface WalkthroughVideosQueryData {
+    walkthroughVideos: WalkthroughVideo[];
+  }
+
   const {
     data: videosData,
     loading: videosLoading,
     error: videosError,
-  } = useQuery(ALL_WALKTHROUGH_VIDEOS);
+  } = useQuery<WalkthroughVideosQueryData>(ALL_WALKTHROUGH_VIDEOS);
 
   const handleGoBack = () => {
     router.back();

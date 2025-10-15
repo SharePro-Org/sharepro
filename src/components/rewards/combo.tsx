@@ -10,7 +10,8 @@ import { BriefcaseIcon, Clock, ClockIcon, CurrencyIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import ShareModal from "../ShareModal";
 import { CREATE_COMBO_REWARD } from "@/apollo/mutations/campaigns";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { message } from "antd";
 
 const emptyTier = { name: "", pointsRequired: "", benefits: "" };
@@ -82,8 +83,8 @@ const ComboRewards = ({ id }: { id: string | null }) => {
   ];
 
   const redemptionTypes = [
-    { label: "Wallet", value: "wallet" },
-    { label: "Checkout", value: "checkout" },
+    // { label: "Wallet", value: "wallet" },
+    // { label: "Checkout", value: "checkout" },
     { label: "Manual claim", value: "manual-claim" },
     { label: "Voucher", value: "voucher" },
   ];
@@ -110,6 +111,14 @@ const ComboRewards = ({ id }: { id: string | null }) => {
       // setSuccessMsg("");
     },
   });
+
+  type CreateCampaignRewardResponse = {
+    createCampaignReward?: {
+      success: boolean;
+      message?: string;
+      campaign?: any;
+    };
+  };
 
   const handleSubmit = async () => {
     const tier = tiers[0]; // You may want to support multiple tiers
@@ -157,12 +166,14 @@ const ComboRewards = ({ id }: { id: string | null }) => {
         },
       });
 
-      if (data?.createCampaignReward?.success) {
-        setCampaignData(data.createCampaignReward.campaign);
+      const response = data as CreateCampaignRewardResponse;
+
+      if (response?.createCampaignReward?.success) {
+        setCampaignData(response.createCampaignReward.campaign);
         setSuccess(true);
       } else {
         message.error(
-          data?.createCampaignReward?.message ||
+          response?.createCampaignReward?.message ||
             "Failed to create loyalty reward."
         );
       }
@@ -603,7 +614,7 @@ const ComboRewards = ({ id }: { id: string | null }) => {
 
           <div>
             <Label htmlFor="validity" className="block mb-2 text-sm">
-              Limit (optional)
+              Limit
             </Label>
             <div className="grid grid-cols-2 w-full gap-3">
               <div className="flex gap-3">

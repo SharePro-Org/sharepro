@@ -5,10 +5,52 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button, Dropdown } from "antd";
 import { ArrowRight, SearchIcon, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useState } from "react";
+import { useQuery } from "@apollo/client/react";
+import { BUSINESS_MEMBERS } from "@/apollo/queries/admin";
+import { useAtom } from 'jotai';
+import { userAtom } from "@/store/User";
+
+type BusinessMember = {
+  invitedAt: string;
+  inviterEmail: string;
+  inviterName: string;
+  isActive: boolean;
+  joinedAt: string;
+  role: string;
+  user: {
+    userProfile: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      bio: string;
+      createdAt: string;
+      id: string;
+      userType: string;
+    };
+    totalCampaignsJoined: number;
+    totalReferrals: number;
+    totalRewardsEarned: number;
+  };
+};
+
+type BusinessMembersData = {
+  businessMembers: BusinessMember[];
+};
 
 const customers = () => {
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [user] = useAtom(userAtom);
+
+  const { data, loading, error } = useQuery<BusinessMembersData>(BUSINESS_MEMBERS, {
+    variables: {
+      businessId: user?.businessId
+    },
+    skip: !user?.businessId,
+  });
+
+  const members = data?.businessMembers || [];
 
   return (
     <DashboardLayout>
@@ -23,15 +65,15 @@ const customers = () => {
                   <Users size={16} fill="#A16AD4" className="text-[#A16AD4]" />
                 </div>
               </div>
-              <div className="text-xl my-3 font-bold">4,500</div>
-              <div className="flex justify-between w-full mt-2">
+              <div className="text-xl my-3 font-bold">{members.length}</div>
+              {/* <div className="flex justify-between w-full mt-2">
                 <div className="text-xs text-gray-500">
                   Referral links shared.
                 </div>
                 <div className={`text-xs text-green-600 mt-1 font-bold`}>
                   10% ↑
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -44,15 +86,15 @@ const customers = () => {
                   <Users size={16} fill="#233E97" className="text-[#233E97]" />
                 </div>
               </div>
-              <div className="text-xl my-3 font-bold">500</div>
-              <div className="flex justify-between w-full mt-2">
-                <div className="text-xs text-gray-500">
-                  Referral purchases made.
-                </div>
-                <div className="text-xs text-green-600 mt-1 font-bold">
-                  10% ↑
-                </div>
-              </div>
+              <div className="text-xl my-3 font-bold">{members.length}</div>
+                {/* <div className="flex justify-between w-full mt-2">
+                  <div className="text-xs text-gray-500">
+                    Referral purchases made.
+                  </div>
+                  <div className="text-xs text-green-600 mt-1 font-bold">
+                    10% ↑
+                  </div>
+                </div> */}
             </div>
           </div>
 
@@ -66,14 +108,14 @@ const customers = () => {
                 </div>
               </div>
               <div className="text-xl my-3 font-bold">100</div>
-              <div className="flex justify-between w-full mt-2">
+              {/* <div className="flex justify-between w-full mt-2">
                 <div className="text-xs text-gray-500">
                   Rewards claimed by customers
                 </div>
                 <div className="text-xs text-green-600 mt-1 font-bold">
                   5% ↑
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
@@ -81,7 +123,7 @@ const customers = () => {
         <section className="bg-white p-4 rounded-md mt-4 border border-[#E2E8F0]">
           <div className="flex justify-between">
             <div>
-              <p className="font-medium">Loyalty Tiers</p>
+              <p className="font-medium">Customers</p>
               <p className="text-sm text-[#030229B2]">
                 Identify your most loyal customers.
               </p>
@@ -91,7 +133,9 @@ const customers = () => {
                 <input
                   type="text"
                   className="bg-[#F9FAFB] md:w-72 w-full border border-[#E4E7EC] p-3 rounded-sm pl-8 text-sm"
-                  placeholder="Search Campaign Name"
+                  placeholder="Search members..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
 
                 <SearchIcon
@@ -99,10 +143,6 @@ const customers = () => {
                   className="absolute top-4 left-3 text-gray-500"
                 />
               </div>
-              <button className="flex my-auto gap-2 text-sm text-primary cursor-pointer">
-                <span className="my-auto">View All </span>
-                <ArrowRight size={15} className="my-auto" />
-              </button>
             </div>
           </div>
           <div className="overflow-x-auto">
@@ -113,48 +153,67 @@ const customers = () => {
                   <th className="px-4 py-3 font-medium text-left">
                     Customer Name
                   </th>
-                  <th className="px-4 py-3 font-medium text-left">Points</th>
-                  <th className="px-4 py-3 font-medium text-left">Purchases</th>
-                  <th className="px-4 py-3 font-medium text-left">Amount</th>
-                  <th className="px-4 py-3 font-medium text-left">Redeemed</th>
-                  <th className="px-4 py-3 font-medium text-left">Badge</th>
-                  <th className="px-4 py-3 font-medium text-left">Action</th>
+                  <th className="px-4 py-3 font-medium text-left">Email</th>
+                  <th className="px-4 py-3 font-medium text-left">Campaigns Joined</th>
+                  <th className="px-4 py-3 font-medium text-left">Total Referrals</th>
+                  <th className="px-4 py-3 font-medium text-left">Total Rewards</th>
+                  {/* <th className="px-4 py-3 font-medium text-left">Action</th> */}
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td className="px-4 black font-normal py-3">1</td>
-                  <td className="px-4 black font-normal py-3">John Doe</td>
-                  <td className="px-4 black font-normal py-3">10</td>
-                  <td className="px-4 black font-normal py-3">18</td>
-                  <td className="px-4 black font-normal py-3">#1000</td>
-                  <td className="px-4 black font-normal py-3">Gold</td>
-                  <td className="px-4 black font-normal py-3">Gold</td>
-                  <td>
-                    <Dropdown
-                      menu={{
-                        items: [
-                          {
-                            key: "view",
-                            label: "View activity",
-                            onClick: () => router.push(`/business/customers/1`),
-                          },
-                        ],
-                      }}
-                      trigger={["click"]}
-                    >
-                      <Button type="text">
-                        <MoreOutlined />
-                      </Button>
-                    </Dropdown>
-                  </td>
-                </tr>
+                {loading ? (
+                  <tr>
+                    <td colSpan={8} className="text-center py-4">Loading...</td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan={8} className="text-center py-4 text-red-500">Error loading members: {error.message}</td>
+                  </tr>
+                ) : members.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="text-center py-4">No members found</td>
+                  </tr>
+                ) : (
+                  members.map((member, index) => (
+                    <tr key={member.user.userProfile.id} className="hover:bg-gray-50">
+                      <td className="px-4 black font-normal py-3">{index + 1}</td>
+                      <td className="px-4 black font-normal py-3">
+                        {member.user.userProfile.firstName} {member.user.userProfile.lastName}
+                      </td>
+                      <td className="px-4 black font-normal py-3">{member.user.userProfile.email}</td>
+                      <td className="px-4 black font-normal py-3">{member.user.totalCampaignsJoined}</td>
+                      <td className="px-4 black font-normal py-3">{member.user.totalReferrals}</td>
+                      <td className="px-4 black font-normal py-3">
+                        ₦{member.user.totalRewardsEarned.toLocaleString()}
+                      </td>
+
+                      {/* <td>
+                        <Dropdown
+                          menu={{
+                            items: [
+                              {
+                                key: "view",
+                                label: "View activity",
+                                onClick: () => router.push(`/business/customers/${member.user.userProfile.id}`),
+                              },
+                            ],
+                          }}
+                          trigger={["click"]}
+                        >
+                          <Button type="text">
+                            <MoreOutlined />
+                          </Button>
+                        </Dropdown>
+                      </td> */}
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </section>
 
-        <section className="bg-white p-4 rounded-md mt-4 border border-[#E2E8F0]">
+        {/* <section className="bg-white p-4 rounded-md mt-4 border border-[#E2E8F0]">
           <div className="flex justify-between">
             <div>
               <p className="font-medium">Top Referrers</p>
@@ -228,7 +287,7 @@ const customers = () => {
               </tbody>
             </table>
           </div>
-        </section>
+        </section> */}
       </>
     </DashboardLayout>
   );

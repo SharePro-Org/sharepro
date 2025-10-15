@@ -7,7 +7,8 @@ import { Dropdown, Button } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import Link from "next/link";
 import { Filter } from "@/components/Filter";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
+
 import { GET_BUSINESS_CAMPAIGNS } from "@/apollo/queries/campaigns";
 import CampaignsTable from "@/components/dashboard/CampaignsTable";
 import { useAtom } from "jotai";
@@ -64,7 +65,7 @@ const campaigns = () => {
             <p className="text-black font-semibold text-base">My Campaigns</p>
             <div className="lg:flex gap-4">
               {/* <RangePicker /> */}
-              <Filter />
+              {/* <Filter /> */}
               <Link href="/business/campaigns/create">
                 <button className="bg-primary p-3 md:w-auto w-full cursor-pointer my-auto rounded-sm text-white text-sm px-6">
                   Create Campaign

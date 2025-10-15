@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { MdOutlineLock } from "react-icons/md";
 import { FaChevronLeft } from "react-icons/fa6";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { RESET_PASSWORD } from "@/apollo/mutations/auth";
 import { useSearchParams } from "next/navigation";
 
@@ -69,13 +70,13 @@ function ResetPasswordContent() {
     }
     try {
       const { data } = await resetPassword({
-        variables: { newPassword: password, restToken: token },
+        variables: { newPassword: password, resetToken: token },
       });
-      if (data?.resetPassword?.success) {
-        setSuccess(data.resetPassword.message || "Password reset!");
+      if ((data as { resetPassword?: { success?: boolean; message?: string } })?.resetPassword?.success) {
+        setSuccess((data as any).resetPassword.message || "Password reset!");
         setTimeout(() => router.push("/auth/sign-in"), 1500);
       } else {
-        setError(data?.resetPassword?.message || "Failed to reset password");
+        setError((data as any)?.resetPassword?.message || "Failed to reset password");
       }
     } catch (err: any) {
       setError(err.message || "Failed to reset password");

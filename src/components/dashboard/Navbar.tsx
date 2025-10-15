@@ -46,7 +46,7 @@ export default function Navbar({
           <RiMenu2Line className="w-5 h-5 text-[#83859C]" />
         </button>
         {/* Search hidden on mobile */}
-        <div className="hidden sm:flex relative w-full max-w-[200px] sm:max-w-[320px] md:max-w-[430px] items-center">
+        {/* <div className="hidden sm:flex relative w-full max-w-[200px] sm:max-w-[320px] md:max-w-[430px] items-center">
           <input
             type="text"
             placeholder="Search"
@@ -55,8 +55,8 @@ export default function Navbar({
           <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-[#83859C]" />
           {/* <span className="hidden sm:inline absolute right-3 top-1/2 -translate-y-1/2 px-2 py-1 rounded border border-gray-200 text-xs text-[#83859C] bg-white font-medium select-none">
             ⌘ K
-          </span> */}
-        </div>
+          </span>
+        </div> */}
       </div>
 
       {/* Actions: Theme, Bell, Profile */}
@@ -72,13 +72,14 @@ export default function Navbar({
             <Moon className="w-5 h-5 text-[#83859C]" />
           )}
         </button> */}
-        <button
+        {user?.userType === 'OWNER' ? <button
           aria-label="Notifications"
           className="relative flex items-center justify-center w-9 h-9 rounded-full border border-gray-200 hover:bg-gray-50 transition"
         >
           <Bell className="w-5 h-5 text-[#83859C]" />
           <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#F89C1F]"></span>
-        </button>
+        </button> : null}
+
         {/* Profile section (could be replaced by Image/avatar) */}
         <div className="flex items-center gap-2 ml-3">
           <Image
@@ -109,13 +110,15 @@ export default function Navbar({
             <Moon className="w-5 h-5 text-[#83859C]" />
           )}
         </button> */}
-        <button
-          aria-label="Notifications"
-          className="relative flex items-center justify-center w-8 h-8 rounded-full border border-gray-200 hover:bg-gray-50 transition"
-        >
-          <Bell className="w-5 h-5 text-[#83859C]" />
-          <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#F89C1F]"></span>
-        </button>
+        {
+          user?.userType === 'OWNER' ? <button
+            aria-label="Notifications"
+            className="relative flex items-center justify-center w-8 h-8 rounded-full border border-gray-200 hover:bg-gray-50 transition"
+          >
+            <Bell className="w-5 h-5 text-[#83859C]" />
+            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#F89C1F]"></span>
+          </button> : null
+        }
         <Image
           src={Avatar}
           width={28}

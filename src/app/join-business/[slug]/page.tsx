@@ -13,7 +13,8 @@ import { MdOutlineVisibilityOff, MdOutlineVisibility } from "react-icons/md";
 import { FiUser } from "react-icons/fi";
 import Link from "next/link";
 import Image from "next/image";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { REGISTER_INVITED_MEMBER } from "@/apollo/mutations/account";
 
 import TopRightLeftSection from "../../../../public/assets/auth/top-right-left-section.svg";
@@ -113,6 +114,14 @@ const SignupComp = () => {
     if (!isFormValid) return;
     setLoading(true);
     try {
+      type RegisterInvitedMemberResponse = {
+        registerInvitedMember?: {
+          success?: boolean;
+          message?: string;
+          errors?: string[];
+        };
+      };
+
       const response = await registerInvitedMember({
         variables: {
           input: {
@@ -125,7 +134,8 @@ const SignupComp = () => {
           },
         },
       });
-      const result = response.data?.registerInvitedMember;
+
+      const result = (response.data as RegisterInvitedMemberResponse)?.registerInvitedMember;
       if (result?.success) {
         setSuccessMessage(result.message || "Account created!");
         router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`);

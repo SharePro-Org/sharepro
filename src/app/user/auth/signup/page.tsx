@@ -13,7 +13,8 @@ import { MdOutlineVisibilityOff, MdOutlineVisibility } from "react-icons/md";
 import { FiUser } from "react-icons/fi";
 import Link from "next/link";
 import Image from "next/image";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { REGISTER_USER, TRACK_CONVERSION } from "@/apollo/mutations/auth";
 
 import TopRightLeftSection from "../../../../../public/assets/auth/top-right-left-section.svg";
@@ -238,14 +239,22 @@ const SignupComp = () => {
             referralCode: referralData.referralCode,
           },
         },
-      });
+      }) as {
+        data: {
+          registerUserByCode?: {
+            success?: boolean;
+            user?: { id?: string };
+            message?: string;
+          };
+        };
+      };
 
       if (data?.registerUserByCode?.success) {
         // Track registration success analytics
         const trackRegistrationSuccess = async () => {
           const successProperties = {
             eventType: "registration_success",
-            userId: data.registerUserByCode.user?.id,
+            userId: data.registerUserByCode?.user?.id,
             userEmail: email,
             firstName,
             lastName,

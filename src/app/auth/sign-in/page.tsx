@@ -15,7 +15,8 @@ import {
 } from "react-icons/md";
 import { FcGoogle } from "react-icons/fc";
 import { cn } from "@/lib/utils";
-import { useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
+
 import { LOGIN, LOGIN_PHONE } from "@/apollo/mutations/auth";
 import { useSetAtom } from "jotai";
 import { userAtom } from "@/store/User";
@@ -95,17 +96,39 @@ export default function SignIn() {
     if (hasError || !canContinue) return;
     try {
       if (tab === "email") {
+        type LoginResponse = {
+          login?: {
+            success: boolean;
+            token: string;
+            refreshToken: string;
+            user: {
+              id?: string;
+              email?: string;
+              businessName?: string;
+              business: {
+                id: string;
+                onBoardingComplete?: boolean;
+              };
+              phone?: string;
+              profile: {
+                userType: string;
+              };
+            };
+            message?: string;
+          };
+        };
         const { data } = await login({ variables: { email, password } });
-        if (data?.login?.success) {
-          const user = data.login.user;
+        const loginData = data as LoginResponse;
+        if (loginData?.login?.success) {
+          const user = loginData.login.user;
           const onBoardingComplete = user?.business?.onBoardingComplete;
           const userData = {
-            accessToken: data.login.token,
-            refreshToken: data.login.refreshToken,
+            accessToken: loginData.login.token,
+            refreshToken: loginData.login.refreshToken,
             userId: user?.id,
             email: user?.email || email,
             businessName: user?.businessName,
-            businessId: user.business.id,
+            businessId: user?.business?.id,
             phone: user?.phone || phone,
             userType: user?.profile.userType,
             onBoardingComplete,
@@ -113,21 +136,49 @@ export default function SignIn() {
 
           localStorage.setItem("userData", JSON.stringify(userData));
           setUser(userData);
-          router.push(
-            onBoardingComplete ? "/business/dashboard" : "/onboarding"
-          );
+          if (userData.userType === "ADMIN") {
+            router.push("/admin/dashboard");
+          } else if (userData.userType === "VIEWER") {
+            router.push("/user/dashboard");
+          } else {
+            router.push(
+              onBoardingComplete ? "/business/dashboard" : "/onboarding"
+            );
+          }
         } else {
-          setGeneralError(data?.login?.message || "Invalid credentials");
+          setGeneralError(loginData?.login?.message || "Invalid credentials");
         }
       } else {
+        type LoginPhoneResponse = {
+          loginPhone?: {
+            success: boolean;
+            token: string;
+            refreshToken: string;
+            user: {
+              id: string;
+              email?: string;
+              businessName?: string;
+              business: {
+                id: string;
+                onBoardingComplete?: boolean;
+              };
+              phone?: string;
+              profile: {
+                userType: string;
+              };
+            };
+            message?: string;
+          };
+        };
         const { data } = await loginPhone({ variables: { phone, password } });
-        if (data?.loginPhone?.success) {
-          const user = data.loginPhone.user;
+        const loginPhoneData = data as LoginPhoneResponse;
+        if (loginPhoneData?.loginPhone?.success) {
+          const user = loginPhoneData.loginPhone.user;
           const onBoardingComplete = user?.business?.onBoardingComplete;
 
           const userData = {
-            accessToken: data.loginPhone.token,
-            refreshToken: data.loginPhone.refreshToken,
+            accessToken: loginPhoneData.loginPhone.token,
+            refreshToken: loginPhoneData.loginPhone.refreshToken,
             userId: user?.id,
             email: user?.email,
             businessName: user?.businessName,
@@ -139,11 +190,17 @@ export default function SignIn() {
           localStorage.setItem("userData", JSON.stringify(userData));
           setUser(userData);
 
-          router.push(
-            onBoardingComplete ? "/business/dashboard" : "/onboarding"
-          );
+          if (userData.userType === "ADMIN") {
+            router.push("/admin/dashboard");
+          } else if (userData.userType === "VIEWER") {
+            router.push("/user/dashboard");
+          } else {
+            router.push(
+              onBoardingComplete ? "/business/dashboard" : "/onboarding"
+            );
+          }
         } else {
-          setGeneralError(data?.loginPhone?.message || "Invalid credentials");
+          setGeneralError(loginPhoneData?.loginPhone?.message || "Invalid credentials");
         }
       }
     } catch (err: any) {
