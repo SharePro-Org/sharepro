@@ -5,12 +5,11 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Install dependencies
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
+COPY package.json package-lock.json* pnpm-lock.yaml* ./
 
 # Install dependencies based on the preferred package manager
 RUN \
-  if [ -f yarn.lock ]; then yarn install; \
-  elif [ -f package-lock.json ]; then npm install; \
+  if [ -f package-lock.json ]; then npm install; \
   elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm install; \
   else echo "Lockfile not found." && exit 1; \
   fi

@@ -1,0 +1,33 @@
+{
+  "name": "sharepro-frontend",
+  "description": "SharePro Frontend - Next.js Application",
+  "keywords": ["nextjs", "react", "typescript", "sharepro"],
+  "website": "https://mysharepro.com",
+  "repository": "https://github.com/SharePro-Org/frontend_sharepro",
+  "env": {
+    "NODE_ENV": {
+      "description": "Node environment",
+      "value": "production"
+    },
+    "NEXT_PUBLIC_API_URL": {
+      "description": "GraphQL API URL",
+      "value": "https://api.mysharepro.com/graphql/"
+    },
+    "PORT": {
+      "description": "Port for the application",
+      "value": "3000"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "stack": "heroku-22"
+}
