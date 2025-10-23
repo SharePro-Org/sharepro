@@ -175,16 +175,16 @@ const customers = () => {
                   </tr>
                 ) : (
                   members.map((member, index) => (
-                    <tr key={member.user.userProfile.id} className="hover:bg-gray-50">
+                    <tr key={member?.user?.userProfile.id} className="hover:bg-gray-50">
                       <td className="px-4 black font-normal py-3">{index + 1}</td>
                       <td className="px-4 black font-normal py-3">
-                        {member.user.userProfile.firstName} {member.user.userProfile.lastName}
+                        {member?.user?.userProfile?.firstName} {member?.user?.userProfile?.lastName}
                       </td>
-                      <td className="px-4 black font-normal py-3">{member.user.userProfile.email}</td>
-                      <td className="px-4 black font-normal py-3">{member.user.totalCampaignsJoined}</td>
-                      <td className="px-4 black font-normal py-3">{member.user.totalReferrals}</td>
+                      <td className="px-4 black font-normal py-3">{member?.user?.userProfile?.email}</td>
+                      <td className="px-4 black font-normal py-3">{member?.user?.totalCampaignsJoined}</td>
+                      <td className="px-4 black font-normal py-3">{member?.user?.totalReferrals}</td>
                       <td className="px-4 black font-normal py-3">
-                        ₦{member.user.totalRewardsEarned.toLocaleString()}
+                        ₦{member?.user?.totalRewardsEarned.toLocaleString()}
                       </td>
 
                       {/* <td>
