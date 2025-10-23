@@ -22,10 +22,77 @@ export const USER_JOINED_CAMPAIGNS = gql`
       campaignType
       dateJoined
       referralCode
+      campaignReferralLink
       rewardInfo
       status
       totalReferrals
       totalRewards
+       campaign {
+        activeParticipants
+        activeReferrals
+        campaignType
+        name
+        referralLink
+        status
+        totalReferrals
+        totalRewardsGiven
+        totalViews
+        shareLinks
+        analyticsEvents {
+          referrer
+        }
+        referralRewards {
+          referreeValidityPeriod
+          referreeRewardValue
+          referreeRewardType
+          referreeRewardChannels
+          referreeRewardAction
+          referralRewardType
+          referralRewardLimitType
+          referralRewardLimit
+          referralRewardAmount
+          referralRewardAction
+          loyaltyTierBenefits
+          loyaltyPoints
+          loyaltyName
+        }
+        loyaltyRewards {
+          redeemValidityPeriod
+          redeemRewardValue
+          redeemRewardPointRequired
+          redeemRewardChannels
+          redeemRewardAction
+          loyaltyTierBenefits
+          loyaltyPoints
+          loyaltyName
+          earnRewardPoints
+          earnRewardAmount
+          earnRewardAction
+        }
+        comboRewards {
+          loyaltyName
+          loyaltyPoints
+          loyaltyTierBenefits
+          redeemRewardAction
+          redeemRewardChannels
+          redeemRewardPointRequired
+          redeemRewardValue
+          redeemValidityPeriod
+          referralName
+          referralPoints
+          referralRewardAction
+          referralRewardAmount
+          referralRewardLimit
+          referralRewardLimitType
+          referralRewardType
+          referralTierBenefits
+          referreeRewardAction
+          referreeRewardChannels
+          referreeRewardType
+          referreeRewardValue
+          referreeValidityPeriod
+        }
+      }
     }
   }
 `;
@@ -60,6 +127,7 @@ export const AVAILABLE_CAMPAIGNS = gql`
       maxParticipants
       description
       websiteLink
+      
     }
   }
 `;

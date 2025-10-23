@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import {
   USER_JOINED_CAMPAIGNS,
@@ -8,22 +8,30 @@ import { CLAIM_REWARD } from "@/apollo/mutations/campaigns";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
 import { Campaign, Reward } from "@/apollo/types";
-import { Button, Dropdown } from "antd";
+import { Button, Dropdown, message } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { CheckCircle, SearchIcon, XCircle } from "lucide-react";
-
+import Image from "next/image";
+import userCheck from "../../../public/assets/Check.svg";
+import Link from "next/link";
+import { MdCampaign } from "react-icons/md";
 // import { format } from "date-fns";
 
 const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
   // Access the current user from the global state
   const [user] = useAtom(userAtom);
+  const [messageApi, contextHolder] = message.useMessage();
+  const [searchTerm, setSearchTerm] = useState("");
 
   // State for claim reward functionality
   const [claimingReward, setClaimingReward] = useState<string | null>(null);
   const [claimError, setClaimError] = useState<string | null>(null);
   const [claimSuccess, setClaimSuccess] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [showCampaign, setShowCampaign] = useState(false)
+  const [joining, setJoining] = useState<any>(null);
+
 
   // Mutations
   const [claimReward] = useMutation(CLAIM_REWARD);
@@ -138,17 +146,19 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
   // Handle dropdown action
   const handleDropdownAction = (action: string, campaign: Campaign) => {
     if (action === "copy") {
-      if (campaign.referralCode) {
-        navigator.clipboard.writeText(campaign.referralCode);
-        // message.success("Referral link copied to clipboard!");
+      if (campaign.campaignReferralLink) {
+        navigator.clipboard.writeText(campaign.campaignReferralLink);
+        messageApi.open({
+          type: 'success',
+          content: 'Referral link copied to clipboard!',
+        });
       } else {
         // message.error("No referral link available.");
       }
     } else if (action === "campaign") {
       // Show campaign details modal (simple alert for now)
-      // message.info(
-      //   `Campaign: ${campaign.campaignName}\nType: ${campaign.campaignType}\nReward: ${campaign.rewardInfo}`
-      // );
+      setShowCampaign(true)
+      setJoining(campaign)
     }
     //  else if (action === "reward") {
     //   if (campaign.isClaimable && campaign.rewardId) {
@@ -159,18 +169,41 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
     // }
   };
 
+  const filteredCampaigns = useMemo(() => {
+    if (!searchTerm) return displayCampaigns;
+    const term = searchTerm.toLowerCase();
+    return displayCampaigns.filter(
+      (c) =>
+        c.campaignName.toLowerCase().includes(term) ||
+        c.campaignType.toLowerCase().includes(term) ||
+        c.status.toLowerCase().includes(term)
+    );
+  }, [displayCampaigns, searchTerm]);
+
+  // Filter rewards
+  const filteredRewards = useMemo(() => {
+    if (!searchTerm) return displayRewards;
+    const term = searchTerm.toLowerCase();
+    return displayRewards.filter(
+      (r) =>
+        r.campaignName.toLowerCase().includes(term) ||
+        r.rewardType.toLowerCase().includes(term) ||
+        r.status.toLowerCase().includes(term)
+    );
+  }, [displayRewards, searchTerm]);
+
   return (
     <div className="overflow-x-auto">
+      {contextHolder}
       <div className="relative md:mt-0 mt-2">
         <input
           type="text"
           className="bg-[#F9FAFB] md:w-96 w-full border border-[#E4E7EC] p-3 rounded-sm pl-8 text-base"
-          placeholder="Search Campaign Name"
+          placeholder={`Search ${type === "campaigns" ? "Campaign Name" : "Reward or Campaign"}`}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <SearchIcon
-          size={16}
-          className="absolute top-4 left-3 text-gray-500"
-        />
+        <SearchIcon size={16} className="absolute top-4 left-3 text-gray-500" />
       </div>
       {type === "campaigns" ? (
         <table className="w-full mt-4 text-sm">
@@ -191,8 +224,8 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                   Loading campaigns...
                 </td>
               </tr>
-            ) : displayCampaigns.length > 0 ? (
-              (max ? displayCampaigns.slice(0, max) : displayCampaigns).map(
+            ) : filteredCampaigns.length > 0 ? (
+              (max ? filteredCampaigns.slice(0, max) : filteredCampaigns).map(
                 (campaign: Campaign) => (
                   <tr
                     key={campaign.campaignId}
@@ -202,10 +235,10 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                     <td className={`px-4 py-3`}>
                       <span
                         className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs ${campaign.campaignType.toLowerCase() === "loyalty"
-                            ? "bg-[#A16AD4]"
-                            : campaign.campaignType.toLowerCase() === "combo"
-                              ? "bg-[#6192AE]"
-                              : "bg-[#4C8AFF]"
+                          ? "bg-[#A16AD4]"
+                          : campaign.campaignType.toLowerCase() === "combo"
+                            ? "bg-[#6192AE]"
+                            : "bg-[#4C8AFF]"
                           }`}
                       >
                         {" "}
@@ -216,10 +249,10 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                     <td className="px-4 py-3">
                       <span
                         className={`px-2 py-1 rounded-full text-xs ${campaign.status === "Active"
-                            ? "bg-green-300 text-green-800"
-                            : campaign.status === "Completed"
-                              ? "bg-blue-300 text-blue-800"
-                              : "bg-gray-300 text-gray-800"
+                          ? "bg-green-300 text-green-800"
+                          : campaign.status === "Completed"
+                            ? "bg-blue-300 text-blue-800"
+                            : "bg-gray-300 text-gray-800"
                           }`}
                       >
                         {campaign.status}
@@ -234,7 +267,7 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                           items: [
                             { key: "copy", label: "Copy Referral Link" },
                             { key: "campaign", label: "Campaign Details" },
-                            // { key: "reward", label: "Claim Reward" },
+                            { key: "reward", label: "Claim Reward" },
                           ],
                           onClick: ({ key }) => handleDropdownAction(key, campaign),
                         }}
@@ -284,8 +317,8 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                     Loading rewards...
                   </td>
                 </tr>
-              ) : displayRewards.length > 0 ? (
-                (max ? displayRewards.slice(0, max) : displayRewards).map(
+              ) : filteredRewards.length > 0 ? (
+                (max ? filteredRewards.slice(0, max) : filteredRewards).map(
                   (reward: Reward) => (
                     <tr
                       key={reward.rewardId}
@@ -299,10 +332,10 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                       <td className="px-4 py-3">
                         <span
                           className={`px-2 py-1 rounded-full text-xs ${reward.status === "Paid"
-                              ? "bg-green-200 text-green-800"
-                              : reward.status === "Approved"
-                                ? "bg-yellow-200 text-yellow-800"
-                                : "bg-gray-100 text-gray-800"
+                            ? "bg-green-200 text-green-800"
+                            : reward.status === "Approved"
+                              ? "bg-yellow-200 text-yellow-800"
+                              : "bg-gray-100 text-gray-800"
                             }`}
                         >
                           {reward.status}
@@ -372,6 +405,175 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog
+        open={showCampaign}
+        onOpenChange={(isOpen) => {
+          setShowCampaign(false);
+        }}
+      >
+        <DialogContent size="3xl" className="w-full flex flex-col gap-6 py-6">
+          {joining?.campaignType === "Loyalty" && (
+            <div>
+              <h3 className="text-lg font-medium text-center mb-3">
+                {joining.campaignName}
+              </h3>
+              <div className="grid md:grid-cols-4 grid-cols-">
+                <div className="flex gap-2">
+                  <button className="bg-[#ECF3FF] rounded-sm p-3">
+                    <MdCampaign color="#A16AD4" />
+                  </button>
+                  <div>
+                    <p className="text-sm"> Campaign Name</p>
+                    <p> {joining.campaignName}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm"> Campaign Type</p>
+                  <p> {joining.campaignType}</p>
+                </div>
+                <div>
+                  <p className="text-sm"> End Date</p>
+                  <p> {formatDate(joining.endDate)}</p>
+                </div>
+
+                <div>
+                  <p>
+                    {joining.participantsCount}{" "}
+                    {joining.participantsCount === 1 ? "user" : "users"} joined
+                    {joining.maxParticipants > 0 &&
+                      ` (max: ${joining.maxParticipants})`}
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm py-6">Invite your friends and earn {joining?.rewardInfo} for each new signup who makes a purchase</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <strong>How It Works</strong>
+                  <ul className="list-disc ml-4">
+                    <li>Step 1: Tap Join Campaign</li>
+                    <li>Step 2: Make purchases at participating outlets</li>
+                    <li>Step 3: Earn loyalty points automatically</li>
+                    <li>Step 4: Redeem points for rewards in your wallet</li>
+                  </ul>
+                </div>
+                <div>
+                  <strong>Rules & Conditions</strong>
+
+                </div>
+              </div>
+              <div className="flex gap-4 justify-center mt-6">
+                <button className="bg-[#233E97] p-4 rounded-md text-white"> Visit Business Website</button>
+                <button className="text-[#233E97] p-4 rounded-md bg-[#ECF3FF]">Claim Reward</button>
+              </div>
+            </div>
+          )}
+          {joining?.campaignType === "Combo" && (
+            <div>
+              <h3 className="text-lg font-medium text-center mb-3">
+                {joining.campaignName}
+              </h3>
+              <div className="grid md:grid-cols-4 grid-cols-1">
+                <div className="flex gap-2">
+                  <button className="bg-[#ECF3FF] rounded-sm p-3">
+                    <MdCampaign color="#A16AD4" />
+                  </button>
+                  <div>
+                    <p className="text-sm"> Campaign Name</p>
+                    <p> {joining.campaignName}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm"> Campaign Type</p>
+                  <p> {joining.campaignType}</p>
+                </div>
+                <div>
+                  <p className="text-sm"> End Date</p>
+                  <p> {formatDate(joining.endDate)}</p>
+                </div>
+
+                <div>
+                  <p>
+                    {joining.participantsCount}{" "}
+                    {joining.participantsCount === 1 ? "user" : "users"} joined
+                    {joining.maxParticipants > 0 &&
+                      ` (max: ${joining.maxParticipants})`}
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm py-6">Invite your friends and earn {joining?.rewardInfo} for each new signup who makes a purchase</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <strong>Rules & Conditions</strong>
+                  <ul className="list-disc ml-4">
+                    <li>Users must sign up and make a valid purchase</li>
+                    <li>Reward is credited after 24hrs of verification</li>
+                    <li>Limit: 10 referrals per user</li>
+                  </ul>
+                </div>
+                <div>
+                </div>
+              </div>
+              <div className="flex gap-4 justify-center mt-6">
+                <button className="bg-[#233E97] p-4 rounded-md text-white"> Visit Business Website</button>
+                <button className="text-[#233E97] p-4 rounded-md bg-[#ECF3FF]">Claim Reward</button>
+              </div>
+            </div>
+          )}
+          {joining?.campaignType === "Referral" && (
+            <div>
+              <h3 className="text-lg font-medium text-center mb-3">
+                {joining.campaignName}
+              </h3>
+              <div className="grid md:grid-cols-4 grid-cols-1">
+                <div className="flex gap-2">
+                  <button className="bg-[#ECF3FF] rounded-sm p-3">
+                    <MdCampaign color="#A16AD4" />
+                  </button>
+                  <div>
+                    <p className="text-sm"> Campaign Name</p>
+                    <p> {joining.campaignName}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm"> Campaign Type</p>
+                  <p> {joining.campaignType}</p>
+                </div>
+                <div>
+                  <p className="text-sm"> End Date</p>
+                  <p> {formatDate(joining.endDate)}</p>
+                </div>
+                <div>
+                  <p>
+                    {joining.participantsCount}{" "}
+                    {joining.participantsCount === 1 ? "user" : "users"} joined
+                    {joining.maxParticipants > 0 &&
+                      ` (max: ${joining.maxParticipants})`}
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm py-6">Invite your friends and earn {joining?.rewardInfo} for each new signup who makes a purchase</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <strong>How It Works</strong>
+                  <ul className="list-disc ml-4">
+                    <li>Step 1: Tap Join Campaign</li>
+                    <li>Step 2: Copy your referral link and share with friends</li>
+                    <li>Step 3: Earn rewards when your friends sign up on participating outlets</li>
+                    <li>Step 4: Claim your reward</li>
+                  </ul>
+                </div>
+                <div>
+                </div>
+              </div>
+              <div className="flex gap-4 justify-center mt-6">
+                <button className="bg-[#233E97] p-4 rounded-md text-white"> Claim Reward</button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 };

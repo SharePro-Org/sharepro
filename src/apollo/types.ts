@@ -3,6 +3,7 @@ export interface Campaign {
   campaignName: string;
   campaignType: string;
   dateJoined: string;
+  campaignReferralLink: string;
   referralCode: string;
   rewardInfo: string;
   status: string;

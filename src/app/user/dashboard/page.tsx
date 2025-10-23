@@ -231,7 +231,7 @@ const userDashboard = () => {
                   <button className="text-primary mt-auto">View All</button>
                 </Link>
               </div>
-              <UserDashboardTable type="campaigns" max={4} />
+              <UserDashboardTable type="campaigns" max={6} />
             </div>
             <div className="row-span-2 p-4 bg-white rounded-md">
               <DiscoverCampaign />

@@ -44,7 +44,7 @@ const account = () => {
       setEditForm({
         firstName: userData.currentUser.userProfile.firstName || "",
         lastName: userData.currentUser.userProfile.lastName || "",
-        phone: userData.currentUser.userProfile.phone || "",
+        phone: userData.currentUser.phone || "",
       });
     }
   }, [userData]);
