@@ -11,7 +11,6 @@
     "build": "next build",
     "start": "node server.js",
     "lint": "next lint",
-    "postinstall": "next build",
     "heroku-postbuild": "npm run build"
   },
   "dependencies": {
