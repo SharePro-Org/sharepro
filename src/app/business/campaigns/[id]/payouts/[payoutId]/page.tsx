@@ -5,8 +5,26 @@ import Image from "next/image";
 import { CheckCircle, XCircle } from "lucide-react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { IoWarning } from "react-icons/io5";
+import { useMutation, useQuery } from "@apollo/client/react";
+import { GET_SINGLE_PAYOUT } from "@/apollo/queries/campaigns";
+import { useParams } from "next/navigation";
+import { REVIEW_PAYOUT } from "@/apollo/mutations/campaigns";
 
 const PayoutDetails = () => {
+    const params = useParams();
+    const id = params.payoutId;
+    const {
+        data,
+        loading,
+        error,
+    } = useQuery<any>(GET_SINGLE_PAYOUT, {
+        variables: { id: id },
+        skip: !id,
+    });
+
+    const [handleToggleRewardStatus, { loading: setLoading }] = useMutation(REVIEW_PAYOUT)
+
+
     return (
         <DashboardLayout>
             <>
@@ -15,11 +33,11 @@ const PayoutDetails = () => {
                     <div className="flex justify-between items-start">
                         <div>
                             <h2 className="text-lg font-semibold">Payout Details</h2>
-                            <p className="text-sm text-gray-500">Transaction ID: TXN-2025-001234</p>
+                            {/* <p className="text-sm text-gray-500">Transaction ID: TXN-2025-001234</p> */}
                         </div>
-                        <button className="bg-[#FCBC33] flex gap-2 text-white text-sm px-4 py-1.5 rounded-full font-medium">
+                        <button className="bg-green-500 flex gap-2 text-white text-sm px-4 py-1.5 rounded-full font-medium">
                             <IoWarning className="my-auto" />
-                            <span className="my-auto">Pending</span>
+                            <span className="my-auto">{data?.reward?.status}</span>
                         </button>
                     </div>
 
@@ -32,19 +50,19 @@ const PayoutDetails = () => {
                             </h3>
                             <div className="grid grid-cols-2 gap-y-2 text-sm">
                                 <p className="text-gray-500">Campaign</p>
-                                <p className="font-medium text-gray-800">Shp2Earn</p>
+                                <p className="font-medium text-gray-800">{data?.reward?.campaign?.name}</p>
 
                                 <p className="text-gray-500">Reward Type</p>
-                                <p className="font-medium text-gray-800">Referral reward</p>
+                                <p className="font-medium text-gray-800">{data?.reward?.rewardType}</p>
 
                                 <p className="text-gray-500">Amount</p>
-                                <p className="font-medium text-gray-800">₦10,000</p>
+                                <p className="font-medium text-gray-800">{data?.reward?.amount}</p>
 
-                                <p className="text-gray-500">Reward</p>
-                                <p className="font-medium text-gray-800">Cashback</p>
+                                {/* <p className="text-gray-500">Reward</p>
+                                <p className="font-medium text-gray-800">Cashback</p> */}
 
                                 <p className="text-gray-500">Request Date</p>
-                                <p className="font-medium text-gray-800">08-04-2025</p>
+                                <p className="font-medium text-gray-800">--</p>
 
                                 <p className="text-gray-500">Payment Date</p>
                                 <p className="font-medium text-gray-800">--</p>
@@ -56,22 +74,22 @@ const PayoutDetails = () => {
                             <h3 className="text-sm font-medium text-gray-700">Customer Details</h3>
                             <div className="grid grid-cols-2 gap-y-2 text-sm">
                                 <p className="text-gray-500">Full Name</p>
-                                <p className="font-medium text-gray-800">John Busco</p>
+                                <p className="font-medium text-gray-800">{data?.reward?.user.firstName} {data?.reward?.user.lastName}</p>
 
                                 <p className="text-gray-500">Email Address</p>
-                                <p className="font-medium text-gray-800">john.busco@example.com</p>
+                                <p className="font-medium text-gray-800">{data?.reward?.user.email}</p>
 
                                 <p className="text-gray-500">Phone Number</p>
-                                <p className="font-medium text-gray-800">+234 801 234 5678</p>
+                                <p className="font-medium text-gray-800">{data?.reward?.user.phone}</p>
 
                                 <p className="text-gray-500">Account Number</p>
-                                <p className="font-medium text-gray-800">0123456789</p>
+                                <p className="font-medium text-gray-800"></p>
 
                                 <p className="text-gray-500">Bank Name</p>
-                                <p className="font-medium text-gray-800">Opay</p>
+                                <p className="font-medium text-gray-800"></p>
 
                                 <p className="text-gray-500">Bank Holder’s Name</p>
-                                <p className="font-medium text-gray-800">John Busco</p>
+                                <p className="font-medium text-gray-800"></p>
                             </div>
                         </div>
                     </div>
@@ -88,7 +106,7 @@ const PayoutDetails = () => {
                                     className="border border-[#E4E7EC] rounded-lg overflow-hidden w-56 shadow-sm"
                                 >
                                     <Image
-                                        src="/assets/receipt-placeholder.png"
+                                        src={data?.reward?.proofFile}
                                         alt={`Receipt ${i}`}
                                         width={224}
                                         height={280}
@@ -101,13 +119,25 @@ const PayoutDetails = () => {
 
                     {/* Actions */}
                     <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
-                        <button className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-md border border-red-500 text-red-600 font-medium hover:bg-red-50 transition">
+                        <button onClick={() => handleToggleRewardStatus({
+                            variables: {
+                                rewardId: id,
+                                action: 'reject',
+                            }
+                        })} className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-md border border-red-500 text-red-600 font-medium hover:bg-red-50 transition">
                             <XCircle className="w-5 h-5" />
-                            Reject Payout
+                            {setLoading ? 'loading...' : 'Reject Payout'}
+
                         </button>
-                        <button className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-md bg-[#0A1B88] text-white font-medium hover:bg-[#0A1B88]/90 transition">
+                        <button onClick={() => handleToggleRewardStatus({
+                            variables: {
+                                rewardId: id,
+                                action: 'approve',
+                            }
+                        })} className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-md bg-[#0A1B88] text-white font-medium hover:bg-[#0A1B88]/90 transition">
                             <CheckCircle className="w-5 h-5" />
-                            Approve & Make Payment
+                            {setLoading ? 'loading...' : 'Approve & Make Payment'}
+
                         </button>
                     </div>
                 </div>

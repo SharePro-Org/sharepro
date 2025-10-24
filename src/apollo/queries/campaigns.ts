@@ -251,3 +251,36 @@ export const GET_CAMPAIGN = gql`
     }
   }
 `
+export const GET_SINGLE_PAYOUT = gql`
+  query Reward($id: UUID!) {
+  reward(id: $id) {
+    amount
+    createdAt
+    currency
+    deletedAt
+    description
+    status
+    rewardType
+    reviewNotes
+    requiresProof
+    proofFile
+    proofDescription
+    processedAt
+    points
+    metadata
+    isExpired
+    isDeleted
+    id
+    campaign {
+      campaignType
+      name
+    }
+    user {
+      firstName
+      lastName
+      email
+      phone
+    }
+  }
+}
+`
