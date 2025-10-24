@@ -1,10 +1,36 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Enable standalone output for Docker
-  output: 'standalone',
+  // Enable standalone output for Docker (only in production)
+  output: process.env.NODE_ENV === 'production' ? 'standalone' : undefined,
+  
+  // Development optimizations
+  ...(process.env.NODE_ENV === 'development' && {
+    // Enable faster refresh in development
+    experimental: {
+      // Enable turbo for faster development builds (if available)
+      turbo: {
+        resolverCaching: false,
+      },
+    },
+    // Optimize for development
+    swcMinify: false,
+  }),
+
   images: {
     unoptimized: true,
+  },
+
+  // File watching configuration for Docker
+  webpack: (config, { dev, isServer }) => {
+    if (dev && !isServer) {
+      // Enable polling for file changes in Docker
+      config.watchOptions = {
+        poll: 1000,
+        aggregateTimeout: 300,
+      };
+    }
+    return config;
   },
 
   // Environment variables that will be available to the browser

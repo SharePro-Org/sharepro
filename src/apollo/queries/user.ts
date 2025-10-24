@@ -38,7 +38,7 @@ export const USER_JOINED_CAMPAIGNS = gql`
         totalRewardsGiven
         totalViews
         shareLinks
-        website_link
+        websiteLink
         analyticsEvents {
           referrer
         }

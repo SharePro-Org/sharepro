@@ -1,28 +1,41 @@
 # Development Dockerfile for Next.js with hot reloading
 FROM node:20-alpine
 
+# Install dumb-init for proper signal handling
+RUN apk add --no-cache dumb-init
+
+# Create app user for security
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
+
 # Set working directory
 WORKDIR /app
 
+# Change ownership of the app directory
+RUN chown -R nextjs:nodejs /app
+USER nextjs
+
 # Install dependencies
-COPY package.json package-lock.json* pnpm-lock.yaml* ./
+COPY --chown=nextjs:nodejs package.json package-lock.json* pnpm-lock.yaml* ./
 
 # Install dependencies based on the preferred package manager
-# Remove postinstall script temporarily to avoid building during install
 RUN \
   if [ -f package-lock.json ]; then npm install --ignore-scripts; \
   elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm install --ignore-scripts; \
   else echo "Lockfile not found." && exit 1; \
   fi
 
-# Copy source code
-COPY . .
-
 # Expose port
 EXPOSE 3000
 
-# Set environment to development
+# Set environment variables for development and hot reloading
 ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV WATCHPACK_POLLING=true
+ENV CHOKIDAR_USEPOLLING=true
+
+# Start the development server with dumb-init for proper signal handling
+ENTRYPOINT ["dumb-init", "--"]
 
 # Start the development server
 CMD \

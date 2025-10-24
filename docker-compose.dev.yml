@@ -7,11 +7,22 @@ services:
       - "3000:3000"
     env_file:
       - ./.env
+    environment:
+      - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
     volumes:
+      # Mount source code for hot reloading
       - .:/app
+      # Use anonymous volumes for node_modules and build cache to avoid conflicts
       - /app/node_modules
       - /app/.next
+      # Optionally exclude .git to improve performance
+      - /app/.git
     restart: unless-stopped
+    stdin_open: true
+    tty: true
 
 # networks:
 #   sharepro-network:

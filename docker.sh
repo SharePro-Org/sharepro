@@ -44,6 +44,17 @@ prod_start() {
     print_status "Flower (Celery monitoring): http://localhost:5555"
 }
 
+# Function to start development environment with hot reloading
+dev_start() {
+    print_status "Starting development environment with hot reloading..."
+    docker-compose -f docker-compose.dev.yml up --build
+    
+    print_status "Development server started!"
+    print_status "Frontend: http://localhost:3000"
+    print_status "Hot reloading is enabled - changes will auto-refresh"
+    print_status "Press Ctrl+C to stop"
+}
+
 # Function to stop services
 stop_services() {
     print_status "Stopping services..."
@@ -78,6 +89,10 @@ rebuild() {
 # Main script logic
 case "$1" in
 
+    "dev")
+        check_docker
+        dev_start
+        ;;
     "prod")
         check_docker
         prod_start
@@ -101,6 +116,7 @@ case "$1" in
         echo "Usage: $0 {command} [options]"
         echo ""
         echo "Commands:"
+        echo "  dev                 Start development environment with hot reloading"
         echo "  prod                Start production environment"
         echo "  stop                Stop all services"
         echo "  logs [service]      Show logs for a service (default: frontend)"
@@ -109,6 +125,7 @@ case "$1" in
         echo "  help                Show this help message"
         echo ""
         echo "Examples:"
+        echo "  $0 dev              # Start development with hot reloading"
         echo "  $0 prod             # Start production environment"
         echo "  $0 logs frontend    # Show frontend logs"
         echo "  $0 logs api         # Show backend API logs"

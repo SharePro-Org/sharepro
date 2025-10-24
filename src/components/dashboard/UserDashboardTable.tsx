@@ -464,7 +464,7 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                 </div>
               </div>
               <div className="flex gap-4 justify-center mt-6">
-                <button className="bg-[#233E97] p-4 rounded-md text-white" onClick={() => gotToBusinessWebsite(joining?.campaign?.website_link)}> Visit Business Website</button>
+                <button className="bg-[#233E97] p-4 rounded-md text-white" onClick={() => gotToBusinessWebsite(joining?.campaign?.websiteLink)}> Visit Business Website</button>
                 <button className="text-[#233E97] p-4 rounded-md bg-[#ECF3FF]">Claim Reward</button>
               </div>
             </div>
@@ -516,7 +516,7 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                 </div>
               </div>
               <div className="flex gap-4 justify-center mt-6">
-                <button className="bg-[#233E97] p-4 rounded-md text-white" onClick={() => gotToBusinessWebsite(joining?.campaign?.website_link)}> Visit Business Website</button>
+                <button className="bg-[#233E97] p-4 rounded-md text-white" onClick={() => gotToBusinessWebsite(joining?.campaign?.websiteLink)}> Visit Business Website</button>
                 <button className="text-[#233E97] p-4 rounded-md bg-[#ECF3FF]">Claim Reward</button>
               </div>
             </div>
@@ -568,7 +568,7 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                 </div>
               </div>
               <div className="flex gap-4 justify-center mt-6">
-                <button className="bg-[#233E97] p-4 rounded-md text-white" onClick={() => gotToBusinessWebsite(joining?.campaign?.website_link)}> Visit Business Website</button>
+                <button className="bg-[#233E97] p-4 rounded-md text-white" onClick={() => gotToBusinessWebsite(joining?.campaign?.websiteLink)}> Visit Business Website</button>
                 <button className="bg-[#233E97] p-4 rounded-md text-white"> Claim Reward</button>
               </div>
             </div>
