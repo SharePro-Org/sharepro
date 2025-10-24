@@ -136,7 +136,7 @@ function fileToBase64(file: Blob): Promise<string> {
       await handleAction(
         user.userId,
         joining.campaignId,
-        "website_visit",
+        "referral",
         {
           website_url: joining?.campaign?.websiteLink,
           campaign_name: joining?.campaign?.campaignName,
@@ -176,7 +176,7 @@ function fileToBase64(file: Blob): Promise<string> {
       const trackingResult = await handleAction(
         user.userId,
         joining.campaignId,
-        "proof_submission",
+        "engagement",
         {
           campaign_name: joining.campaignName,
           campaign_type: joining.campaignType,
@@ -320,13 +320,16 @@ function fileToBase64(file: Blob): Promise<string> {
       setShowCampaign(true)
       setJoining(campaign)
     }
-    //  else if (action === "reward") {
-    //   if (campaign.isClaimable && campaign.rewardId) {
-    //     handleClaimReward(campaign.rewardId);
-    //   } else {
-    //     message.error("Reward not claimable or missing reward ID.");
-    //   }
-    // }
+    else if (action === "reward") {
+      setShowCampaign(true)
+      setJoining(campaign)
+      setShowClaim(true)
+      // if (campaign.isClaimable && campaign.rewardId) {
+      //   handleClaimReward(campaign.rewardId);
+      // } else {
+      //   message.error("Reward not claimable or missing reward ID.");
+      // }
+    }
   };
 
   const filteredCampaigns = useMemo(() => {

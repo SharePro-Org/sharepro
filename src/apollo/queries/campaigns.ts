@@ -170,3 +170,84 @@ export const GET_PAYOUT = gql`
     }
   }
 `;
+
+export const GET_CAMPAIGN = gql`
+  query Campaign($id: UUID!, $businessId: UUID!) {
+    campaign(id: $id, businessId: $businessId){
+      activeParticipants
+    activeReferrals
+    campaignType
+    conversionRate
+    createdAt
+    deletedAt
+    description
+    endDate
+    id
+    isActive
+    isDeleted
+    isScheduled
+    maxParticipants
+    name
+    referralCode
+    referralLink
+    shareLinks
+    status
+    totalReferrals
+    totalRewardsGiven
+    totalViews
+    updatedAt
+    websiteLink
+      referralRewards {
+          referreeValidityPeriod
+          referreeRewardValue
+          referreeRewardType
+          referreeRewardChannels
+          referreeRewardAction
+          referralRewardType
+          referralRewardLimitType
+          referralRewardLimit
+          referralRewardAmount
+          referralRewardAction
+          loyaltyTierBenefits
+          loyaltyPoints
+          loyaltyName
+        }
+        loyaltyRewards {
+          redeemValidityPeriod
+          redeemRewardValue
+          redeemRewardPointRequired
+          redeemRewardChannels
+          redeemRewardAction
+          loyaltyTierBenefits
+          loyaltyPoints
+          loyaltyName
+          earnRewardPoints
+          earnRewardAmount
+          earnRewardAction
+        }
+        comboRewards {
+          loyaltyName
+          loyaltyPoints
+          loyaltyTierBenefits
+          redeemRewardAction
+          redeemRewardChannels
+          redeemRewardPointRequired
+          redeemRewardValue
+          redeemValidityPeriod
+          referralName
+          referralPoints
+          referralRewardAction
+          referralRewardAmount
+          referralRewardLimit
+          referralRewardLimitType
+          referralRewardType
+          referralTierBenefits
+          referreeRewardAction
+          referreeRewardChannels
+          referreeRewardType
+          referreeRewardValue
+          referreeValidityPeriod
+        }
+    }
+  }
+`

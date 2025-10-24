@@ -4,23 +4,31 @@ import React, { useState, useEffect } from "react";
 import { Dropdown, Button, message } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import { useQuery, useMutation } from "@apollo/client/react";
-import { GET_BUSINESS_CAMPAIGNS } from "@/apollo/queries/campaigns";
-import { ACTIVATE_CAMPAIGN } from "@/apollo/mutations/campaigns";
+import { GET_BUSINESS_CAMPAIGNS, GET_PAYOUT } from "@/apollo/queries/campaigns";
+import { ACTIVATE_CAMPAIGN, REVIEW_PAYOUT } from "@/apollo/mutations/campaigns";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { CAMPAIGNS } from "@/apollo/queries/admin";
 
 const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
   const [user] = useAtom(userAtom);
   const [businessId, setBusinessId] = useState<string>("");
   const router = useRouter();
+  const params = useParams();
+  const campaignId = params.id;
 
   useEffect(() => {
     if (user?.businessId) {
       setBusinessId(user.businessId);
     }
   }, [user]);
+
+  const { data: payoutData, } = useQuery<any>(GET_PAYOUT, {
+    variables: { campaignId },
+    skip: !campaignId,
+  })
+
 
   // Choose query based on userType
   const isAdmin = user?.userType === "ADMIN";
@@ -38,6 +46,8 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
         skip: !businessId,
       }
   );
+
+  const [handleToggleRewardStatus, { loading: setLoading }] = useMutation(REVIEW_PAYOUT)
 
   const [activateCampaign, { loading: activateLoading }] = useMutation(
     ACTIVATE_CAMPAIGN,
@@ -59,6 +69,18 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
       },
     }
   );
+  const formatDate = (dateString: string): string => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    } catch (error) {
+      return "Invalid date";
+    }
+  };
 
   const handleToggleCampaignStatus = (
     campaignId: string,
@@ -78,6 +100,8 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
     );
   };
 
+
+
   return type === "payout" ? (
     <div>
       <table className="w-full mt-4 text-sm">
@@ -86,7 +110,7 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
             <th className="px-4 py-3 font-medium text-left">Campaign</th>
             <th className="px-4 py-3 font-medium text-left">Reward Type</th>
             <th className="px-4 py-3 font-medium text-left">Amount</th>
-            <th className="px-4 py-3 font-medium text-left">Reward</th>
+            {/* <th className="px-4 py-3 font-medium text-left">Reward</th> */}
             <th className="px-4 py-3 font-medium text-left">User</th>
             <th className="px-4 py-3 font-medium text-left">Status</th>
             <th className="px-4 py-3 font-medium text-left">Date</th>
@@ -94,22 +118,22 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
           </tr>
         </thead>
         <tbody>
-          {[1, 2, 3, 4].map((campaign: any) => (
+          {payoutData?.campaignRewards.map((campaign: any) => (
             <tr
               key={campaign}
               className="border-b border-[#E2E8F0] py-2 last:border-0"
             >
-              <td className="px-4 font-black font-normal py-3">Pro Gain</td>
-              <td className="px-4 py-3">Referral reward</td>
-              <td className="px-4 py-3">10,000</td>
-              <td className="px-4 py-3">Airtime</td>
-              <td className="px-4 py-3">John Doe</td>
+              <td className="px-4 font-black font-normal py-3">{campaign.campaign.name}</td>
+              <td className="px-4 py-3">{campaign.rewardType}</td>
+              <td className="px-4 py-3">{campaign.amount}</td>
+              {/* <td className="px-4 py-3">Airtime</td> */}
+              <td className="px-4 py-3">{campaign.user.firstname} {campaign.user.lastname}</td>
               <td className="px-4 py-3">
                 <span className="inline-block px-4 py-1 rounded-[5px] text-white text-xs bg-green-500">
-                  Paid
+                  {campaign.status}
                 </span>
               </td>
-              <td className="px-4 py-3">2020-10-10</td>
+              <td className="px-4 py-3">{formatDate(campaign.createdAt)}</td>
               <td className="px-4 py-3">
                 <Dropdown
                   menu={{
@@ -118,11 +142,28 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
                         key: "view",
                         label: "Review Payout",
                         onClick: () =>
-                          router.push(`/business/campaigns/7ddb9a9c-80af-4301-9144-51ebb1597d47/payouts/10`),
+                          router.push(`/business/campaigns/${campaignId}/payouts/${campaign.id}`),
                       },
                       // { key: "end", label: "Review Payout" },
-                      { key: "settings", label: "Approve" },
+                      {
+                        key: "settings", label: "Approve",
+                        onClick: () => handleToggleRewardStatus({
+                          variables: {
+                            rewardId: campaign.id,
+                            action: 'approve',
+                          }
+                        }),
+                      },
+                      {
+                        key: "settings", label: "Reject", onClick: () => handleToggleRewardStatus({
+                          variables: {
+                            rewardId: campaign.id,
+                            action: 'reject',
+                          }
+                        }),
+                      },
                       { key: "payouts", label: "Mark as paid" },
+                      // 
                     ],
                   }}
                   trigger={["click"]}

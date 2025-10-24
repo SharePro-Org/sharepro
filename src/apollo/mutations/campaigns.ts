@@ -120,3 +120,13 @@ export const CLAIM_REWARD = gql`
     }
   }
 `;
+
+export const REVIEW_PAYOUT = gql`
+  mutation ReviewRewardProof($action: String!, $rewardId: UUID!) {
+    reviewRewardProof(action: $action, rewardId: $rewardId) {
+      success
+      message
+      errors
+    }
+  }
+`

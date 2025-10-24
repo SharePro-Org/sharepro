@@ -3,7 +3,7 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import React, { useEffect, useState } from "react";
 import { useQuery } from "@apollo/client/react";
-import { GET_CAMPAIGN_ANALYTICS, GET_PAYOUT } from "@/apollo/queries/campaigns";
+import { GET_CAMPAIGN, GET_CAMPAIGN_ANALYTICS } from "@/apollo/queries/campaigns";
 import { ArrowLeft, RefreshCwIcon, SearchIcon } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { Dropdown, Button } from "antd";
@@ -90,11 +90,17 @@ const singleCampaign = () => {
     skip: !campaignId || !businessId,
   });
 
-  const { data: payoutData, } = useQuery(GET_PAYOUT, {
-    variables: { campaignId },
-    skip: !campaignId,
+  const {
+    data: campaignData,
+    loading: campaignLoading,
+    error: campaignError,
+  } = useQuery<any>(GET_CAMPAIGN, {
+    variables: { id: campaignId, businessId },
+    skip: !campaignId || !businessId,
+  });
 
-  })
+
+
 
   useEffect(() => {
     if (analyticsData?.campaignAnalytics) {
@@ -319,26 +325,26 @@ const singleCampaign = () => {
               <div className="border-r m-3 pr-3 border-r-[#CCCCCC]">
                 <h2 className="text-xs mb-2">Campaign Name</h2>
                 <p className="text-sm">
-                  {campaignAnalytics?.campaign?.name || "-"}
+                  {campaignData?.campaign?.name || "-"}
                 </p>
               </div>
               <div className="border-r m-3 pr-3 border-r-[#CCCCCC]">
                 <h2 className="text-xs mb-2">Campaign Type</h2>
                 <p className="text-sm">
-                  {campaignAnalytics?.campaign?.campaignType || "-"}
+                  {campaignData?.campaign?.campaignType || "-"}
                 </p>
               </div>
               <div className="border-r m-3 pr-3 border-r-[#CCCCCC]">
                 <h2 className="text-xs mb-2">Duration</h2>
                 <p className="text-sm">
                   {/* You can format date range here if available */}
-                  {campaignAnalytics?.date || "-"}
+                  {campaignData?.date || "-"}
                 </p>
               </div>
               <div className="m-3">
                 <h2 className="text-xs mb-2">Status</h2>
                 <p className="text-sm">
-                  {campaignAnalytics?.campaign?.status || "-"}
+                  {campaignData?.campaign?.status || "-"}
                 </p>
               </div>
             </div>
@@ -353,31 +359,31 @@ const singleCampaign = () => {
           <div className="bg-white p-3 rounded-md text-center">
             <p className="text-sm">Total Participants</p>
             <h2 className="font-bold mt-3 text-xl">
-              {campaignAnalytics?.campaign?.activeParticipants ?? "-"}
+              {campaignData?.campaign?.activeParticipants ?? "-"}
             </h2>
           </div>
           <div className="bg-white p-3 rounded-md text-center">
             <p className="text-sm">New Signups</p>
             <h2 className="font-bold mt-3 text-xl">
-              {campaignAnalytics?.campaign?.activeReferrals ?? "-"}
+              {campaignData?.campaign?.activeReferrals ?? "-"}
             </h2>
           </div>
           <div className="bg-white p-3 rounded-md text-center">
             <p className="text-sm">Conversion Rate</p>
             <h2 className="font-bold mt-3 text-xl">
-              {campaignAnalytics?.conversionRate ?? "-"}
+              {campaignData?.campaign?.conversionRate ?? "-"}
             </h2>
           </div>
           <div className="bg-white p-3 rounded-md text-center">
             <p className="text-sm">Rewards Redeemed</p>
             <h2 className="font-bold mt-3 text-xl">
-              {campaignAnalytics?.campaign?.totalRewardsGiven ?? "-"}
+              {campaignData?.campaign?.totalRewardsGiven ?? "-"}
             </h2>
           </div>
           <div className="bg-white p-3 rounded-md text-center">
             <p className="text-sm">Points Shared</p>
             <h2 className="font-bold mt-3 text-xl">
-              {campaignAnalytics?.campaign?.totalReferrals ?? "-"}
+              {campaignData?.campaign?.totalReferrals ?? "-"}
             </h2>
           </div>
         </section>
@@ -388,140 +394,140 @@ const singleCampaign = () => {
               <span role="img" aria-label="trophy" className="mr-2">
                 🏆
               </span>
-              {campaignAnalytics?.campaign?.campaignType === "REFERRAL" &&
+              {campaignData?.campaign?.campaignType === "REFERRAL" &&
                 "Referral Program:"}
-              {campaignAnalytics?.campaign?.campaignType === "LOYALTY" &&
+              {campaignData?.campaign?.campaignType === "LOYALTY" &&
                 "Loyalty Program:"}
-              {campaignAnalytics?.campaign?.campaignType === "COMBO" &&
+              {campaignData?.campaign?.campaignType === "COMBO" &&
                 "Combo Program:"}
             </div>
-            {campaignAnalytics?.campaign?.campaignType === "REFERRAL" &&
-              campaignAnalytics?.campaign?.referralRewards &&
-              campaignAnalytics?.campaign?.referralRewards.length > 0 && (
+            {campaignData?.campaign?.campaignType === "REFERRAL" &&
+              campaignData?.campaign?.referralRewards &&
+              campaignData?.campaign?.referralRewards.length > 0 && (
                 <ul className="check-disc text-sm space-y-4">
                   <li>
                     Referrers earn{" "}
-                    {campaignAnalytics.campaign.referralRewards[0]
+                    {campaignData.campaign.referralRewards[0]
                       .referralRewardAmount || "X"}{" "}
-                    {campaignAnalytics.campaign.referralRewards[0]
+                    {campaignData.campaign.referralRewards[0]
                       .referralRewardType || "reward"}{" "}
                     for each successful referral
                   </li>
                   <li>
                     Referee's must{" "}
-                    {campaignAnalytics.campaign.referralRewards[0]
+                    {campaignData?.campaign?.referralRewards[0]
                       .referreeRewardAction || "sign up"}{" "}
                     for a referral to be successful
                   </li>
                   <li>
                     Referee's earn{" "}
-                    {campaignAnalytics.campaign.referralRewards[0]
+                    {campaignData.campaign.referralRewards[0]
                       .referreeRewardValue || "Y"}{" "}
-                    {campaignAnalytics.campaign.referralRewards[0]
+                    {campaignData.campaign.referralRewards[0]
                       .referreeRewardType || "reward"}{" "}
                     after{" "}
-                    {campaignAnalytics.campaign.referralRewards[0]
+                    {campaignData.campaign.referralRewards[0]
                       .referreeRewardAction || "sign up"}
                   </li>
-                  {campaignAnalytics.campaign.referralRewards[0]
+                  {campaignData.campaign.referralRewards[0]
                     .loyaltyTierBenefits && (
                       <li>
                         Users can unlock tier benefits:{" "}
                         {
-                          campaignAnalytics.campaign.referralRewards[0]
+                          campaignData.campaign.referralRewards[0]
                             .loyaltyTierBenefits.benefits
                         }
                       </li>
                     )}
                   <li>
                     Rewards are redeemed at{" "}
-                    {campaignAnalytics.campaign.referralRewards[0]
+                    {campaignData.campaign.referralRewards[0]
                       .referreeRewardChannels || "checkout"}
                   </li>
                 </ul>
               )}
-            {campaignAnalytics?.campaign?.campaignType === "LOYALTY" &&
-              campaignAnalytics?.campaign?.loyaltyRewards &&
-              campaignAnalytics?.campaign?.loyaltyRewards.length > 0 && (
+            {campaignData?.campaign?.campaignType === "LOYALTY" &&
+              campaignData?.campaign?.loyaltyRewards &&
+              campaignData?.campaign.loyaltyRewards.length > 0 && (
                 <ul className="check-disc text-sm space-y-4">
                   <li>
                     Customers earn{" "}
-                    {campaignAnalytics.campaign.loyaltyRewards[0]
+                    {campaignData.campaign.loyaltyRewards[0]
                       .earnRewardPoints || "X"}{" "}
                     points for every{" "}
-                    {campaignAnalytics.campaign.loyaltyRewards[0]
+                    {campaignData.campaign.loyaltyRewards[0]
                       .earnRewardAction || "transaction"}
                   </li>
                   <li>
                     Points can be redeemed for{" "}
-                    {campaignAnalytics.campaign.loyaltyRewards[0]
+                    {campaignData.campaign.loyaltyRewards[0]
                       .redeemRewardValue || "Z"}{" "}
                     (
-                    {campaignAnalytics.campaign.loyaltyRewards[0]
+                    {campaignData.campaign.loyaltyRewards[0]
                       .redeemRewardPointRequired || "W"}{" "}
                     pts)
                   </li>
-                  {campaignAnalytics.campaign.loyaltyRewards[0]
+                  {campaignData.campaign.loyaltyRewards[0]
                     .loyaltyTierBenefits && (
                       <li>
                         Users can unlock tier benefits:{" "}
                         {
-                          campaignAnalytics.campaign.loyaltyRewards[0]
+                          campaignData.campaign.loyaltyRewards[0]
                             .loyaltyTierBenefits.benefits
                         }
                       </li>
                     )}
                 </ul>
               )}
-            {campaignAnalytics?.campaign?.campaignType === "COMBO" &&
-              campaignAnalytics?.campaign?.comboRewards &&
-              campaignAnalytics?.campaign?.comboRewards.length > 0 && (
+            {campaignData?.campaign?.campaignType === "COMBO" &&
+              campaignData?.campaign?.comboRewards &&
+              campaignData?.campaign?.comboRewards.length > 0 && (
                 <ul className="check-disc text-sm space-y-4">
                   <li>
                     Referrers earn{" "}
-                    {campaignAnalytics.campaign.comboRewards[0]
+                    {campaignData.campaign.comboRewards[0]
                       .referralRewardAmount || "X"}{" "}
-                    {campaignAnalytics.campaign.comboRewards[0]
+                    {campaignData.campaign.comboRewards[0]
                       .referralRewardType || "reward"}{" "}
                     for each successful referral
                   </li>
                   <li>
                     Referee's must{" "}
-                    {campaignAnalytics.campaign.comboRewards[0]
+                    {campaignData.campaign.comboRewards[0]
                       .referreeRewardAction || "sign up"}{" "}
                     for a referral to be successful
                   </li>
                   <li>
                     Referee's earn{" "}
-                    {campaignAnalytics.campaign.comboRewards[0]
+                    {campaignData.campaign.comboRewards[0]
                       .referreeRewardValue || "Y"}{" "}
-                    {campaignAnalytics.campaign.comboRewards[0]
+                    {campaignData.campaign.comboRewards[0]
                       .referreeRewardType || "reward"}{" "}
                     after{" "}
-                    {campaignAnalytics.campaign.comboRewards[0]
+                    {campaignData.campaign.comboRewards[0]
                       .referreeRewardAction || "sign up"}
                   </li>
                   <li>
                     Customers earn{" "}
-                    {campaignAnalytics.campaign.comboRewards[0].loyaltyPoints ||
+                    {campaignData.campaign.comboRewards[0].loyaltyPoints ||
                       "X"}{" "}
                     points for transactions
                   </li>
                   <li>
                     Points can be redeemed for{" "}
-                    {campaignAnalytics.campaign.comboRewards[0]
+                    {campaignData.campaign.comboRewards[0]
                       .redeemRewardValue || "Z"}{" "}
                     (
-                    {campaignAnalytics.campaign.comboRewards[0]
+                    {campaignData.campaign.comboRewards[0]
                       .redeemRewardPointRequired || "W"}{" "}
                     pts)
                   </li>
-                  {campaignAnalytics.campaign.comboRewards[0]
+                  {campaignData.campaign.comboRewards[0]
                     .loyaltyTierBenefits && (
                       <li>
                         Users can unlock tier benefits:{" "}
                         {
-                          campaignAnalytics.campaign.comboRewards[0]
+                          campaignData.campaign.comboRewards[0]
                             .loyaltyTierBenefits.benefits
                         }
                       </li>
@@ -529,8 +535,8 @@ const singleCampaign = () => {
                 </ul>
               )}
 
-            <p className="text-primary text-sm">{campaignAnalytics?.campaign?.referralLink}</p>
-            {!campaignAnalytics?.campaign?.campaignType && (
+            <p className="text-primary text-sm">{campaignData?.campaign?.referralLink}</p>
+            {!campaignData?.campaign?.campaignType && (
               <ul className="check-list text-sm">
                 <li>Loading campaign information...</li>
               </ul>
