@@ -25,7 +25,7 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showClaim, setShowClaim] = useState(false)
 
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState<File | null>(null);
   const [previewName, setPreviewName] = useState("");
 
   // State for claim reward functionality
@@ -58,48 +58,154 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
     }
   );
 
-  const handleFileChange = (e: any) => {
-    const selected = e.target.files[0];
-    if (selected) {
-      setFile(selected);
-      setPreviewName(selected.name);
+const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const selected = e.target.files?.[0];
+  if (selected) {
+    setFile(selected);
+    setPreviewName(selected.name);
+    try {
+      const base64 = await fileToBase64(selected);
+      // Use base64 string as needed, for example:
+      // await uploadFile(base64);
+    } catch (error) {
+      console.error('Error converting file to base64:', error);
     }
-  };
-
-  function fileToBase64(file: Blob) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = error => reject(error);
-    });
   }
+};
 
+function fileToBase64(file: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = error => reject(error);
+  });
+}
 
   const [trackAction] = useMutation(TRACK_LOYALTY_ACTION);
 
-  const handlePurchase = async (userId: any, campaignId: any, orderData: { total: any; id: any; items: string | any[]; }) => {
+  // Enhanced handleAction function for different types of loyalty actions
+  const handleAction = async (
+    userId: string, 
+    campaignId: string, 
+    actionType: string,
+    metadata: any = {}
+  ) => {
     try {
       const result: any = await trackAction({
         variables: {
           userId: userId,
           campaignId: campaignId,
-          actionType: "purchase",
-          metadata: JSON.stringify({
-            amount: orderData.total,
-            order_id: orderData.id,
-            items_count: orderData.items.length
-          }),
+          actionType: actionType,
+          metadata: JSON.stringify(metadata),
           checkDuplicates: true
         }
       });
 
-      if (result?.data.trackLoyaltyAction.success) {
+      if (result?.data?.trackLoyaltyAction?.success) {
         const points = result?.data?.trackLoyaltyAction?.pointsAwarded;
-        alert(`Congratulations! You earned ${points} loyalty points!`);
+        if (points > 0) {
+          messageApi.open({
+            type: 'success',
+            content: `Congratulations! You earned ${points} loyalty points!`,
+          });
+        }
+        return result.data.trackLoyaltyAction;
+      } else {
+        messageApi.open({
+          type: 'info',
+          content: result?.data?.trackLoyaltyAction?.message || 'Action tracked successfully!',
+        });
+        return result?.data?.trackLoyaltyAction;
+      }
+    } catch (error: any) {
+      console.error('Error tracking loyalty action:', error);
+      messageApi.open({
+        type: 'error',
+        content: 'Failed to track action. Please try again.',
+      });
+      return null;
+    }
+  };
+
+  // Handle website visit with loyalty tracking
+  const handleBusinessWebsiteVisit = async (joining: any) => {
+    // Track the website visit action
+    console.log("Tracking website visit:", joining)
+    if (user?.userId && joining?.campaignId) {
+      await handleAction(
+        user.userId,
+        joining.campaignId,
+        "website_visit",
+        {
+          website_url: joining?.campaign?.websiteLink,
+          campaign_name: joining?.campaign?.campaignName,
+          campaign_type: joining?.campaign?.campaignType,
+          visit_timestamp: new Date().toISOString()
+        }
+      );
+    }
+    
+    // Open the website
+    gotToBusinessWebsite(joining?.campaign?.websiteLink);
+  };
+
+  // Handle proof submission with loyalty tracking
+  const handleProofSubmission = async () => {
+    if (!file) {
+      messageApi.open({
+        type: 'error',
+        content: 'Please upload a proof file before submitting.',
+      });
+      return;
+    }
+
+    if (!user?.userId || !joining?.campaignId) {
+      messageApi.open({
+        type: 'error',
+        content: 'Missing user or campaign information.',
+      });
+      return;
+    }
+
+    try {
+      // Convert file to base64
+      const base64File = await fileToBase64(file);
+      
+      // Track proof submission action
+      const trackingResult = await handleAction(
+        user.userId,
+        joining.campaignId,
+        "proof_submission",
+        {
+          campaign_name: joining.campaignName,
+          campaign_type: joining.campaignType,
+          file_name: file.name,
+          file_size: file.size,
+          file_type: file.type,
+          submission_timestamp: new Date().toISOString()
+        }
+      );
+
+      if (trackingResult?.success) {
+        // Here you would also submit the actual proof to your backend
+        // For now, we'll just show success message
+        messageApi.open({
+          type: 'success',
+          content: 'Proof submitted successfully! Your reward will be processed.',
+        });
+        
+        // Reset form
+        setFile(null);
+        setPreviewName("");
+        setShowClaim(false);
       }
     } catch (error) {
-      console.error('Error tracking loyalty action:', error);
+      console.error('Error submitting proof:', error);
+      messageApi.open({
+        type: 'error',
+        content: 'Failed to submit proof. Please try again.',
+      });
     }
   };
 
@@ -143,6 +249,7 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
 
   const gotToBusinessWebsite = (url: string) => {
     window.open(url, "_blank");
+    console.log("Opened website:", url);
   };
 
   const handleClaimReward = async (rewardId: string) => {
@@ -539,6 +646,7 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                 <div className="text-center">
                   <button
                     className="p-3 rounded-md bg-[#233E97] text-white"
+                    onClick={handleProofSubmission}
                   >
                     Submit & Claim Reward
                   </button>
@@ -562,8 +670,18 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                     </div>
                   </div>
                   <div className="flex gap-4 justify-center mt-6">
-                    <button className="bg-[#233E97] p-4 rounded-md text-white" onClick={() => gotToBusinessWebsite(joining?.campaign?.websiteLink)}> Visit Business Website</button>
-                    <button onClick={() => setShowClaim(true)} className="text-[#233E97] p-4 rounded-md bg-[#ECF3FF]">Claim Reward</button>
+                    <button 
+                      className="bg-[#233E97] p-4 rounded-md text-white" 
+                      onClick={() => handleBusinessWebsiteVisit(joining)}
+                    >
+                      Visit Business Website
+                    </button>
+                    <button 
+                      onClick={() => setShowClaim(true)} 
+                      className="text-[#233E97] p-4 rounded-md bg-[#ECF3FF]"
+                    >
+                      Claim Reward
+                    </button>
                   </div>
                 </>}
 
@@ -643,6 +761,7 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                 <div className="text-center">
                   <button
                     className="p-3 rounded-md bg-[#233E97] text-white"
+                    onClick={handleProofSubmission}
                   >
                     Submit & Claim Reward
                   </button>
@@ -662,7 +781,7 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                   </div>
                 </div>
                 <div className="flex gap-4 justify-center mt-6">
-                  <button className="bg-[#233E97] p-4 rounded-md text-white" onClick={() => gotToBusinessWebsite(joining?.campaign?.websiteLink)}> Visit Business Website</button>
+                  <button className="bg-[#233E97] p-4 rounded-md text-white" onClick={() => handleBusinessWebsiteVisit(joining)}> Visit Business Website</button>
                   <button onClick={() => setShowClaim(true)} className="text-[#233E97] p-4 rounded-md bg-[#ECF3FF]">Claim Reward</button>
                 </div>
               </>}
@@ -711,14 +830,14 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                     <li>Step 1: Tap Join Campaign</li>
                     <li>Step 2: Copy your referral link and share with friends</li>
                     <li>Step 3: Earn rewards when your friends sign up on participating outlets</li>
-                    <li>Step 4: Claim your reward</li>
+                    <li>Step 4: Claim your reward now</li>
                   </ul>
                 </div>
                 <div>
                 </div>
               </div>
               <div className="flex gap-4 justify-center mt-6">
-                <button className="bg-[#233E97] p-4 rounded-md text-white" onClick={() => gotToBusinessWebsite(joining?.campaign?.websiteLink)}> Visit Business Website</button>
+                <button className="bg-[#233E97] p-4 rounded-md text-white" onClick={() => handleBusinessWebsiteVisit(joining)}> Visit Business Website</button>
                 {/* <button onClick={() => setShowClaim(true)} className="bg-[#233E97] p-4 rounded-md text-white"> Claim Reward</button> */}
               </div>
             </div>
