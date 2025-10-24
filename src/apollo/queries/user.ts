@@ -30,6 +30,8 @@ export const USER_JOINED_CAMPAIGNS = gql`
        campaign {
         activeParticipants
         activeReferrals
+        endDate
+        maxParticipants
         campaignType
         name
         referralLink
@@ -164,3 +166,27 @@ export const USER_REFERALS = gql`
     }
   }
 `
+
+export const TRACK_LOYALTY_ACTION = gql`
+  mutation TrackLoyaltyAction(
+    $userId: UUID!
+    $campaignId: UUID!
+    $actionType: String!
+    $metadata: JSONString
+    $checkDuplicates: Boolean
+  ) {
+    trackLoyaltyAction(
+      userId: $userId
+      campaignId: $campaignId
+      actionType: $actionType
+      metadata: $metadata
+      checkDuplicates: $checkDuplicates
+    ) {
+      success
+      pointsAwarded
+      message
+      actionLogId
+      rewardId
+    }
+  }
+`;
