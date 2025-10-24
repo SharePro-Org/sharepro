@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useQuery, useMutation } from "@apollo/client/react";
 import {
+  TRACK_LOYALTY_ACTION,
   USER_JOINED_CAMPAIGNS,
   USER_REWARD_HISTORY,
 } from "@/apollo/queries/user";
@@ -13,6 +14,8 @@ import { MoreOutlined } from "@ant-design/icons";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { CheckCircle, SearchIcon, XCircle } from "lucide-react";
 import { MdCampaign } from "react-icons/md";
+import { Upload, FileCheck } from "lucide-react";
+
 // import { format } from "date-fns";
 
 const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
@@ -20,6 +23,10 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
   const [user] = useAtom(userAtom);
   const [messageApi, contextHolder] = message.useMessage();
   const [searchTerm, setSearchTerm] = useState("");
+  const [showClaim, setShowClaim] = useState(false)
+
+  const [file, setFile] = useState(null);
+  const [previewName, setPreviewName] = useState("");
 
   // State for claim reward functionality
   const [claimingReward, setClaimingReward] = useState<string | null>(null);
@@ -50,6 +57,51 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
       skip: !user?.userId || type !== "rewards",
     }
   );
+
+  const handleFileChange = (e: any) => {
+    const selected = e.target.files[0];
+    if (selected) {
+      setFile(selected);
+      setPreviewName(selected.name);
+    }
+  };
+
+  function fileToBase64(file: Blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
+  }
+
+
+  const [trackAction] = useMutation(TRACK_LOYALTY_ACTION);
+
+  const handlePurchase = async (userId: any, campaignId: any, orderData: { total: any; id: any; items: string | any[]; }) => {
+    try {
+      const result: any = await trackAction({
+        variables: {
+          userId: userId,
+          campaignId: campaignId,
+          actionType: "purchase",
+          metadata: JSON.stringify({
+            amount: orderData.total,
+            order_id: orderData.id,
+            items_count: orderData.items.length
+          }),
+          checkDuplicates: true
+        }
+      });
+
+      if (result?.data.trackLoyaltyAction.success) {
+        const points = result?.data?.trackLoyaltyAction?.pointsAwarded;
+        alert(`Congratulations! You earned ${points} loyalty points!`);
+      }
+    } catch (error) {
+      console.error('Error tracking loyalty action:', error);
+    }
+  };
 
   // Format date function
   const formatDate = (dateString: string): string => {
@@ -411,14 +463,19 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
         open={showCampaign}
         onOpenChange={(isOpen) => {
           setShowCampaign(false);
+          setShowClaim(false)
         }}
       >
         <DialogContent size="3xl" className="w-full flex flex-col gap-6 py-6">
           {joining?.campaignType === "Loyalty" && (
             <div>
-              <h3 className="text-lg font-medium text-center mb-3">
+              {showClaim ? <div className="text-center my-3">
+                <h3 className="text-lg font-medium mb-3">Claim Reward</h3>
+                <p>Fill the following information to claim your reward</p>
+              </div> : <h3 className="text-lg font-medium text-center mb-3">
                 {joining.campaignName}
-              </h3>
+              </h3>}
+
               <div className="grid md:grid-cols-4 grid-cols-">
                 <div className="flex gap-2">
                   <button className="bg-[#ECF3FF] rounded-sm p-3">
@@ -435,45 +492,93 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                 </div>
                 <div>
                   <p className="text-sm"> End Date</p>
-                  <p> {formatDate(joining.endDate)}</p>
+                  <p> {formatDate(joining.campaign.endDate)}</p>
                 </div>
 
                 <div>
                   <p>
-                    {joining.participantsCount}{" "}
-                    {joining.participantsCount === 1 ? "user" : "users"} joined
-                    {joining.maxParticipants > 0 &&
-                      ` (max: ${joining.maxParticipants})`}
+                    {joining.campaign.participantsCount}{" "}
+                    {joining.campaign.participantsCount === 1 ? "user" : "users"} joined
+                    {joining.campaign.maxParticipants > 0 &&
+                      ` (max: ${joining.campaign.maxParticipants})`}
                   </p>
                 </div>
               </div>
-              <p className="text-sm py-6">Invite your friends and earn {joining?.rewardInfo} for each new signup who makes a purchase</p>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <strong>How It Works</strong>
-                  <ul className="list-disc ml-4">
-                    <li>Step 1: Tap Join Campaign</li>
-                    <li>Step 2: Make purchases at participating outlets</li>
-                    <li>Step 3: Earn loyalty points automatically</li>
-                    <li>Step 4: Redeem points for rewards in your wallet</li>
-                  </ul>
+              {showClaim ? <div className="my-6">
+                <label htmlFor="">Upload Proof of Engagement</label>
+                <label
+                  htmlFor="proofUpload"
+                  className="border-2 my-4 border-dashed border-gray-300 hover:border-[#233E97] transition-all rounded-lg w-full flex flex-col items-center justify-center gap-3 py-4 cursor-pointer bg-[#ECF3FF]/30"
+                >
+                  {file ? (
+                    <>
+                      <FileCheck className="text-[#233E97] w-8 h-8" />
+                      <p className="text-sm font-medium text-[#233E97]">
+                        {previewName}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="text-gray-500 w-8 h-8" />
+                      <p className="text-sm text-gray-500">
+                        Click to upload or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        PNG, JPG, or PDF (max 5MB)
+                      </p>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    id="proofUpload"
+                    className="hidden"
+                    accept="image/*,.pdf"
+                    onChange={handleFileChange}
+                  />
+                </label>
+                <div className="text-center">
+                  <button
+                    className="p-3 rounded-md bg-[#233E97] text-white"
+                  >
+                    Submit & Claim Reward
+                  </button>
                 </div>
-                <div>
-                  <strong>Rules & Conditions</strong>
+              </div> :
+                <>
+                  <p className="text-sm py-6">Invite your friends and earn {joining?.rewardInfo} for each new signup who makes a purchase</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <strong>How It Works</strong>
+                      <ul className="list-disc ml-4">
+                        <li>Step 1: Tap Join Campaign</li>
+                        <li>Step 2: Make purchases at participating outlets</li>
+                        <li>Step 3: Earn loyalty points automatically</li>
+                        <li>Step 4: Redeem points for rewards in your wallet</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <strong>Rules & Conditions</strong>
 
-                </div>
-              </div>
-              <div className="flex gap-4 justify-center mt-6">
-                <button className="bg-[#233E97] p-4 rounded-md text-white" onClick={() => gotToBusinessWebsite(joining?.campaign?.websiteLink)}> Visit Business Website</button>
-                <button className="text-[#233E97] p-4 rounded-md bg-[#ECF3FF]">Claim Reward</button>
-              </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-4 justify-center mt-6">
+                    <button className="bg-[#233E97] p-4 rounded-md text-white" onClick={() => gotToBusinessWebsite(joining?.campaign?.websiteLink)}> Visit Business Website</button>
+                    <button onClick={() => setShowClaim(true)} className="text-[#233E97] p-4 rounded-md bg-[#ECF3FF]">Claim Reward</button>
+                  </div>
+                </>}
+
             </div>
           )}
+
           {joining?.campaignType === "Combo" && (
             <div>
-              <h3 className="text-lg font-medium text-center mb-3">
+              {showClaim ? <div className="text-center my-3">
+                <h3 className="text-lg font-medium mb-3">Claim Reward</h3>
+                <p>Fill the following information to claim your reward</p>
+              </div> : <h3 className="text-lg font-medium text-center mb-3">
                 {joining.campaignName}
-              </h3>
+              </h3>}
+
               <div className="grid md:grid-cols-4 grid-cols-1">
                 <div className="flex gap-2">
                   <button className="bg-[#ECF3FF] rounded-sm p-3">
@@ -502,30 +607,75 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                   </p>
                 </div>
               </div>
-              <p className="text-sm py-6">Invite your friends and earn {joining?.rewardInfo} for each new signup who makes a purchase</p>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <strong>Rules & Conditions</strong>
-                  <ul className="list-disc ml-4">
-                    <li>Users must sign up and make a valid purchase</li>
-                    <li>Reward is credited after 24hrs of verification</li>
-                    <li>Limit: 10 referrals per user</li>
-                  </ul>
+              {showClaim ? <div className="my-6">
+                <label htmlFor="">Upload Proof of Engagement</label>
+                <label
+                  htmlFor="proofUpload"
+                  className="border-2 my-4 border-dashed border-gray-300 hover:border-[#233E97] transition-all rounded-lg w-full flex flex-col items-center justify-center gap-3 py-4 cursor-pointer bg-[#ECF3FF]/30"
+                >
+                  {file ? (
+                    <>
+                      <FileCheck className="text-[#233E97] w-8 h-8" />
+                      <p className="text-sm font-medium text-[#233E97]">
+                        {previewName}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="text-gray-500 w-8 h-8" />
+                      <p className="text-sm text-gray-500">
+                        Click to upload or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        PNG, JPG, or PDF (max 5MB)
+                      </p>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    id="proofUpload"
+                    className="hidden"
+                    accept="image/*,.pdf"
+                    onChange={handleFileChange}
+                  />
+                </label>
+
+                <div className="text-center">
+                  <button
+                    className="p-3 rounded-md bg-[#233E97] text-white"
+                  >
+                    Submit & Claim Reward
+                  </button>
                 </div>
-                <div>
+              </div> : <>
+                <p className="text-sm py-6">Invite your friends and earn {joining?.rewardInfo} for each new signup who makes a purchase</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <strong>Rules & Conditions</strong>
+                    <ul className="list-disc ml-4">
+                      <li>Users must sign up and make a valid purchase</li>
+                      <li>Reward is credited after 24hrs of verification</li>
+                      <li>Limit: 10 referrals per user</li>
+                    </ul>
+                  </div>
+                  <div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex gap-4 justify-center mt-6">
-                <button className="bg-[#233E97] p-4 rounded-md text-white" onClick={() => gotToBusinessWebsite(joining?.campaign?.websiteLink)}> Visit Business Website</button>
-                <button className="text-[#233E97] p-4 rounded-md bg-[#ECF3FF]">Claim Reward</button>
-              </div>
+                <div className="flex gap-4 justify-center mt-6">
+                  <button className="bg-[#233E97] p-4 rounded-md text-white" onClick={() => gotToBusinessWebsite(joining?.campaign?.websiteLink)}> Visit Business Website</button>
+                  <button onClick={() => setShowClaim(true)} className="text-[#233E97] p-4 rounded-md bg-[#ECF3FF]">Claim Reward</button>
+                </div>
+              </>}
+
             </div>
           )}
+
           {joining?.campaignType === "Referral" && (
             <div>
               <h3 className="text-lg font-medium text-center mb-3">
                 {joining.campaignName}
               </h3>
+
               <div className="grid md:grid-cols-4 grid-cols-1">
                 <div className="flex gap-2">
                   <button className="bg-[#ECF3FF] rounded-sm p-3">
@@ -569,7 +719,7 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
               </div>
               <div className="flex gap-4 justify-center mt-6">
                 <button className="bg-[#233E97] p-4 rounded-md text-white" onClick={() => gotToBusinessWebsite(joining?.campaign?.websiteLink)}> Visit Business Website</button>
-                <button className="bg-[#233E97] p-4 rounded-md text-white"> Claim Reward</button>
+                {/* <button onClick={() => setShowClaim(true)} className="bg-[#233E97] p-4 rounded-md text-white"> Claim Reward</button> */}
               </div>
             </div>
           )}
