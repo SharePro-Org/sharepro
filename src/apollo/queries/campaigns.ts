@@ -142,4 +142,31 @@ export const GET_CAMPAIGN_ANALYTICS = gql`
   }
 `;
 
-
+export const GET_PAYOUT = gql`
+  query CampaignRewards($campaignId: UUID!) {
+    campaignRewards(campaignId: $campaignId) {
+      amount
+      currency
+      createdAt
+      updatedAt
+      status
+      rewardType
+      processedAt
+      points
+      metadata
+      isExpired
+      isDeleted
+      id
+      expiresAt
+      description
+      deletedAt
+      user {
+        lastName
+        firstName
+      }
+      campaign {
+        name
+      }
+    }
+  }
+`;

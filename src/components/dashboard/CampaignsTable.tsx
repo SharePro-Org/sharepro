@@ -110,7 +110,28 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
                 </span>
               </td>
               <td className="px-4 py-3">2020-10-10</td>
-              <td className="px-4 py-3"></td>
+              <td className="px-4 py-3">
+                <Dropdown
+                  menu={{
+                    items: [
+                      {
+                        key: "view",
+                        label: "Review Payout",
+                        onClick: () =>
+                          router.push(`/business/campaigns/7ddb9a9c-80af-4301-9144-51ebb1597d47/payouts/10`),
+                      },
+                      // { key: "end", label: "Review Payout" },
+                      { key: "settings", label: "Approve" },
+                      { key: "payouts", label: "Mark as paid" },
+                    ],
+                  }}
+                  trigger={["click"]}
+                >
+                  <Button type="text">
+                    <MoreOutlined />
+                  </Button>
+                </Dropdown>
+              </td>
             </tr>
           ))}
         </tbody>

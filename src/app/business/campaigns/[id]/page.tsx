@@ -3,8 +3,8 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import React, { useEffect, useState } from "react";
 import { useQuery } from "@apollo/client/react";
-import { GET_CAMPAIGN_ANALYTICS } from "@/apollo/queries/campaigns";
-import { ArrowLeft, RefreshCwIcon } from "lucide-react";
+import { GET_CAMPAIGN_ANALYTICS, GET_PAYOUT } from "@/apollo/queries/campaigns";
+import { ArrowLeft, RefreshCwIcon, SearchIcon } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import { Dropdown, Button } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
@@ -89,6 +89,12 @@ const singleCampaign = () => {
     variables: { id: campaignId, businessId },
     skip: !campaignId || !businessId,
   });
+
+  const { data: payoutData, } = useQuery(GET_PAYOUT, {
+    variables: { campaignId },
+    skip: !campaignId,
+
+  })
 
   useEffect(() => {
     if (analyticsData?.campaignAnalytics) {
@@ -389,11 +395,10 @@ const singleCampaign = () => {
               {campaignAnalytics?.campaign?.campaignType === "COMBO" &&
                 "Combo Program:"}
             </div>
-            <p className="text-primary text-sm">{campaignAnalytics?.campaign?.referralLink}</p>
             {campaignAnalytics?.campaign?.campaignType === "REFERRAL" &&
               campaignAnalytics?.campaign?.referralRewards &&
               campaignAnalytics?.campaign?.referralRewards.length > 0 && (
-                <ul className="check-list text-sm">
+                <ul className="check-disc text-sm space-y-4">
                   <li>
                     Referrers earn{" "}
                     {campaignAnalytics.campaign.referralRewards[0]
@@ -438,7 +443,7 @@ const singleCampaign = () => {
             {campaignAnalytics?.campaign?.campaignType === "LOYALTY" &&
               campaignAnalytics?.campaign?.loyaltyRewards &&
               campaignAnalytics?.campaign?.loyaltyRewards.length > 0 && (
-                <ul className="check-list text-sm">
+                <ul className="check-disc text-sm space-y-4">
                   <li>
                     Customers earn{" "}
                     {campaignAnalytics.campaign.loyaltyRewards[0]
@@ -471,7 +476,7 @@ const singleCampaign = () => {
             {campaignAnalytics?.campaign?.campaignType === "COMBO" &&
               campaignAnalytics?.campaign?.comboRewards &&
               campaignAnalytics?.campaign?.comboRewards.length > 0 && (
-                <ul className="check-list text-sm">
+                <ul className="check-disc text-sm space-y-4">
                   <li>
                     Referrers earn{" "}
                     {campaignAnalytics.campaign.comboRewards[0]
@@ -523,6 +528,8 @@ const singleCampaign = () => {
                     )}
                 </ul>
               )}
+
+            <p className="text-primary text-sm">{campaignAnalytics?.campaign?.referralLink}</p>
             {!campaignAnalytics?.campaign?.campaignType && (
               <ul className="check-list text-sm">
                 <li>Loading campaign information...</li>
@@ -557,6 +564,33 @@ const singleCampaign = () => {
                 />
               )}
             </div>
+          </div>
+        </section>
+        <section className="bg-white rounded-md md:p-6 p-3 mt-4">
+          <div className="">
+            <div className="lg:flex justify-between">
+              <p className="text-black font-medium my-auto text-base">
+                All Payouts
+              </p>
+              <div className="flex gap-4">
+                {/* <RangePicker /> */}
+                {/* <Filter filter={false} /> */}
+
+                <div className="relative md:mt-0 mt-2">
+                  <input
+                    type="text"
+                    className="bg-[#F9FAFB] md:w-72 w-full border border-[#E4E7EC] p-3 rounded-sm pl-8 text-sm"
+                    placeholder="Search Campaign Name"
+                  />
+
+                  <SearchIcon
+                    size={16}
+                    className="absolute top-4 left-3 text-gray-500"
+                  />
+                </div>
+              </div>
+            </div>
+            <CampaignsTable type="payout" />
           </div>
         </section>
       </>

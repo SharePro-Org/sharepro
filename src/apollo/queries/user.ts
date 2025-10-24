@@ -153,3 +153,13 @@ export const USER_REWARDS = gql`
     }
   }
 `;
+
+export const USER_REFERALS = gql`
+  query UserReferrals($userId: UUID!) {
+    userReferrals(userId: $userId) {
+      deviceType
+      referralCode
+      referralLink
+    }
+  }
+`

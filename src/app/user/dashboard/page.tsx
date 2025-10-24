@@ -3,7 +3,7 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import DiscoverCampaign from "@/components/dashboard/DiscoverCampaign";
 import UserDashboardTable from "@/components/dashboard/UserDashboardTable";
-import { USER_DASHBOARD_SUMMARY } from "@/apollo/queries/user";
+import { USER_DASHBOARD_SUMMARY, USER_REFERALS } from "@/apollo/queries/user";
 import { useQuery, useMutation } from "@apollo/client/react";
 
 import { Calendar, Users, XIcon } from "lucide-react";
@@ -43,6 +43,11 @@ const userDashboard = () => {
     variables: { userId: user?.userId },
     skip: !user?.userId,
   });
+
+  // const { data: userCode } = useQuery(USER_REFERALS, {
+  //   variables: { userId: user?.userId },
+  //   skip: !user?.userId,
+  // })
 
   useEffect(() => {
     if (data?.userDashboardSummary) {
@@ -103,11 +108,10 @@ const userDashboard = () => {
                     Last: {summary.recentRewardChange || "N/A"}
                   </div>
                   <div
-                    className={`text-sm ${
-                      summary.recentRewardPercentage >= 0
+                    className={`text-sm ${summary.recentRewardPercentage >= 0
                         ? "text-green-600"
                         : "text-red-600"
-                    } mt-1 font-bold`}
+                      } mt-1 font-bold`}
                   >
                     {summary.recentRewardPercentage}%{" "}
                     {summary.recentRewardPercentage >= 0 ? "↑" : "↓"}
