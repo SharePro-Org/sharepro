@@ -11,12 +11,15 @@ RUN adduser -S nextjs -u 1001
 # Set working directory
 WORKDIR /app
 
-# Change ownership of the app directory
-RUN chown -R nextjs:nodejs /app
-USER nextjs
+# Create directories and set permissions as root
+RUN mkdir -p .next node_modules && \
+    chown -R nextjs:nodejs /app
 
-# Install dependencies
+# Copy package files with correct ownership
 COPY --chown=nextjs:nodejs package.json package-lock.json* pnpm-lock.yaml* ./
+
+# Switch to non-root user
+USER nextjs
 
 # Install dependencies based on the preferred package manager
 RUN \
@@ -33,6 +36,8 @@ ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV WATCHPACK_POLLING=true
 ENV CHOKIDAR_USEPOLLING=true
+# Increase Node.js memory limit for development
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # Start the development server with dumb-init for proper signal handling
 ENTRYPOINT ["dumb-init", "--"]

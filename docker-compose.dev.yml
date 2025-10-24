@@ -12,17 +12,22 @@ services:
       - NEXT_TELEMETRY_DISABLED=1
       - WATCHPACK_POLLING=true
       - CHOKIDAR_USEPOLLING=true
+      - NODE_OPTIONS=--max-old-space-size=4096
     volumes:
       # Mount source code for hot reloading
       - .:/app
-      # Use anonymous volumes for node_modules and build cache to avoid conflicts
-      - /app/node_modules
-      - /app/.next
+      # Use named volumes for better performance and permission handling
+      - node_modules:/app/node_modules
+      - next_cache:/app/.next
       # Optionally exclude .git to improve performance
       - /app/.git
     restart: unless-stopped
     stdin_open: true
     tty: true
+
+volumes:
+  node_modules:
+  next_cache:
 
 # networks:
 #   sharepro-network:

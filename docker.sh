@@ -73,6 +73,7 @@ show_logs() {
 # Function to clean up Docker resources
 cleanup() {
     print_status "Cleaning up Docker resources..."
+    docker-compose -f docker-compose.dev.yml down --volumes --remove-orphans
     docker-compose down --volumes --remove-orphans
     docker system prune -f
     print_status "Cleanup completed."
@@ -81,9 +82,21 @@ cleanup() {
 # Function to rebuild containers
 rebuild() {
     print_status "Rebuilding containers..."
+    docker-compose -f docker-compose.dev.yml down
     docker-compose down
+    docker-compose -f docker-compose.dev.yml build --no-cache
     docker-compose build --no-cache
     print_status "Rebuild completed."
+}
+
+# Function to reset development environment (full clean)
+reset_dev() {
+    print_status "Resetting development environment..."
+    docker-compose -f docker-compose.dev.yml down --volumes --remove-orphans
+    docker volume prune -f
+    docker image prune -f
+    docker-compose -f docker-compose.dev.yml build --no-cache
+    print_status "Development environment reset completed."
 }
 
 # Main script logic
@@ -110,6 +123,10 @@ case "$1" in
         check_docker
         rebuild
         ;;
+    "reset")
+        check_docker
+        reset_dev
+        ;;
     "help"|"--help"|"-h")
         echo "SharePro Frontend Docker Management"
         echo ""
@@ -122,11 +139,13 @@ case "$1" in
         echo "  logs [service]      Show logs for a service (default: frontend)"
         echo "  cleanup             Clean up Docker resources"
         echo "  rebuild             Rebuild containers from scratch"
+        echo "  reset               Reset development environment (full clean + rebuild)"
         echo "  help                Show this help message"
         echo ""
         echo "Examples:"
         echo "  $0 dev              # Start development with hot reloading"
         echo "  $0 prod             # Start production environment"
+        echo "  $0 reset            # Reset development environment (if having issues)"
         echo "  $0 logs frontend    # Show frontend logs"
         echo "  $0 logs api         # Show backend API logs"
         echo "  $0 stop             # Stop all services"

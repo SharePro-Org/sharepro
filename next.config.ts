@@ -6,15 +6,8 @@ const nextConfig: NextConfig = {
   
   // Development optimizations
   ...(process.env.NODE_ENV === 'development' && {
-    // Enable faster refresh in development
-    experimental: {
-      // Enable turbo for faster development builds (if available)
-      turbo: {
-        resolverCaching: false,
-      },
-    },
-    // Optimize for development
-    swcMinify: false,
+    // Enable turbopack for faster development builds (Next.js 15+)
+    // Note: turbopack is now stable in Next.js 15
   }),
 
   images: {
