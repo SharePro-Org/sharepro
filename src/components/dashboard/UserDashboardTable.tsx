@@ -12,9 +12,6 @@ import { Button, Dropdown, message } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { CheckCircle, SearchIcon, XCircle } from "lucide-react";
-import Image from "next/image";
-import userCheck from "../../../public/assets/Check.svg";
-import Link from "next/link";
 import { MdCampaign } from "react-icons/md";
 // import { format } from "date-fns";
 
@@ -90,6 +87,10 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
       success: boolean;
       message?: string;
     };
+  };
+
+  const gotToBusinessWebsite = (url: string) => {
+    window.open(url, "_blank");
   };
 
   const handleClaimReward = async (rewardId: string) => {
@@ -463,7 +464,7 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                 </div>
               </div>
               <div className="flex gap-4 justify-center mt-6">
-                <button className="bg-[#233E97] p-4 rounded-md text-white"> Visit Business Website</button>
+                <button className="bg-[#233E97] p-4 rounded-md text-white" onClick={() => gotToBusinessWebsite(joining?.businessWebsite)}> Visit Business Website</button>
                 <button className="text-[#233E97] p-4 rounded-md bg-[#ECF3FF]">Claim Reward</button>
               </div>
             </div>
@@ -515,7 +516,7 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                 </div>
               </div>
               <div className="flex gap-4 justify-center mt-6">
-                <button className="bg-[#233E97] p-4 rounded-md text-white"> Visit Business Website</button>
+                <button className="bg-[#233E97] p-4 rounded-md text-white" onClick={() => gotToBusinessWebsite(joining?.businessWebsite)}> Visit Business Website</button>
                 <button className="text-[#233E97] p-4 rounded-md bg-[#ECF3FF]">Claim Reward</button>
               </div>
             </div>
@@ -567,6 +568,7 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                 </div>
               </div>
               <div className="flex gap-4 justify-center mt-6">
+                <button className="bg-[#233E97] p-4 rounded-md text-white" onClick={() => gotToBusinessWebsite(joining?.businessWebsite)}> Visit Business Website</button>
                 <button className="bg-[#233E97] p-4 rounded-md text-white"> Claim Reward</button>
               </div>
             </div>
