@@ -28,7 +28,7 @@ const links = [
   { label: "Dashboard", href: "/business/dashboard", icon: LayoutDashboard },
   { label: "Campaigns", href: "/business/campaigns", icon: Megaphone },
   { label: "Analytics", href: "/business/analytics", icon: PieChart },
-  { label: "Wallets & Payouts", href: "/business/wallets", icon: Wallet },
+  { label: "Wallet", href: "/business/wallets", icon: Wallet },
   { label: "Customers & Referrers", href: "/business/customers", icon: Users },
   { label: "Notifications", href: "/business/notifications", icon: Bell },
   { label: "Settings", href: "/business/settings", icon: Settings },
