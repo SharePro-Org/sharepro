@@ -99,6 +99,14 @@ export const ACTIVATE_CAMPAIGN = gql`
     }
   }
 `;
+export const PAUSE_CAMPAIGN = gql`
+  mutation PauseCampaign($id: UUID!, $pause: Boolean!) {
+    pauseCampaign(id: $id, pause: $pause) {
+      message
+      success
+    }
+  }
+`;
 
 export const JOIN_CAMPAIGN = gql`
   mutation JoinCampaign($campaignId: UUID!, $userId: UUID!) {
