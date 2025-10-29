@@ -34,12 +34,12 @@ export const clearAuth = (): void => {
   localStorage.removeItem("userData");
 };
 
-// const API_BASE_URL =
-//   process.env.NEXT_PUBLIC_API_URL || "https://api.mysharepro.com/graphql/";
-// const WS_URL =
-//   process.env.NEXT_PUBLIC_WS_URL || "wss://api.mysharepro.com/ws/graphql/";
-const API_BASE_URL = "https://2704e7c0a076.ngrok-free.app/graphql/";
-const WS_URL = "wss://2704e7c0a076.ngrok-free.app/graphql/";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://api.mysharepro.com/graphql/";
+const WS_URL =
+  process.env.NEXT_PUBLIC_WS_URL || "wss://api.mysharepro.com/ws/graphql/";
+// const API_BASE_URL = "https://2704e7c0a076.ngrok-free.app/graphql/";
+// const WS_URL = "wss://2704e7c0a076.ngrok-free.app/graphql/";
 
 if (!API_BASE_URL) {
   throw new Error("NEXT_PUBLIC_API_URL is not set in environment variables.");
