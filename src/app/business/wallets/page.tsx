@@ -89,9 +89,9 @@ const wallets = () => {
       <>
         <section className="bg-white p-4 rounded-md ">
           <div className="flex gap-4">
-            <button className="bg-primary p-3 rounded-sm text-white">
+            {/* <button className="bg-primary p-3 rounded-sm text-white">
               Fund Wallet
-            </button>
+            </button> */}
           </div>
         </section>
         <section className="grid grid-cols-3 gap-4 mt-4">

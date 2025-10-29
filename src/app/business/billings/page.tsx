@@ -7,6 +7,7 @@ import { useMutation, useQuery } from "@apollo/client/react";
 import { GET_INVOICES, GET_BILLING_SUMMARY, GET_PLANS, DELETE_PAYMENT_METHOD } from "@/apollo/queries/billing";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import { Button, Dropdown, message } from "antd";
 
 import Image from "next/image";
 import userCheck from "../../../../public/assets/Check.svg";
@@ -61,8 +62,11 @@ const billingsSubscription = () => {
   const [success, setSuccess] = useState(false);
   const [isDefault, setIsDefault] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState("card");
+  const [messageApi, contextHolder] = message.useMessage();
+  const [paymentType, setPaymentType] = useState("card");
+  const [upgrade, setUpgrade] = useState(false);
 
-  const { data: billingSummary, loading: summaryLoading } = useQuery<BillingSummaryData>(GET_BILLING_SUMMARY);
+  const { data: billingSummary, refetch, loading: summaryLoading } = useQuery<BillingSummaryData>(GET_BILLING_SUMMARY);
 
   const { data, loading, error } = useQuery<InvoicesData>(GET_INVOICES, {
     variables: {
@@ -90,10 +94,13 @@ const billingsSubscription = () => {
   const [updateSubscription, { loading: updatingSubscription }] = useMutation(UPDATE_SUBSCRIPTION, {
     onCompleted: (data: any) => {
       if (data?.updateSubscription?.success) {
-        // setSuccess(true);
-
+        setUpgrade(false);
+        refetch()
       } else {
-
+        messageApi.open({
+          type: 'error',
+          content: data?.updateSubscription?.message,
+        });
       }
     },
     onError: (error) => {
@@ -135,12 +142,13 @@ const billingsSubscription = () => {
 
   const { data: plansData, loading: plansLoading, error: plansError } = useQuery<{ plans: PlanAPI[] }>(GET_PLANS);
 
-  function handleUpgradePlan(id: string): void {
+  function handleUpgradePlan(id: string, paymentType?: string): void {
     updateSubscription({
       variables: {
         input: {
           planId: id,
-          subscriptionId: billingSummary?.billingSummary ? billingSummary?.billingSummary?.currentPlan?.id : ''
+          subscriptionId: billingSummary?.billingSummary ? billingSummary?.billingSummary?.currentPlan?.id : '',
+          paymentType: paymentType || undefined
         }
       }
     })
@@ -148,7 +156,8 @@ const billingsSubscription = () => {
 
   const [deletePaymentMethod] = useMutation(DELETE_PAYMENT_METHOD, {
     onCompleted: (data) => {
-     console.log("Payment method deleted:", data);
+      console.log("Payment method deleted:", data);
+      refetch();
     },
     onError: (error) => {
       console.error("Error deleting payment method:", error);
@@ -156,10 +165,10 @@ const billingsSubscription = () => {
   });
 
 
-
   return (
     <DashboardLayout>
       <>
+        {contextHolder}
         <h1 className="text-lg font-semibold">Billing & Subscription</h1>
         <section className="my-4 bg-white rounded-md p-4 flex gap-3">
           <div className="w-[35%]">
@@ -168,7 +177,7 @@ const billingsSubscription = () => {
               You can update your plan anytime for the best benefit from the
               product
             </p>
-            <button className="text-sm text-primary">Upgrade Plan</button>
+            {/* <button className="text-sm text-primary">Upgrade Plan</button> */}
           </div>
           {summaryLoading ? (
             <div className="bg-[#ECF3FF] w-[65%] rounded-md p-3 animate-pulse">
@@ -277,7 +286,11 @@ const billingsSubscription = () => {
                 </ul>
                 <div className="flex justify-between mt-2">
                   <span></span>
-                  <button onClick={() => handleUpgradePlan(plan.id)} className="text-sm text-primary">Upgrade Plan</button>
+                  {billingSummary?.billingSummary?.currentPlan?.id !== plan.id && (
+                    <button onClick={() => { setUpgrade(true) }} className="text-sm text-primary">
+                      Upgrade Plan
+                    </button>
+                  )}
                 </div>
               </div>
             ))
@@ -420,120 +433,7 @@ const billingsSubscription = () => {
                   disabled={addingPaymentMethod}
                 />
               </div>
-              {/* Name on Card */}
-              {/* <div>
-                <label
-                  htmlFor="nameOnCard"
-                  className="block text-sm font-medium mb-2"
-                >
-                  Name on Card *
-                </label>
-                <input
-                  type="text"
-                  id="nameOnCard"
-                  value={cardData.nameOnCard}
-                  onChange={(e) =>
-                    handleCardInputChange("nameOnCard", e.target.value)
-                  }
-                  className="w-full border border-[#E4E7EC] rounded-md p-3 text-sm"
-                  placeholder="John Doe"
-                  required
-                />
-              </div> */}
 
-              {/* Card Number */}
-              {/* <div>
-                <label
-                  htmlFor="cardNumber"
-                  className="block text-sm font-medium mb-2"
-                >
-                  Card Number *
-                </label>
-                <input
-                  type="text"
-                  id="cardNumber"
-                  value={cardData.cardNumber}
-                  onChange={(e) => {
-                    const formatted = formatCardNumber(e.target.value);
-                    if (formatted.replace(/\s/g, "").length <= 16) {
-                      handleCardInputChange("cardNumber", formatted);
-                    }
-                  }}
-                  className="w-full border border-[#E4E7EC] rounded-md p-3 text-sm"
-                  placeholder="1234 5678 9012 3456"
-                  maxLength={19}
-                  required
-                />
-              </div> */}
-
-              {/* Expiry Date and CVV */}
-              {/* <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label
-                    htmlFor="expiryDate"
-                    className="block text-sm font-medium mb-2"
-                  >
-                    Expiry Date *
-                  </label>
-                  <input
-                    type="text"
-                    id="expiryDate"
-                    value={cardData.expiryDate}
-                    onChange={(e) => {
-                      const formatted = formatExpiryDate(e.target.value);
-                      handleCardInputChange("expiryDate", formatted);
-                    }}
-                    className="w-full border border-[#E4E7EC] rounded-md p-3 text-sm"
-                    placeholder="MM/YY"
-                    maxLength={5}
-                    required
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="cvv"
-                    className="block text-sm font-medium mb-2"
-                  >
-                    CVV *
-                  </label>
-                  <input
-                    type="text"
-                    id="cvv"
-                    value={cardData.cvv}
-                    onChange={(e) => {
-                      const digits = e.target.value.replace(/\D/g, "");
-                      if (digits.length <= 4) {
-                        handleCardInputChange("cvv", digits);
-                      }
-                    }}
-                    className="w-full border border-[#E4E7EC] rounded-md p-3 text-sm"
-                    placeholder="123"
-                    maxLength={4}
-                    required
-                  />
-                </div>
-              </div> */}
-
-              {/* Billing Address (Optional) */}
-              {/* <div>
-                <label
-                  htmlFor="billingAddress"
-                  className="block text-sm font-medium mb-2"
-                >
-                  Billing Address{" "}
-                  <span className="text-gray-500">(Optional)</span>
-                </label>
-                <textarea
-                  id="billingAddress"
-                  value={cardData.billingAddress}
-                  onChange={(e) =>
-                    handleCardInputChange("billingAddress", e.target.value)
-                  }
-                  className="w-full border border-[#E4E7EC] rounded-md p-3 text-sm resize-vertical"
-                  placeholder="Enter your billing address..."
-                  rows={2}
-                />
-              </div> */}
 
               {/* Submit Buttons */}
               <div className="flex justify-end gap-3 pt-4">
@@ -542,6 +442,53 @@ const billingsSubscription = () => {
                   className="px-6 w-full py-3 bg-primary text-white rounded-md text-sm hover:bg-primary/90 transition-colors"
                 >
                   {addingPaymentMethod ? "Adding..." : "Add Card"}
+                </button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={upgrade} onOpenChange={() => setUpgrade(false)}>
+          <DialogContent size="lg" className="">
+            <div className="text-center mb-6">
+              <p className="font-semibold text-lg text-center mb-2">
+                Select Payment Method
+              </p>
+            </div>
+
+            <form className="space-y-4">
+
+              <div>
+                <label htmlFor="paymentType" className="block text-sm font-medium mb-2">
+                  Payment Method *
+                </label>
+                <select onChange={(e) => setPaymentType(e.target.value)} value={paymentType} className="w-full border border-[#E4E7EC] rounded-md p-3 text-sm"
+                  name="paymentType" id="paymentType">
+                  <option value="card">Credit/Debit Card</option>
+                  <option value="wallet">Wallet</option>
+                </select>
+              </div>
+
+
+
+              {/* Submit Buttons */}
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const planId = billingSummary?.billingSummary?.currentPlan?.id;
+                    if (typeof handleUpgradePlan === 'function' && planId) {
+                      handleUpgradePlan(planId, paymentType);
+                    } else {
+                      messageApi.open({
+                        type: 'error',
+                        content: 'No plan selected for upgrade.',
+                      });
+                    }
+                  }}
+                  className="px-6 w-full py-3 bg-primary text-white rounded-md text-sm hover:bg-primary/90 transition-colors"
+                >
+                  {updatingSubscription ? "Upgrading..." : "Upgrade Plan"}
                 </button>
               </div>
             </form>
