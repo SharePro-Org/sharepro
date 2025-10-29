@@ -65,6 +65,7 @@ const billingsSubscription = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const [paymentType, setPaymentType] = useState("card");
   const [upgrade, setUpgrade] = useState(false);
+  const [newPlanId, setNewPlanId] = useState("")
 
   const { data: billingSummary, refetch, loading: summaryLoading } = useQuery<BillingSummaryData>(GET_BILLING_SUMMARY);
 
@@ -286,11 +287,13 @@ const billingsSubscription = () => {
                 </ul>
                 <div className="flex justify-between mt-2">
                   <span></span>
-                  {billingSummary?.billingSummary?.currentPlan?.id !== plan.id && (
-                    <button onClick={() => { setUpgrade(true) }} className="text-sm text-primary">
+                  {plan?.name === 'FREE' ? 
+                    null
+                  : billingSummary?.billingSummary?.currentPlan?.id !== plan.id && (
+                    <button onClick={() => { setUpgrade(true); setNewPlanId(plan.id) }} className="text-sm text-primary">
                       Upgrade Plan
                     </button>
-                  )}
+                   )}
                 </div>
               </div>
             ))
@@ -326,7 +329,6 @@ const billingsSubscription = () => {
                   </div>
                   <div>
                     <p className="font-medium">{billingSummary.billingSummary.paymentMethod.displayName}</p>
-                    <p className="text-sm text-gray-500">**** **** **** {billingSummary.billingSummary.paymentMethod.cardLast4}</p>
                   </div>
                 </div>
                 <button onClick={() => deletePaymentMethod({ variables: { paymentMethodId: billingSummary?.billingSummary?.paymentMethod?.id } })} className="text-sm text-red-500 hover:text-red-600">Remove</button>
@@ -375,7 +377,7 @@ const billingsSubscription = () => {
                       {new Intl.NumberFormat('en-NG', {
                         style: 'currency',
                         currency: invoice.currency || 'NGN'
-                      }).format(invoice.amountDue)}
+                      }).format(invoice.amountPaid)}
                     </td>
                     <td className="px-4 py-3">{new Date(invoice.dueDate).toLocaleDateString()}</td>
                     <td className="px-4 py-3">
@@ -478,7 +480,7 @@ const billingsSubscription = () => {
                   onClick={() => {
                     const planId = billingSummary?.billingSummary?.currentPlan?.id;
                     if (typeof handleUpgradePlan === 'function' && planId) {
-                      handleUpgradePlan(planId, paymentType);
+                      handleUpgradePlan(newPlanId, paymentType);
                     } else {
                       messageApi.open({
                         type: 'error',
