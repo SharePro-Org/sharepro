@@ -1,17 +1,16 @@
 "use client";
 
-import { Plan } from "@/apollo/types";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import React, { useState } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { GET_INVOICES, GET_BILLING_SUMMARY, GET_PLANS, DELETE_PAYMENT_METHOD } from "@/apollo/queries/billing";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { Button, Dropdown, message } from "antd";
+import { message } from "antd";
 
 import Image from "next/image";
 import userCheck from "../../../../public/assets/Check.svg";
-import { ADD_PAYMENT_METHOD, UPDATE_SUBSCRIPTION } from "@/apollo/mutations/billing";
+import { ADD_PAYMENT_METHOD, UPDATE_SUBSCRIPTION, RENEW_SUBSCRIPTION } from "@/apollo/mutations/billing";
 interface Invoice {
   id: string;
   status: string;
@@ -43,6 +42,11 @@ interface BillingSummary {
     description?: string;
   };
   subscriptionStatus: string;
+  subscription?: {
+    id: string;
+    status: string;
+    cancelAtPeriodEnd: boolean;
+  };
   nextBillingDate: string;
   amountDue: number;
   paymentMethod?: {
@@ -65,6 +69,7 @@ const billingsSubscription = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const [paymentType, setPaymentType] = useState("card");
   const [upgrade, setUpgrade] = useState(false);
+  const [renewPlan, setRenewPlan] = useState(false);
   const [newPlanId, setNewPlanId] = useState("")
 
   const { data: billingSummary, refetch, loading: summaryLoading } = useQuery<BillingSummaryData>(GET_BILLING_SUMMARY);
@@ -108,6 +113,22 @@ const billingsSubscription = () => {
       console.error("Error adding payment method:", error);
     },
   });
+  const [renewSubscription, { loading: renewingSubscription }] = useMutation(RENEW_SUBSCRIPTION, {
+    onCompleted: (data: any) => {
+      if (data?.renewSubscription?.success) {
+        setRenewPlan(false);
+        refetch()
+      } else {
+        messageApi.open({
+          type: 'error',
+          content: data?.renewSubscription?.message,
+        });
+      }
+    },
+    onError: (error) => {
+      console.error("Error adding payment method:", error);
+    },
+  });
 
   const handleCardSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,7 +165,16 @@ const billingsSubscription = () => {
   const { data: plansData, loading: plansLoading, error: plansError } = useQuery<{ plans: PlanAPI[] }>(GET_PLANS);
 
   function handleUpgradePlan(id: string, paymentType?: string): void {
-    updateSubscription({
+    renewPlan ? renewSubscription({
+      variables: {
+        input: {
+          planId: id,
+          subscriptionId: billingSummary?.billingSummary ? billingSummary?.billingSummary?.subscription?.id : '',
+          paymentType: paymentType || undefined
+        }
+      }
+    })
+    : updateSubscription({
       variables: {
         input: {
           planId: id,
@@ -153,6 +183,8 @@ const billingsSubscription = () => {
         }
       }
     })
+    
+    
   }
 
   const [deletePaymentMethod] = useMutation(DELETE_PAYMENT_METHOD, {
@@ -175,10 +207,12 @@ const billingsSubscription = () => {
           <div className="w-[35%]">
             <p className="font-medium">Current Plan</p>
             <p className="text-sm my-2">
-              You can update your plan anytime for the best benefit from the
+              You can renew your plan anytime for the best benefit from the
               product
             </p>
-            {/* <button className="text-sm text-primary">Upgrade Plan</button> */}
+            {billingSummary?.billingSummary?.currentPlan?.name !== "FREE" && (
+              <button className="text-sm text-primary" onClick={() => { setRenewPlan(true); setNewPlanId(billingSummary?.billingSummary?.currentPlan?.id ?? '') }}>Renew Plan</button>
+            )}
           </div>
           {summaryLoading ? (
             <div className="bg-[#ECF3FF] w-[65%] rounded-md p-3 animate-pulse">
@@ -450,7 +484,7 @@ const billingsSubscription = () => {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={upgrade} onOpenChange={() => setUpgrade(false)}>
+        <Dialog open={upgrade || renewPlan} onOpenChange={() => {setUpgrade(false); setRenewPlan(false)}}>
           <DialogContent size="lg" className="">
             <div className="text-center mb-6">
               <p className="font-semibold text-lg text-center mb-2">
@@ -490,7 +524,11 @@ const billingsSubscription = () => {
                   }}
                   className="px-6 w-full py-3 bg-primary text-white rounded-md text-sm hover:bg-primary/90 transition-colors"
                 >
-                  {updatingSubscription ? "Upgrading..." : "Upgrade Plan"}
+                  { renewPlan ? (
+                    renewingSubscription ? "Renewing..." : "Renew Plan"
+                  ) : (
+                    updatingSubscription ? "Upgrading..." : "Upgrade Plan"
+                  )}
                 </button>
               </div>
             </form>

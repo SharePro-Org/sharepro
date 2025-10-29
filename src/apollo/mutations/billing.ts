@@ -33,8 +33,23 @@ export const PROCESS_PAYMENT = gql`
 `;
 
 export const UPDATE_SUBSCRIPTION = gql`
-  mutation UpdateSubscription($input: UpdateSubscriptionInput!) {
+  mutation UpdateSubscription($input: SubscriptionInput!) {
     updateSubscription(input: $input) {
+      success
+      message
+      subscription {
+        id
+        status
+        cancelAtPeriodEnd
+      }
+      errors
+    }
+  }
+`;
+
+export const RENEW_SUBSCRIPTION = gql`
+  mutation RenewSubscription($input: SubscriptionInput!) {
+    renewSubscription(input: $input) {
       success
       message
       subscription {

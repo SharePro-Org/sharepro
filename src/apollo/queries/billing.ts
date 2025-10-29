@@ -29,6 +29,11 @@ export const GET_BILLING_SUMMARY = gql`
         billablePeriods
       }
       subscriptionStatus
+      subscription {
+        id
+        status
+        cancelAtPeriodEnd
+      }
       nextBillingDate
       amountDue
       paymentMethod {
