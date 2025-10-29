@@ -163,6 +163,7 @@ export const GET_PAYOUT = gql`
       user {
         lastName
         firstName
+        email
       }
       campaign {
         name

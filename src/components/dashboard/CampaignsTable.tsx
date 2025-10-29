@@ -127,9 +127,15 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
               <td className="px-4 py-3">{campaign.rewardType}</td>
               <td className="px-4 py-3">{campaign.amount}</td>
               {/* <td className="px-4 py-3">Airtime</td> */}
-              <td className="px-4 py-3">{campaign.user.firstname} {campaign.user.lastname}</td>
+              <td className="px-4 py-3">{campaign.user.email}</td>
               <td className="px-4 py-3">
-                <span className="inline-block px-4 py-1 rounded-[5px] text-white text-xs bg-green-500">
+                <span
+                  className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs
+                    ${campaign.status === 'APPROVED' ? 'bg-green-500'
+                      : campaign.status === 'PENDING' ? 'bg-yellow-500 text-black'
+                        : 'bg-red-500'}
+                  `}
+                >
                   {campaign.status}
                 </span>
               </td>

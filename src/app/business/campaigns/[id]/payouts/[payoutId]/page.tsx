@@ -37,7 +37,16 @@ const PayoutDetails = () => {
                         </div>
                         <button className="bg-green-500 flex gap-2 text-white text-sm px-4 py-1.5 rounded-full font-medium">
                             <IoWarning className="my-auto" />
-                            <span className="my-auto">{data?.reward?.status}</span>
+                            <span
+                                className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs
+                    ${data?.reward?.status === 'APPROVED' ? 'bg-green-500'
+                                        : data?.reward?.status === 'PENDING' ? 'bg-yellow-500 text-black'
+                                            : 'bg-red-500'}
+                  `}
+                            >
+                                {data?.reward?.status}
+                            </span>
+                            {/* <span className="my-auto">{}</span> */}
                         </button>
                     </div>
 
