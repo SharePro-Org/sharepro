@@ -9,7 +9,7 @@ import {
   MessageCircleReply,
   Users,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { Dropdown, Button } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
@@ -240,6 +240,25 @@ export default function Dashboard() {
     skip: !businessId,
   });
 
+  // Calculate totals from campaigns data
+  const totals = useMemo(() => {
+    const campaigns = (campaignsData as any)?.businessCampaigns || [];
+
+    if (!campaigns || campaigns.length === 0) return {
+      activeCampaigns: 0,
+      totalReferrals: 0,
+      totalRewardsGiven: 0,
+      averageConversionRate: 0
+    };
+
+    return {
+      activeCampaigns: campaigns.filter((campaign: any) => campaign.isActive).length,
+      totalReferrals: campaigns.reduce((sum: number, campaign: any) => sum + (campaign.totalReferrals || 0), 0),
+      totalRewardsGiven: campaigns.reduce((sum: number, campaign: any) => sum + (campaign.totalRewardsGiven || 0), 0),
+      averageConversionRate: campaigns.reduce((sum: number, campaign: any) => sum + (campaign.conversionRate || 0), 0) / campaigns.length
+    };
+  }, [campaignsData]);
+
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-8 w-full">
@@ -252,11 +271,11 @@ export default function Dashboard() {
                 <HeartIcon fill="#5B93FF" className="text-[#5B93FF]" />
               </div>
               <div className="ml-4">
-                <div className="text-lg font-bold">4</div>
-                <div className="text-xs text-gray-500">Ongoing Campaigns</div>
-                <div className="text-xs text-green-600 mt-1 font-bold">
-                  12% ↑
-                </div>
+                <div className="text-lg font-bold">{totals.activeCampaigns}</div>
+                <div className="text-xs text-gray-500">Live Campaigns</div>
+                {campaignsLoading ? (
+                  <div className="text-xs text-gray-400 mt-1">Loading...</div>
+                ) : null}
               </div>
             </div>
           </div>
@@ -267,9 +286,11 @@ export default function Dashboard() {
                 <Users fill="#FFC327" className="text-[#FFC327]" />
               </div>
               <div className="ml-4">
-                <div className="text-lg font-bold">12.5K</div>
-                <div className="text-xs text-gray-500">Customers</div>
-                <div className="text-xs text-red-600 mt-1 font-bold">12% ↑</div>
+                <div className="text-lg font-bold">{totals.totalRewardsGiven.toLocaleString()}</div>
+                <div className="text-xs text-gray-500">Rewards Claimed</div>
+                {campaignsLoading ? (
+                  <div className="text-xs text-gray-400 mt-1">Loading...</div>
+                ) : null}
               </div>
             </div>
           </div>
@@ -280,11 +301,11 @@ export default function Dashboard() {
                 <Flame className="text-[#FF8F6B]" fill="#FF8F6B" />
               </div>
               <div className="ml-4">
-                <div className="text-lg font-bold">30K</div>
-                <div className="text-xs text-gray-500">Total Referrals</div>
-                <div className="text-xs text-green-600 mt-1 font-bold">
-                  12% ↑
-                </div>
+                <div className="text-lg font-bold">{totals.totalReferrals.toLocaleString()}</div>
+                <div className="text-xs text-gray-500">Total Referral Count</div>
+                {campaignsLoading ? (
+                  <div className="text-xs text-gray-400 mt-1">Loading...</div>
+                ) : null}
               </div>
             </div>
           </div>
@@ -295,9 +316,11 @@ export default function Dashboard() {
                 <MessageCircleReply className="text-[#605BFF]" fill="#605BFF" />
               </div>
               <div className="ml-4">
-                <div className="text-lg font-bold">32.03%</div>
-                <div className="text-xs text-gray-500">Conversion Rate</div>
-                <div className="text-xs text-red-600 mt-1 font-bold">12% ↑</div>
+                <div className="text-lg font-bold">{totals.averageConversionRate.toFixed(2)}%</div>
+                <div className="text-xs text-gray-500">Referral Success Rate</div>
+                {campaignsLoading ? (
+                  <div className="text-xs text-gray-400 mt-1">Loading...</div>
+                ) : null}
               </div>
             </div>
           </div>

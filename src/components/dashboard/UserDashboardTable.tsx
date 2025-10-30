@@ -523,8 +523,8 @@ function fileToBase64(file: Blob): Promise<string> {
                           {claimingReward === reward.rewardId
                             ? "Claiming..."
                             : reward.isClaimable
-                              ? "Claim"
-                              : "View"}
+                              ? "View"
+                              : "Claim"}
                         </button>
                       </td>
                     </tr>
