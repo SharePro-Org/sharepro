@@ -43,7 +43,7 @@ export function CustomSelect({
           {prefix && <span className="text-sm text-nowrap text-[#030229] mr-2">{prefix}</span>}
           <span>
             {value
-              ? options.find((o) => o.value === value)?.label
+              ? options.find((o) => o.value === value)?.label || value
               : placeholder}
           </span>
           <span className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
@@ -95,8 +95,10 @@ export function CustomSelect({
                 <hr />
                 <input
                   type="text"
-                  placeholder="Enter a defined method"
+                  placeholder="Others"
+                  value={value && !options.find((o) => o.value === value) ? value : ""}
                   className="w-4/5 mx-12 py-2   text-body font-semibold text-sm focus:ring-0 placeholder:text-[#030229B2] outline-none "
+                  onChange={e => onChange(e.target.value)}
                   onBlur={e => {
                     if (e.target.value) onChange(e.target.value);
                   }}

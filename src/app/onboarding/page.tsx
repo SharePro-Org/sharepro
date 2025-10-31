@@ -412,6 +412,7 @@ const BusinessInfoStep: React.FC<BusinessInfoStepProps> = ({
               value={businessType}
               onChange={setBusinessType}
               placeholder="Select a business type"
+              allowCustomInput
             />
           </div>
           <div>
