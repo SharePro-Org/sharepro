@@ -183,7 +183,8 @@ function fileToBase64(file: Blob): Promise<string> {
           file_name: file.name,
           file_size: file.size,
           file_type: file.type,
-          submission_timestamp: new Date().toISOString()
+          submission_timestamp: new Date().toISOString(),
+          file_content: base64File
         }
       );
 
