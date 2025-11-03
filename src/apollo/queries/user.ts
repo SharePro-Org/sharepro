@@ -185,8 +185,6 @@ export const TRACK_LOYALTY_ACTION = gql`
       success
       pointsAwarded
       message
-      actionLogId
-      rewardId
     }
   }
 `;

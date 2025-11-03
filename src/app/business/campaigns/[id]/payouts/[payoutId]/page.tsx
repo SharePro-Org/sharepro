@@ -109,20 +109,18 @@ const PayoutDetails = () => {
                             Proof of Purchase
                         </h3>
                         <div className="flex flex-wrap gap-4">
-                            {[1, 2].map((i) => (
-                                <div
-                                    key={i}
+                             <div
                                     className="border border-[#E4E7EC] rounded-lg overflow-hidden w-56 shadow-sm"
                                 >
                                     <Image
-                                        src={data?.reward?.proofFile}
-                                        alt={`Receipt ${i}`}
+                                        src={process.env.NEXT_PUBLIC_MEDIA_URL + data?.reward?.proofFile}
+                                        // src={"http://localhost:8000/media/" + data?.reward?.proofFile}
+                                        alt="Receipt"
                                         width={224}
                                         height={280}
                                         className="object-cover"
                                     />
                                 </div>
-                            ))}
                         </div>
                     </div>
 
