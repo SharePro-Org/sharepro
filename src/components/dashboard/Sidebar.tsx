@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { AlertCircleIcon } from "lucide-react";
+import { AlertCircleIcon, DollarSignIcon } from "lucide-react";
 
 import Image from "next/image";
 import Logo from "/assets/logo.svg";
@@ -29,6 +29,8 @@ const links = [
   { label: "Campaigns", href: "/business/campaigns", icon: Megaphone },
   { label: "Analytics", href: "/business/analytics", icon: PieChart },
   { label: "Wallet", href: "/business/wallets", icon: Wallet },
+  { label: "Payout", href: "/business/payout", icon: DollarSignIcon },
+
   { label: "Customers & Referrers", href: "/business/customers", icon: Users },
   { label: "Notifications", href: "/business/notifications", icon: Bell },
   { label: "Settings", href: "/business/settings", icon: Settings },

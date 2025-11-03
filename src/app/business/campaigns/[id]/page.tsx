@@ -582,7 +582,7 @@ const singleCampaign = () => {
                 {/* <RangePicker /> */}
                 {/* <Filter filter={false} /> */}
 
-                <div className="relative md:mt-0 mt-2">
+                {/* <div className="relative md:mt-0 mt-2">
                   <input
                     type="text"
                     className="bg-[#F9FAFB] md:w-72 w-full border border-[#E4E7EC] p-3 rounded-sm pl-8 text-sm"
@@ -593,7 +593,7 @@ const singleCampaign = () => {
                     size={16}
                     className="absolute top-4 left-3 text-gray-500"
                   />
-                </div>
+                </div> */}
               </div>
             </div>
             <CampaignsTable type="payout" />
