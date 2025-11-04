@@ -8,7 +8,7 @@ import { IoWarning } from "react-icons/io5";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { GET_SINGLE_PAYOUT } from "@/apollo/queries/campaigns";
 import { useParams } from "next/navigation";
-import { REVIEW_PAYOUT } from "@/apollo/mutations/campaigns";
+import { APPROVE_OR_REJECT_PROOF } from "@/apollo/mutations/campaigns";
 
 const PayoutDetails = () => {
     const params = useParams();
@@ -22,7 +22,7 @@ const PayoutDetails = () => {
         skip: !id,
     });
 
-    const [handleToggleRewardStatus, { loading: setLoading }] = useMutation(REVIEW_PAYOUT)
+    const [handleToggleRewardStatus, { loading: setLoading }] = useMutation(APPROVE_OR_REJECT_PROOF)
 
 
     return (
@@ -113,7 +113,7 @@ const PayoutDetails = () => {
                                     className="border border-[#E4E7EC] rounded-lg overflow-hidden w-56 shadow-sm"
                                 >
                                     <Image
-                                        src={process.env.NEXT_PUBLIC_MEDIA_URL + data?.reward?.proofFile}
+                                        src={"https://api.mysharepro.com/media/" + data?.reward?.proofFile}
                                         // src={"http://localhost:8000/media/" + data?.reward?.proofFile}
                                         alt="Receipt"
                                         width={224}
@@ -143,7 +143,7 @@ const PayoutDetails = () => {
                             }
                         })} className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-md bg-[#0A1B88] text-white font-medium hover:bg-[#0A1B88]/90 transition">
                             <CheckCircle className="w-5 h-5" />
-                            {setLoading ? 'loading...' : 'Approve & Make Payment'}
+                            {setLoading ? 'loading...' : 'Approve Payout'}
 
                         </button>
                     </div>

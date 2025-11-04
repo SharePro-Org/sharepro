@@ -310,9 +310,9 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
                             router.push(`/business/campaigns/${row.id}`),
                         },
                         { key: "end", label: "End Campaign" },
-                        { key: "settings", label: "Campaign Settings" },
-                        { key: "payouts", label: "View Payouts" },
-                        { key: "download", label: "Download Report" },
+                        // { key: "settings", label: "Campaign Settings" },
+                        // { key: "payouts", label: "View Payouts" },
+                        // { key: "download", label: "Download Report" },
                         {
                           key: "reward",
                           label: "Add Reward",

@@ -129,9 +129,9 @@ export const CLAIM_REWARD = gql`
   }
 `;
 
-export const REVIEW_PAYOUT = gql`
-  mutation ReviewRewardProof($action: String!, $rewardId: UUID!) {
-    reviewRewardProof(action: $action, rewardId: $rewardId) {
+export const APPROVE_OR_REJECT_PROOF = gql`
+  mutation ApproveOrRejectProofMutation($action: String!, $rewardId: UUID!) {
+    approveOrRejectProof(action: $action, rewardId: $rewardId) {
       success
       message
       errors
