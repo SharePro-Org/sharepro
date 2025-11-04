@@ -136,16 +136,23 @@ const PayoutDetails = () => {
                             {setLoading ? 'loading...' : 'Reject Payout'}
 
                         </button>
-                        <button onClick={() => handleToggleRewardStatus({
-                            variables: {
-                                rewardId: id,
-                                action: 'approve',
-                            }
-                        })} className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-md bg-[#0A1B88] text-white font-medium hover:bg-[#0A1B88]/90 transition">
+                       {data?.reward?.status === 'APPROVED' ? (
+                           <button  className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-md bg-[#0A1B88] text-white font-medium hover:bg-[#0A1B88]/90 transition">
+                            <CheckCircle className="w-5 h-5" />
+                            {setLoading ? 'loading...' : 'Send Reward'}
+
+                        </button>)
+                        : (
+                           <button onClick={() => handleToggleRewardStatus({
+                               variables: {
+                                   rewardId: id,
+                                   action: 'approve',
+                               }
+                           })} className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-md bg-[#0A1B88] text-white font-medium hover:bg-[#0A1B88]/90 transition">
                             <CheckCircle className="w-5 h-5" />
                             {setLoading ? 'loading...' : 'Approve Payout'}
 
-                        </button>
+                        </button>)}
                     </div>
                 </div>
             </>
