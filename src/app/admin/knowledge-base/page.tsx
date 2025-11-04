@@ -310,8 +310,10 @@ const KnowledgeBasePage = () => {
                                             category: videoCategory,
                                             name: videoTitle,
                                             description: videoDescription,
-                                            thumbnailUrl: thumbnailBase64,
-                                            videoUrl: videoBase64,
+                                            thumbnail_file_data: thumbnailBase64,
+                                            video_file_data: videoBase64,
+                                            video_file_name: videoFile?.name || '',
+                                            thumbnail_file_name: thumbnailFile?.name || '',
                                         },
                                     });
                                     if (res?.data?.createWalkthroughVideo?.success) {

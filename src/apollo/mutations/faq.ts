@@ -11,18 +11,10 @@ export const CREATE_FAQ = gql`
 
 export const CREATE_WALKTHROUGH_VIDEO = gql`
   mutation createWalkthroughVideo(
-    $category: String!,
-    $name: String!,
-    $description: String!,
-    $thumbnailUrl: String!,
-    $videoUrl: String!
+    $input: WalkthroughVideoInput!
   ) {
     createWalkthroughVideo(
-      category: $category,
-      name: $name,
-      description: $description,
-      thumbnailUrl: $thumbnailUrl,
-      videoUrl: $videoUrl
+      input: $input
     ) {
       success
       message
@@ -31,3 +23,18 @@ export const CREATE_WALKTHROUGH_VIDEO = gql`
   }
 `;
 
+export const UPDATE_WALKTHROUGH_VIDEO = gql`
+  mutation updateWalkthroughVideo(
+    $id: ID!
+    $input: WalkthroughVideoInput!
+  ) {
+    updateWalkthroughVideo(
+      id: $id,
+      input: $input
+    ) {
+      success
+      message
+      errors
+    }
+  }
+`;
