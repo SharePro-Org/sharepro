@@ -5,7 +5,7 @@ import { Dropdown, Button, message } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { GET_BUSINESS_CAMPAIGNS, GET_PAYOUT } from "@/apollo/queries/campaigns";
-import { ACTIVATE_CAMPAIGN, REVIEW_PAYOUT,PAUSE_CAMPAIGN } from "@/apollo/mutations/campaigns";
+import { ACTIVATE_CAMPAIGN, APPROVE_OR_REJECT_PROOF,PAUSE_CAMPAIGN } from "@/apollo/mutations/campaigns";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
 import { useParams, useRouter } from "next/navigation";
@@ -47,7 +47,7 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
       }
   );
 
-  const [handleToggleRewardStatus, { loading: setLoading }] = useMutation(REVIEW_PAYOUT)
+  const [handleToggleRewardStatus, { loading: setLoading }] = useMutation(APPROVE_OR_REJECT_PROOF)
 
   const [activateCampaign, { loading: activateLoading }] = useMutation(
     ACTIVATE_CAMPAIGN,
@@ -179,24 +179,6 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
                         label: "Review Payout",
                         onClick: () =>
                           router.push(`/business/campaigns/${campaignId}/payouts/${campaign.id}`),
-                      },
-                      // { key: "end", label: "Review Payout" },
-                      {
-                        key: "settings", label: "Approve",
-                        onClick: () => handleToggleRewardStatus({
-                          variables: {
-                            rewardId: campaign.id,
-                            action: 'approve',
-                          }
-                        }),
-                      },
-                      {
-                        key: "settings", label: "Reject", onClick: () => handleToggleRewardStatus({
-                          variables: {
-                            rewardId: campaign.id,
-                            action: 'reject',
-                          }
-                        }),
                       },
                       { key: "payouts", label: "Mark as paid" },
                       // 
