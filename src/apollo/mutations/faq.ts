@@ -11,7 +11,7 @@ export const CREATE_FAQ = gql`
 
 export const CREATE_WALKTHROUGH_VIDEO = gql`
   mutation createWalkthroughVideo(
-    $input: WalkthroughVideoInput!
+    $input: WalkThroughVideoInput!
   ) {
     createWalkthroughVideo(
       input: $input
@@ -26,7 +26,7 @@ export const CREATE_WALKTHROUGH_VIDEO = gql`
 export const UPDATE_WALKTHROUGH_VIDEO = gql`
   mutation updateWalkthroughVideo(
     $id: ID!
-    $input: WalkthroughVideoInput!
+    $input: WalkThroughVideoInput!
   ) {
     updateWalkthroughVideo(
       id: $id,

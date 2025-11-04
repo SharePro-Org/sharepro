@@ -150,6 +150,9 @@ const KnowledgeBasePage = () => {
     const [videoTitle, setVideoTitle] = useState('');
     const [videoDescription, setVideoDescription] = useState('');
     const [videoCategory, setVideoCategory] = useState('');
+    const [videoOrder, setVideoOrder] = useState('');
+    const [videoDuration, setVideoDuration] = useState('');
+    const [isFeatured, setIsFeatured] = useState('');
     const [createFaq, { loading: faqUploading }] = useMutation(CREATE_FAQ);
     const { CREATE_WALKTHROUGH_VIDEO } = require('@/apollo/mutations/faq');
     interface CreateWalkthroughVideoResult {
@@ -191,7 +194,7 @@ const KnowledgeBasePage = () => {
         faq.category.toLowerCase().includes(search.toLowerCase())
     ) || [];
 
-    const filteredVideos = videoData.walkthroughVideos.filter((video: any) =>
+    const filteredVideos = videoData?.walkthroughVideos?.filter((video: any) =>
         video.name.toLowerCase().includes(search.toLowerCase()) ||
         video.category.toLowerCase().includes(search.toLowerCase())
     );
@@ -305,15 +308,22 @@ const KnowledgeBasePage = () => {
                                     };
                                     const videoBase64 = await getBase64(videoFile);
                                     const thumbnailBase64 = await getBase64(thumbnailFile);
-                                    const res = await createVideo({
-                                        variables: {
-                                            category: videoCategory,
+                                    const input = {
+                                        category: videoCategory,
                                             name: videoTitle,
                                             description: videoDescription,
-                                            thumbnail_file_data: thumbnailBase64,
-                                            video_file_data: videoBase64,
-                                            video_file_name: videoFile?.name || '',
-                                            thumbnail_file_name: thumbnailFile?.name || '',
+                                            thumbnailFileData: thumbnailBase64,
+                                            videoFileData: videoBase64,
+                                            videoFileName: videoFile?.name || '',
+                                            thumbnailFileName: thumbnailFile?.name || '',
+                                            durationSeconds: parseInt(videoDuration) || 0,
+                                            order: parseInt(videoOrder) || 0,
+                                            isFeatured: isFeatured === 'true',
+                                            isActive: isFeatured === 'true',
+                                    }
+                                    const res = await createVideo({
+                                        variables: {
+                                            input
                                         },
                                     });
                                     if (res?.data?.createWalkthroughVideo?.success) {
@@ -325,6 +335,9 @@ const KnowledgeBasePage = () => {
                                         setVideoDescription('');
                                         setVideoCategory('');
                                         setUploadType('');
+                                        setVideoDuration('');
+                                        setVideoOrder('');
+                                        setIsFeatured('');
                                     } else {
                                         setVideoError(res?.data?.createWalkthroughVideo?.message || 'Failed to upload video');
                                     }
@@ -431,6 +444,43 @@ const KnowledgeBasePage = () => {
                                         ))}
                                     </select>
                                 </div>
+                                  <div>
+                                    <label htmlFor="order" className="mb-2 text-[#030229CC] text-sm">Order</label>
+                                    <input
+                                        type="number"
+                                        id="order"
+                                        className="border border-[#E5E5EA] rounded-md p-3 w-full"
+                                        placeholder="Video order"
+                                        value={videoOrder}
+                                        onChange={e => setVideoOrder(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <div className='flex'>
+                                    <label htmlFor="duration_seconds" className="mb-2 text-[#030229CC] text-sm">Duration</label>
+                                    <input
+                                        type="number"
+                                        id="duration_seconds"
+                                        className="border border-[#E5E5EA] rounded-md p-3 w-full"
+                                        placeholder="Video duration"
+                                        value={videoDuration}
+                                        onChange={e => setVideoDuration(e.target.value)}
+                                        required
+                                    />
+                                    <label htmlFor='is_featured' className="mb-2 text-[#030229CC] text-sm">Is Featured</label>
+                                    <select
+                                        id='is_featured'
+                                        className="border border-[#E5E5EA] rounded-md p-3 w-full"
+                                        value={isFeatured}
+                                        onChange={e => setIsFeatured(e.target.value)}
+                                        required
+                                    >
+                                        <option value="">Select</option>
+                                        <option value="true">Yes</option>
+                                        <option value="false">No</option>
+                                    </select>
+                                </div>
+                            
                                 <div className="flex gap-4 mt-4">
                                     <div className="flex-1">
                                         <label htmlFor="video-file" className="mb-2 text-[#030229CC] text-sm">Video File</label>
