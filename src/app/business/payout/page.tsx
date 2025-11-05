@@ -2,6 +2,7 @@
 'use client'
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { GET_BUSINESS_REWARDS } from '@/apollo/queries/payout';
 import { useQuery } from '@apollo/client/react';
@@ -74,14 +75,15 @@ const Payout = () => {
                     <div className="mt-4 text-red-500">Error loading rewards data</div>
                 ) : (
                     <div className="mt-4 overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campaign</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <table className="w-full mt-4 text-sm">
+                            <thead className="">
+                                <tr className="bg-[#D1DAF4] text-black">
+                                    <th className="px-4 py-3 font-medium text-left">User</th>
+                                    <th className="px-4 py-3 font-medium text-left">Campaign</th>
+                                    <th className="px-4 py-3 font-medium text-left">Amount</th>
+                                    <th className="px-4 py-3 font-medium text-left">Status</th>
+                                    <th className="px-4 py-3 font-medium text-left">Date</th>
+                                    <th className="px-4 py-3 font-medium text-left">Action</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
@@ -90,7 +92,8 @@ const Payout = () => {
                                         reward.campaign.name.toLowerCase().includes(searchTerm.toLowerCase())
                                     )
                                     .map((reward: any) => (
-                                        <tr key={reward.id}>
+                                        <tr className="border-b border-[#E2E8F0] py-2 last:border-0"
+                                            key={reward.id}>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm text-gray-900">{reward.user.username}</div>
                                                 <div className="text-sm text-gray-500">{reward.user.email}</div>
@@ -105,16 +108,22 @@ const Payout = () => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                ${reward.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                                                        reward.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                                                            'bg-gray-100 text-gray-800'}`}>
+                                                ${reward.status === 'APPROVED' ? 'bg-green-500 text-white' :
+                                                        reward.status === 'PENDING' ? 'bg-yellow-500 text-white' :
+                                                            'bg-red-500 text-white'}`}>
                                                     {reward.status}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {new Date(reward.createdAt).toLocaleDateString()}
                                             </td>
-                                        </tr>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <Link href={`/business/campaigns/1/payouts/${reward.id}`}>
+                                                    <button className="px-4 py-2 text-sm font-medium text-primary">
+                                                        View
+                                                    </button>
+                                                </Link>
+                                            </td>                                        </tr>
                                     ))}
                             </tbody>
                         </table>
