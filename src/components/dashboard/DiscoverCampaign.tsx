@@ -513,17 +513,17 @@ const DiscoverCampaign = ({
                   </div>
                   <div className="border border-[#CCCCCC] rounded-md p-4">
                     <p className="text-sm font-semibold">
-                      Submit Your Receipt:
+                      Submit Proof of Engagement:
                     </p>
                     <p className="text-xs mt-2 mb-4">
-                      Once done, come back and submit your receipt Id for
+                      Once done, come back and submit your proof of engagement for
                       reward.
                     </p>
                     <button
                       className="bg-primary/20 text-sm text-white rounded-sm p-3"
                       disabled
                     >
-                      Submit Receipt ID
+                      Submit Proof of Engagement
                     </button>
                   </div>
                   <div className="border border-[#CCCCCC] rounded-md p-4">

@@ -27,6 +27,7 @@ type GetUserData = {
 
 const account = () => {
   const [openBusinessModal, setOpenBusinessModal] = useState(false);
+  const [openBankModal, setOpenBankModal] = useState(false);
   const [user] = useAtom(userAtom);
   const { data: userData, loading: userLoading, error: userError } = useQuery<GetUserData>(GET_USER, {
     variables: { id: user?.userId },
@@ -38,6 +39,11 @@ const account = () => {
     firstName: "",
     lastName: "",
     phone: "",
+  });
+  const [bankForm, setBankForm] = useState({
+    accountHolder: "",
+    bankName: "",
+    accountNumber: "",
   });
   useEffect(() => {
     if (userData?.currentUser?.userProfile) {
@@ -102,6 +108,34 @@ const account = () => {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Bank Account Details Section */}
+            <div className="border border-[#E5E5EA] rounded-sm p-4 my-4">
+              <div className="border-b border-b-[#E5E5EA] flex py-3 mb-3 justify-between">
+                <p className="font-medium my-auto">Bank Account Details</p>
+                <button
+                  onClick={() => setOpenBankModal(true)}
+                  className="flex text-primary bg-[#ECF3FF] rounded-md my-auto gap-2  p-2"
+                >
+                  <span className="text-sm">Add</span>
+                  <Plus size={16} className="my-auto" />
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-[#030229B2] mb-2">Account Holder</p>
+                  <p className="font-medium">-</p>
+                </div>
+                <div>
+                  <p className="text-sm text-[#030229B2] mb-2">Bank Name</p>
+                  <p className="font-medium">-</p>
+                </div>
+                <div>
+                  <p className="text-sm text-[#030229B2] mb-2">Account Number</p>
+                  <p className="font-medium">-</p>
+                </div>
               </div>
             </div>
 
@@ -254,6 +288,65 @@ const account = () => {
                 </div>
               </>
             )}
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={openBankModal}
+          onOpenChange={() => setOpenBankModal(false)}
+        >
+          <DialogContent>
+            <h2 className="font-medium text-center">
+              Add Bank Account Details
+            </h2>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                // Handle bank account submission here
+                console.log("Bank details:", bankForm);
+                setOpenBankModal(false);
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label htmlFor="accountHolder" className="mb-2 text-[#030229CC] text-sm">Account Holder Name</label>
+                <input
+                  type="text"
+                  id="accountHolder"
+                  value={bankForm.accountHolder}
+                  onChange={(e) => setBankForm({ ...bankForm, accountHolder: e.target.value })}
+                  placeholder="Enter account holder name"
+                  className="border border-[#E5E5EA] rounded-md p-2 w-full"
+                />
+              </div>
+              <div>
+                <label htmlFor="bankName" className="mb-2 text-[#030229CC] text-sm">Bank Name</label>
+                <input
+                  type="text"
+                  id="bankName"
+                  value={bankForm.bankName}
+                  onChange={(e) => setBankForm({ ...bankForm, bankName: e.target.value })}
+                  placeholder="Enter bank name"
+                  className="border border-[#E5E5EA] rounded-md p-2 w-full"
+                />
+              </div>
+              <div>
+                <label htmlFor="accountNumber" className="mb-2 text-[#030229CC] text-sm">Account Number</label>
+                <input
+                  type="text"
+                  id="accountNumber"
+                  value={bankForm.accountNumber}
+                  onChange={(e) => setBankForm({ ...bankForm, accountNumber: e.target.value })}
+                  placeholder="Enter account number"
+                  className="border border-[#E5E5EA] rounded-md p-2 w-full"
+                />
+              </div>
+              <div className="text-center">
+                <button type="submit" className="p-3 bg-primary rounded-md text-white">
+                  Save Bank Details
+                </button>
+              </div>
+            </form>
           </DialogContent>
         </Dialog>
       </>

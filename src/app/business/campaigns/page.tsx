@@ -35,7 +35,7 @@ const campaigns = () => {
     <DashboardLayout>
       <>
         <section className="bg-white p-4 mb-2 rounded-md lg:flex justify-between">
-          <div className="flex justify-between gap-4 my-auto">
+          {/* <div className="flex justify-between gap-4 my-auto">
             <button className="bg-[#ECF3FF] py-2 px-4 rounded-sm text-black text-normal text-sm">
               My Campaigns
             </button>
@@ -45,7 +45,7 @@ const campaigns = () => {
             <button className="bg-[#ECF3FF] py-2 px-4 rounded-sm text-black text-normal text-sm">
               Drafts
             </button>
-          </div>
+          </div> */}
 
           <div className="relative md:mt-0 mt-2">
             <input
