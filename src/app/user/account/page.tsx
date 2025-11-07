@@ -37,7 +37,7 @@ type CurrentUser = {
   email: string;
   phone?: string;
   dateJoined: string;
-  bankAccounts?: BankAccount;
+  bankAccounts?: BankAccount[];
 };
 
 type GetUserData = {
@@ -148,13 +148,13 @@ const account = () => {
 
       if (userData.currentUser.bankAccounts) {
         setBankForm({
-          accountName: userData.currentUser.bankAccounts.accountName || "",
-          bankName: userData.currentUser.bankAccounts.bankName || "",
-          accountNumber: userData.currentUser.bankAccounts.accountNumber || "",
-          phoneNumber: userData.currentUser.bankAccounts.phoneNumber || "",
-          networkProvider: userData.currentUser.bankAccounts.networkProvider || "",
-          accountType: userData.currentUser.bankAccounts.accountType || "savings",
-          bankCode: userData.currentUser.bankAccounts.bankCode || "",
+          accountName: userData.currentUser.bankAccounts[0].accountName || "",
+          bankName: userData.currentUser.bankAccounts[0].bankName || "",
+          accountNumber: userData.currentUser.bankAccounts[0].accountNumber || "",
+          phoneNumber: userData.currentUser.bankAccounts[0].phoneNumber || "",
+          networkProvider: userData.currentUser.bankAccounts[0].networkProvider || "",
+          accountType: userData.currentUser.bankAccounts[0].accountType || "savings",
+          bankCode: userData.currentUser.bankAccounts[0].bankCode || "",
         });
       }
     }
@@ -231,15 +231,15 @@ const account = () => {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm text-[#030229B2] mb-2">Account Holder</p>
-                  <p className="font-medium">{userData?.currentUser?.bankAccounts?.accountName || "-"}</p>
+                  <p className="font-medium">{userData?.currentUser?.bankAccounts?.[0]?.accountName || "-"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-[#030229B2] mb-2">Bank Name</p>
-                  <p className="font-medium">{userData?.currentUser?.bankAccounts?.bankName || "-"}</p>
+                  <p className="font-medium">{userData?.currentUser?.bankAccounts?.[0]?.bankName || "-"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-[#030229B2] mb-2">Account Number</p>
-                  <p className="font-medium">{userData?.currentUser?.bankAccounts?.accountNumber || "-"}</p>
+                  <p className="font-medium">{userData?.currentUser?.bankAccounts?.[0]?.accountNumber || "-"}</p>
                 </div>
               </div>
             </div>
