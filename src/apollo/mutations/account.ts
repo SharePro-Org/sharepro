@@ -124,3 +124,22 @@ export const GET_BUSINESS_SETTINGS = gql`
     }
   }
 `;
+export const DEACTIVATE_BUSINESS = gql`
+  mutation DeactivateBusiness($input: DeactivateBusinessInput!) {
+    deactivateBusiness(input: $input) {
+      message
+      success
+    }
+  }
+`;
+
+export const LOGOUT = gql`
+  mutation Logout {
+    logout {
+      message
+      success
+    }
+  }
+`;
+
+

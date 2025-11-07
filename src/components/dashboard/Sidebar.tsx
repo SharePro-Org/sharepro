@@ -21,6 +21,13 @@ import {
   LogOut,
 } from "lucide-react";
 import { useState } from "react";
+
+type LogoutMutationResponse = {
+  logout: {
+    message: string;
+    success: boolean;
+  };
+};
 import { hr } from "@uiw/react-md-editor";
 import { FaUserGroup } from "react-icons/fa6";
 
@@ -75,12 +82,25 @@ export default function Sidebar({
 
   const [show, setShow] = useState(false);
 
-  const handleLogout = () => {
-    localStorage.clear();
-    if (pathname.startsWith("/user")) {
-      router.push("/user/auth/login");
-    } else {
-      router.push("/auth/sign-in");
+  const handleLogout = async () => {
+    try {
+      const { LOGOUT } = await import("@/apollo/mutations/account");
+      const { useMutation } = await import("@apollo/client/react");
+      const [logout] = useMutation<LogoutMutationResponse>(LOGOUT);
+      const result = await logout();
+      const logoutData = result?.data?.logout;
+      if (logoutData?.success) {
+        localStorage.clear();
+        if (pathname.startsWith("/user")) {
+          router.push("/user/auth/login");
+        } else {
+          router.push("/auth/sign-in");
+        }
+      } else {
+        alert(logoutData?.message || "Logout failed.");
+      }
+    } catch (error) {
+      alert("Logout failed.");
     }
   };
 

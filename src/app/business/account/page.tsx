@@ -40,6 +40,7 @@ const account = () => {
   // Replace with actual businessId and inviterName from context/store
   const [businessId, setBusinessId] = useState<string>("");
   const [user] = useAtom(userAtom);
+  const [detailedReason, setDetailedReason] = useState("");
 
   const [editBusinessForm, setEditBusinessForm] = useState({
     name: "",
@@ -143,6 +144,28 @@ const account = () => {
     }>;
   };
 
+  type DeactivateBusinessVariables = {
+    input: {
+      businessId: string;
+      reason: string;
+      detailedReason: string;
+    };
+  };
+
+  type DeactivateBusinessResponse = {
+    deactivateBusiness: {
+      success: boolean;
+      message: string;
+    };
+  };
+
+  type LogoutResponse = {
+    logout: {
+      success: boolean;
+      message: string;
+    };
+  };
+
   const {
     data: membersData,
     loading: membersLoading,
@@ -179,9 +202,9 @@ const account = () => {
   // Get cities for the selected country
   const cities = selectedCountry
     ? City.getCitiesOfCountry(selectedCountry)?.map((city) => ({
-        value: city.name,
-        label: city.name,
-      })) || []
+      value: city.name,
+      label: city.name,
+    })) || []
     : [];
 
   const handleCountryChange = (countryCode: string) => {
@@ -197,17 +220,15 @@ const account = () => {
           <div className="lg:w-[20%] flex flex-col text-sm gap-3 items-start bg-white rounded-md p-4">
             <button
               onClick={() => setActive("profile")}
-              className={`p-3 rounded-full text-left w-full ${
-                active === "profile" && "bg-[#ECF3FF] text-primary"
-              }`}
+              className={`p-3 rounded-full text-left w-full ${active === "profile" && "bg-[#ECF3FF] text-primary"
+                }`}
             >
               Profile
             </button>
             <button
               onClick={() => setActive("users")}
-              className={`p-3 rounded-full w-full text-left ${
-                active === "users" && "bg-[#ECF3FF] text-primary"
-              }`}
+              className={`p-3 rounded-full w-full text-left ${active === "users" && "bg-[#ECF3FF] text-primary"
+                }`}
             >
               Users
             </button>
@@ -700,7 +721,7 @@ const account = () => {
                 <span className="text-sm text-[#030229CC]">
                   Let us know why you're leaving, this helps us improve.
                 </span>
-                <textarea className="rounded-md h-32 border border-[#E5E5EA] rounded-md p-3 w-full"></textarea>
+                <textarea value={detailedReason} onChange={(e) => setDetailedReason(e.target.value)} className="rounded-md h-32 border border-[#E5E5EA] rounded-md p-3 w-full"></textarea>
 
                 <div className="flex justify-center gap-4">
                   <button
@@ -739,8 +760,51 @@ const account = () => {
                     Yes Deactivate
                   </button>
                   <button
-                    onClick={() => setOpenDeactivateModal(false)}
-                    className="bg-gray-500 text-white p-3 rounded-md"
+                    onClick={async () => {
+                      if (!detailedReason.trim()) {
+                        alert("Please provide a reason for deactivation.");
+                        return;
+                      }
+                      try {
+                        const { DEACTIVATE_BUSINESS, LOGOUT } = await import("@/apollo/mutations/account");
+                        const [deactivateBusiness] = useMutation<DeactivateBusinessResponse, DeactivateBusinessVariables>(DEACTIVATE_BUSINESS);
+                        const [logout] = useMutation<LogoutResponse>(LOGOUT);
+
+                        // First try to deactivate the business
+                        const deactivateResponse = await deactivateBusiness({
+                          variables: {
+                            input: {
+                              businessId,
+                              reason: "USER_REQUEST",
+                              detailedReason: detailedReason,
+                            },
+                          },
+                        });
+
+                        if (deactivateResponse?.data?.deactivateBusiness?.success) {
+                          try {
+                            // Try to log out the user
+                            const logoutResponse = await logout();
+                            if (logoutResponse?.data?.logout?.success) {
+                              localStorage.clear(); // Clear any stored data
+                              window.location.href = "/login"; // Redirect to login
+                            } else {
+                              // alert("Business deactivated successfully, but logout failed. Please manually log out.");
+                              setOpenDeactivateModal(false);
+                            }
+                          } catch (logoutError) {
+                            // alert("Business deactivated successfully, but logout failed. Please manually log out.");
+                            setOpenDeactivateModal(false);
+                          }
+                        } else {
+                          // Show the specific error message from the API if available
+                          // alert(deactivateResponse?.data?.deactivateBusiness?.message || "Failed to deactivate business. Please try again.");
+                        }
+                      } catch (error: any) {
+                        // Show a more specific error message if available
+                        alert(error.message || "An error occurred while deactivating the business. Please try again.");
+                      }
+                    }} className="bg-gray-500 text-white p-3 rounded-md"
                   >
                     Cancel
                   </button>
