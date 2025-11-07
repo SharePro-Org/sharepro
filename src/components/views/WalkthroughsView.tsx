@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowLeft, SearchIcon, Play, Clock } from "lucide-react";
+import { ArrowLeft, SearchIcon, Play, Clock, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { useQuery } from "@apollo/client/react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 import { ALL_WALKTHROUGH_VIDEOS } from "@/apollo/queries/support";
 import { WalkthroughVideo } from "@/apollo/types";
@@ -12,6 +13,8 @@ const walkthroughs = () => {
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState("All Tutorials");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedVideo, setSelectedVideo] = useState<WalkthroughVideo | null>(null);
+  const [showVideoModal, setShowVideoModal] = useState(false);
 
   interface WalkthroughVideosQueryData {
     walkthroughVideos: WalkthroughVideo[];
@@ -79,11 +82,10 @@ const walkthroughs = () => {
           <button
             key={category}
             onClick={() => setSelectedCategory(category)}
-            className={`rounded-md p-3 border ${
-              selectedCategory === category
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-[#E5E5EA] hover:border-primary/50"
-            }`}
+            className={`rounded-md p-3 border ${selectedCategory === category
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-[#E5E5EA] hover:border-primary/50"
+              }`}
           >
             {category}
           </button>
@@ -123,7 +125,13 @@ const walkthroughs = () => {
                   </div>
                 )}
                 {/* Play Button Overlay */}
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity">
+                <div
+                  className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
+                  onClick={() => {
+                    setSelectedVideo(video);
+                    setShowVideoModal(true);
+                  }}
+                >
                   <button className="bg-white/90 rounded-full p-3 hover:bg-white transition-colors">
                     <Play className="w-6 h-6 text-gray-800 ml-1" />
                   </button>
@@ -164,6 +172,59 @@ const walkthroughs = () => {
           ))}
         </div>
       )}
+
+      {/* Video Player Modal */}
+      <Dialog open={showVideoModal} onOpenChange={() => setShowVideoModal(false)}>
+        <DialogContent size="xl" className="">
+          <div className="relative">
+            <button
+              onClick={() => setShowVideoModal(false)}
+              className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100 transition-colors z-10"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="aspect-video w-full bg-black rounded-lg">
+              {selectedVideo?.fileUrl && (
+                <video
+                  key={selectedVideo.fileUrl}
+                  src={selectedVideo.fileUrl}
+                  className="w-full h-full rounded-lg"
+                  controls
+                  autoPlay
+                  playsInline
+                  controlsList="nodownload"
+                  poster={selectedVideo.thumbnailUrl || undefined}
+                >
+                  Your browser does not support the video tag.
+                </video>
+              )}
+            </div>
+
+            <div className="mt-4">
+              <h2 className="text-xl font-semibold text-gray-900">
+                {selectedVideo?.name}
+              </h2>
+              <p className="mt-2 text-gray-600">
+                {selectedVideo?.description}
+              </p>
+              <div className="mt-3 flex items-center gap-3 text-sm text-gray-500">
+                <span className="bg-gray-100 px-2 py-1 rounded">
+                  {selectedVideo?.category}
+                </span>
+                <span>{selectedVideo?.viewCount} views</span>
+                {selectedVideo?.duration && (
+                  <span className="flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    {Math.floor(selectedVideo.duration / 60)}:
+                    {(selectedVideo.duration % 60).toString().padStart(2, "0")}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };
