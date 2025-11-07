@@ -47,6 +47,15 @@ export const GET_USER = gql`
         id
         language
       }
+      bankAccounts {
+        accountName
+        accountNumber
+        accountType
+        bankCode
+        bankName
+        phoneNumber
+        networkProvider
+      }
     }
   }
 `;
@@ -136,6 +145,15 @@ export const DEACTIVATE_BUSINESS = gql`
 export const LOGOUT = gql`
   mutation Logout {
     logout {
+      message
+      success
+    }
+  }
+`;
+
+export const CREATE_USER_BANK_DETAILS = gql`
+  mutation CreateUserBankDetails($input: CreateUserBankDetailsInput!) {
+    createUserBankDetails(input: $input) {
       message
       success
     }

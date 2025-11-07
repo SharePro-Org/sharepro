@@ -7,7 +7,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
 import { useQuery, useMutation } from "@apollo/client/react";
-import { GET_USER, UPDATE_USER } from "@/apollo/mutations/account";
+import { GET_USER, UPDATE_USER, CREATE_USER_BANK_DETAILS } from "@/apollo/mutations/account";
 
 type UserProfile = {
   firstName: string;
@@ -23,6 +23,23 @@ type CurrentUser = {
 
 type GetUserData = {
   currentUser?: CurrentUser;
+};
+
+type CreateBankDetailsResponse = {
+  createUserBankDetails: {
+    success: boolean;
+    message: string;
+  };
+};
+
+type CreateBankDetailsVariables = {
+  input: {
+    accountName: string;
+    bankName: string;
+    accountNumber: string;
+    phoneNumber: string;
+    networkProvider: string;
+  };
 };
 
 const account = () => {
@@ -44,6 +61,23 @@ const account = () => {
     accountHolder: "",
     bankName: "",
     accountNumber: "",
+    phoneNumber: "",
+    networkProvider: "",
+  });
+
+  const [createBankDetails, { loading: bankDetailsLoading, error: bankDetailsError }] = useMutation<
+    CreateBankDetailsResponse,
+    CreateBankDetailsVariables
+  >(CREATE_USER_BANK_DETAILS, {
+    onCompleted: (data) => {
+      if (data.createUserBankDetails.success) {
+        setOpenBankModal(false);
+        // alert(data.createUserBankDetails.message || "Bank details saved successfully!");
+      }
+    },
+    onError: (error) => {
+      console.error('Error creating bank details:', error);
+    }
   });
   useEffect(() => {
     if (userData?.currentUser?.userProfile) {
@@ -51,6 +85,13 @@ const account = () => {
         firstName: userData.currentUser.userProfile.firstName || "",
         lastName: userData.currentUser.userProfile.lastName || "",
         phone: userData.currentUser.phone || "",
+      });
+      setBankForm({
+        accountHolder: userData.currentUser.bankAccounts?.accountHolder || "",
+        bankName: userData.currentUser.bankAccounts?.bankName || "",
+        accountNumber: userData.currentUser.bankAccounts?.accountNumber || "",
+        phoneNumber: userData.currentUser.bankAccounts?.phoneNumber || "",
+        networkProvider: userData.currentUser.bankAccounts?.networkProvider || "",
       });
     }
   }, [userData]);
@@ -126,15 +167,15 @@ const account = () => {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm text-[#030229B2] mb-2">Account Holder</p>
-                  <p className="font-medium">-</p>
+                  <p className="font-medium">{userData?.currentUser.bankAccounts?.accountName}</p>
                 </div>
                 <div>
                   <p className="text-sm text-[#030229B2] mb-2">Bank Name</p>
-                  <p className="font-medium">-</p>
+                  <p className="font-medium">{userData?.currentUser.bankAccounts?.bankName}</p>
                 </div>
                 <div>
                   <p className="text-sm text-[#030229B2] mb-2">Account Number</p>
-                  <p className="font-medium">-</p>
+                  <p className="font-medium">{userData?.currentUser.bankAccounts?.accountNumber}</p>
                 </div>
               </div>
             </div>
@@ -300,11 +341,27 @@ const account = () => {
               Add Bank Account Details
             </h2>
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                // Handle bank account submission here
-                console.log("Bank details:", bankForm);
-                setOpenBankModal(false);
+                if (!bankForm.accountHolder || !bankForm.bankName || !bankForm.accountNumber || !bankForm.phoneNumber || !bankForm.networkProvider) {
+                  alert("Please fill in all fields");
+                  return;
+                }
+                try {
+                  await createBankDetails({
+                    variables: {
+                      input: {
+                        accountName: bankForm.accountHolder,
+                        bankName: bankForm.bankName,
+                        accountNumber: bankForm.accountNumber,
+                        phoneNumber: bankForm.phoneNumber,
+                        networkProvider: bankForm.networkProvider
+                      }
+                    }
+                  });
+                } catch (error) {
+                  console.error('Error submitting form:', error);
+                }
               }}
               className="space-y-4"
             >
@@ -317,18 +374,39 @@ const account = () => {
                   onChange={(e) => setBankForm({ ...bankForm, accountHolder: e.target.value })}
                   placeholder="Enter account holder name"
                   className="border border-[#E5E5EA] rounded-md p-2 w-full"
+                  required
                 />
               </div>
               <div>
                 <label htmlFor="bankName" className="mb-2 text-[#030229CC] text-sm">Bank Name</label>
-                <input
-                  type="text"
+                <select
                   id="bankName"
                   value={bankForm.bankName}
                   onChange={(e) => setBankForm({ ...bankForm, bankName: e.target.value })}
-                  placeholder="Enter bank name"
-                  className="border border-[#E5E5EA] rounded-md p-2 w-full"
-                />
+                  className="border border-[#E5E5EA] rounded-md p-2 w-full capitalize"
+                  required
+                >
+                  <option value="">Select Bank</option>
+                  <option value="access_bank">Access Bank</option>
+                  <option value="gtbank">GTBank</option>
+                  <option value="first_bank">First Bank</option>
+                  <option value="zenith_bank">Zenith Bank</option>
+                  <option value="uba">UBA</option>
+                  <option value="fidelity_bank">Fidelity Bank</option>
+                  <option value="union_bank">Union Bank</option>
+                  <option value="sterling_bank">Sterling Bank</option>
+                  <option value="stanbic_ibtc">Stanbic IBTC</option>
+                  <option value="fcmb">FCMB</option>
+                  <option value="wema_bank">Wema Bank</option>
+                  <option value="ecobank">Ecobank</option>
+                  <option value="keystone_bank">Keystone Bank</option>
+                  <option value="polaris_bank">Polaris Bank</option>
+                  <option value="providus_bank">Providus Bank</option>
+                  <option value="opay">OPay</option>
+                  <option value="palmpay">PalmPay</option>
+                  <option value="kuda">Kuda</option>
+                  <option value="other">Other</option>
+                </select>
               </div>
               <div>
                 <label htmlFor="accountNumber" className="mb-2 text-[#030229CC] text-sm">Account Number</label>
@@ -339,11 +417,49 @@ const account = () => {
                   onChange={(e) => setBankForm({ ...bankForm, accountNumber: e.target.value })}
                   placeholder="Enter account number"
                   className="border border-[#E5E5EA] rounded-md p-2 w-full"
+                  required
                 />
               </div>
+              <div>
+                <label htmlFor="phoneNumber" className="mb-2 text-[#030229CC] text-sm">Mobile Money Number</label>
+                <input
+                  type="tel"
+                  id="phoneNumber"
+                  value={bankForm.phoneNumber}
+                  onChange={(e) => setBankForm({ ...bankForm, phoneNumber: e.target.value })}
+                  placeholder="Enter mobile money number"
+                  className="border border-[#E5E5EA] rounded-md p-2 w-full"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="networkProvider" className="mb-2 text-[#030229CC] text-sm">Network Provider</label>
+                <select
+                  id="networkProvider"
+                  value={bankForm.networkProvider}
+                  onChange={(e) => setBankForm({ ...bankForm, networkProvider: e.target.value })}
+                  className="border border-[#E5E5EA] rounded-md p-2 w-full"
+                  required
+                >
+                  <option value="">Select Network Provider</option>
+                  <option value="mtn">MTN</option>
+                  <option value="glo">GLO</option>
+                  <option value="airtel">Airtel</option>
+                  <option value="9mobile">9mobile</option>
+                </select>
+              </div>
+              {bankDetailsError && (
+                <div className="text-red-500 text-sm">
+                  Error saving bank details: {bankDetailsError.message}
+                </div>
+              )}
               <div className="text-center">
-                <button type="submit" className="p-3 bg-primary rounded-md text-white">
-                  Save Bank Details
+                <button
+                  type="submit"
+                  className="p-3 bg-primary rounded-md text-white w-full"
+                  disabled={bankDetailsLoading}
+                >
+                  {bankDetailsLoading ? "Saving..." : "Save Bank Details"}
                 </button>
               </div>
             </form>
