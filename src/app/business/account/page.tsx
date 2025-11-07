@@ -474,8 +474,8 @@ const account = () => {
                 e.preventDefault();
                 await updateBusiness({
                   variables: {
-                    businessId: businessId,
                     input: {
+                      // businessId: businessId,
                       name: editBusinessForm.name,
                       phone: editBusinessForm.phone,
                       category: editBusinessForm.category,

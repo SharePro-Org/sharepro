@@ -88,8 +88,8 @@ export const UPDATE_USER = gql`
 `;
 
 export const UPDATE_BUSINESS = gql`
-  mutation UpdateBusiness($businessId: UUID!, $input: UpdateOnboardingInput!) {
-    updateBusiness(businessId: $businessId, input: $input) {
+  mutation UpdateBusiness($input: UpdateBusinessInfoInput!) {
+    updateBusiness(input: $input) {
       business {
         id
         name

@@ -70,6 +70,9 @@ const adminLinks = [
   { label: "Account", href: "/admin/account", icon: User },
 ];
 
+import { LOGOUT } from "@/apollo/mutations/account";
+import { useMutation } from "@apollo/client/react";
+
 export default function Sidebar({
   open,
   user,
@@ -79,27 +82,32 @@ export default function Sidebar({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-
   const [show, setShow] = useState(false);
 
-  const handleLogout = async () => {
-    try {
-      const { LOGOUT } = await import("@/apollo/mutations/account");
-      const { useMutation } = await import("@apollo/client/react");
-      const [logout] = useMutation<LogoutMutationResponse>(LOGOUT);
-      const result = await logout();
-      const logoutData = result?.data?.logout;
-      if (logoutData?.success) {
+  const [logout] = useMutation<LogoutMutationResponse>(LOGOUT, {
+    onCompleted: (data) => {
+      // if (data.logout?.success) {
         localStorage.clear();
         if (pathname.startsWith("/user")) {
           router.push("/user/auth/login");
         } else {
           router.push("/auth/sign-in");
         }
-      } else {
-        alert(logoutData?.message || "Logout failed.");
-      }
+    //   } else {
+    //     alert(data.logout?.message || "Logout failed.");
+    //   }
+    },
+    onError: (error) => {
+      console.error(error);
+      // alert("Logout failed.");
+    }
+  });
+
+  const handleLogout = () => {
+    try {
+      logout();
     } catch (error) {
+      console.error(error);
       alert("Logout failed.");
     }
   };
