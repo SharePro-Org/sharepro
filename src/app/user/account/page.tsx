@@ -7,28 +7,62 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
 import { useQuery, useMutation } from "@apollo/client/react";
-import { GET_USER, UPDATE_USER, CREATE_USER_BANK_DETAILS } from "@/apollo/mutations/account";
+import {
+  GET_USER,
+  UPDATE_USER,
+  CREATE_USER_BANK_DETAILS,
+  DEACTIVATE_USER_ACCOUNT
+} from "@/apollo/mutations/account";
 
 type UserProfile = {
   firstName: string;
   lastName: string;
   phone?: string;
+  id: string;
+  language: string;
+};
+
+type BankAccount = {
+  accountName: string;
+  accountNumber: string;
+  accountType: string;
+  bankCode: string;
+  bankName: string;
+  phoneNumber: string;
+  networkProvider: string;
 };
 
 type CurrentUser = {
   userProfile?: UserProfile;
   email: string;
   phone?: string;
+  dateJoined: string;
+  bankAccounts?: BankAccount;
 };
 
 type GetUserData = {
-  currentUser?: CurrentUser;
+  currentUser: CurrentUser;
 };
 
 type CreateBankDetailsResponse = {
   createUserBankDetails: {
     success: boolean;
     message: string;
+  };
+};
+
+type DeactivateUserAccountResponse = {
+  deactivateUserAccount: {
+    success: boolean;
+    message: string;
+  };
+};
+
+type DeactivateUserAccountVariables = {
+  input: {
+    reason: string;
+    password: string;
+    detailedReason: string;
   };
 };
 
@@ -57,12 +91,37 @@ const account = () => {
     lastName: "",
     phone: "",
   });
+
+  const [deactivateForm, setDeactivateForm] = useState({
+    reason: "",
+    password: "",
+    detailedReason: "",
+  });
+
+  const [deactivateAccount, { loading: deactivateLoading }] = useMutation<
+    DeactivateUserAccountResponse,
+    DeactivateUserAccountVariables
+  >(DEACTIVATE_USER_ACCOUNT, {
+    onCompleted: (data) => {
+      if (data.deactivateUserAccount.success) {
+        localStorage.clear();
+        window.location.href = "/login";
+      } else {
+        alert(data.deactivateUserAccount.message);
+      }
+    },
+    onError: (error) => {
+      alert(error.message);
+    }
+  });
   const [bankForm, setBankForm] = useState({
-    accountHolder: "",
+    accountName: "",
     bankName: "",
     accountNumber: "",
     phoneNumber: "",
     networkProvider: "",
+    accountType: "savings", // default value
+    bankCode: "", // This will be set based on selected bank
   });
 
   const [createBankDetails, { loading: bankDetailsLoading, error: bankDetailsError }] = useMutation<
@@ -86,13 +145,18 @@ const account = () => {
         lastName: userData.currentUser.userProfile.lastName || "",
         phone: userData.currentUser.phone || "",
       });
-      setBankForm({
-        accountHolder: userData.currentUser.bankAccounts?.accountHolder || "",
-        bankName: userData.currentUser.bankAccounts?.bankName || "",
-        accountNumber: userData.currentUser.bankAccounts?.accountNumber || "",
-        phoneNumber: userData.currentUser.bankAccounts?.phoneNumber || "",
-        networkProvider: userData.currentUser.bankAccounts?.networkProvider || "",
-      });
+
+      if (userData.currentUser.bankAccounts) {
+        setBankForm({
+          accountName: userData.currentUser.bankAccounts.accountName || "",
+          bankName: userData.currentUser.bankAccounts.bankName || "",
+          accountNumber: userData.currentUser.bankAccounts.accountNumber || "",
+          phoneNumber: userData.currentUser.bankAccounts.phoneNumber || "",
+          networkProvider: userData.currentUser.bankAccounts.networkProvider || "",
+          accountType: userData.currentUser.bankAccounts.accountType || "savings",
+          bankCode: userData.currentUser.bankAccounts.bankCode || "",
+        });
+      }
     }
   }, [userData]);
 
@@ -167,15 +231,15 @@ const account = () => {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm text-[#030229B2] mb-2">Account Holder</p>
-                  <p className="font-medium">{userData?.currentUser.bankAccounts?.accountName}</p>
+                  <p className="font-medium">{userData?.currentUser?.bankAccounts?.accountName || "-"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-[#030229B2] mb-2">Bank Name</p>
-                  <p className="font-medium">{userData?.currentUser.bankAccounts?.bankName}</p>
+                  <p className="font-medium">{userData?.currentUser?.bankAccounts?.bankName || "-"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-[#030229B2] mb-2">Account Number</p>
-                  <p className="font-medium">{userData?.currentUser.bankAccounts?.accountNumber}</p>
+                  <p className="font-medium">{userData?.currentUser?.bankAccounts?.accountNumber || "-"}</p>
                 </div>
               </div>
             </div>
@@ -282,7 +346,13 @@ const account = () => {
                 <span className="text-sm text-[#030229CC]">
                   Let us know why you're leaving, this helps us improve.
                 </span>
-                <textarea className="rounded-md h-32 border border-[#E5E5EA] rounded-md p-3 w-full"></textarea>
+                <textarea
+                  className="rounded-md h-32 border border-[#E5E5EA] rounded-md p-3 w-full"
+                  value={deactivateForm.detailedReason}
+                  onChange={(e) => setDeactivateForm({ ...deactivateForm, detailedReason: e.target.value })}
+                  placeholder="Please provide detailed reason for deactivation"
+                  required
+                ></textarea>
 
                 <div className="flex justify-center gap-4">
                   <button
@@ -292,7 +362,13 @@ const account = () => {
                     Cancel
                   </button>
                   <button
-                    onClick={() => setSteps(1)}
+                    onClick={() => {
+                      if (!deactivateForm.detailedReason.trim()) {
+                        alert("Please provide a reason for deactivation");
+                        return;
+                      }
+                      setSteps(1);
+                    }}
                     className="bg-primary text-white p-3 rounded-md"
                   >
                     Deactivate Account
@@ -313,12 +389,39 @@ const account = () => {
                   This action will pause all platform activity for your account.
                   You can reactivate later by logging in again.
                 </p>
+                <div className="my-4">
+                  <label htmlFor="password" className="mb-2 text-[#030229CC] text-sm">Enter your password to confirm</label>
+                  <input
+                    type="password"
+                    id="password"
+                    value={deactivateForm.password}
+                    onChange={(e) => setDeactivateForm({ ...deactivateForm, password: e.target.value })}
+                    className="border border-[#E5E5EA] rounded-md p-2 w-full"
+                    placeholder="Enter your password"
+                    required
+                  />
+                </div>
                 <div className="flex justify-center gap-4">
                   <button
-                    onClick={() => setSteps(1)}
+                    onClick={() => {
+                      if (!deactivateForm.password) {
+                        alert("Please enter your password to confirm deactivation");
+                        return;
+                      }
+                      deactivateAccount({
+                        variables: {
+                          input: {
+                            reason: "user_request",
+                            password: deactivateForm.password,
+                            detailedReason: deactivateForm.detailedReason
+                          }
+                        }
+                      });
+                    }}
+                    disabled={deactivateLoading}
                     className="bg-[#E7302B] text-white p-3 rounded-md"
                   >
-                    Yes Deactivate
+                    {deactivateLoading ? "Processing..." : "Yes Deactivate"}
                   </button>
                   <button
                     onClick={() => setOpenDeactivateModal(false)}
@@ -343,7 +446,7 @@ const account = () => {
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
-                if (!bankForm.accountHolder || !bankForm.bankName || !bankForm.accountNumber || !bankForm.phoneNumber || !bankForm.networkProvider) {
+                if (!bankForm.accountName || !bankForm.bankName || !bankForm.accountNumber || !bankForm.phoneNumber || !bankForm.networkProvider) {
                   alert("Please fill in all fields");
                   return;
                 }
@@ -351,7 +454,7 @@ const account = () => {
                   await createBankDetails({
                     variables: {
                       input: {
-                        accountName: bankForm.accountHolder,
+                        accountName: bankForm.accountName,
                         bankName: bankForm.bankName,
                         accountNumber: bankForm.accountNumber,
                         phoneNumber: bankForm.phoneNumber,
@@ -366,12 +469,12 @@ const account = () => {
               className="space-y-4"
             >
               <div>
-                <label htmlFor="accountHolder" className="mb-2 text-[#030229CC] text-sm">Account Holder Name</label>
+                <label htmlFor="accountName" className="mb-2 text-[#030229CC] text-sm">Account Holder Name</label>
                 <input
                   type="text"
-                  id="accountHolder"
-                  value={bankForm.accountHolder}
-                  onChange={(e) => setBankForm({ ...bankForm, accountHolder: e.target.value })}
+                  id="accountName"
+                  value={bankForm.accountName}
+                  onChange={(e) => setBankForm({ ...bankForm, accountName: e.target.value })}
                   placeholder="Enter account holder name"
                   className="border border-[#E5E5EA] rounded-md p-2 w-full"
                   required

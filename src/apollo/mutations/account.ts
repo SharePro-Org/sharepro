@@ -160,4 +160,13 @@ export const CREATE_USER_BANK_DETAILS = gql`
   }
 `;
 
+export const DEACTIVATE_USER_ACCOUNT = gql`
+  mutation DeactivateUserAccount($input: DeactivateUserAccountInput!) {
+    deactivateUserAccount(input: $input) {
+      success
+      message
+    }
+  }
+`;
+
 
