@@ -18,6 +18,8 @@ import {
   GET_BUSINESS,
   INVITE_MEMBER,
   UPDATE_BUSINESS,
+  LOGOUT,
+  DEACTIVATE_BUSINESS,
 } from "@/apollo/mutations/account";
 import { useQuery } from "@apollo/client/react";
 
@@ -34,8 +36,42 @@ const account = () => {
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
   const [inviteMember] = useMutation(INVITE_MEMBER);
-  const [updateBusiness, { loading: updateLoading, error: updateError }] =
-    useMutation(UPDATE_BUSINESS);
+  const [updateBusiness, { loading: updateLoading, error: updateError }] = useMutation(UPDATE_BUSINESS);
+
+  const [deactivateBusiness, { loading: deactivateLoading }] = useMutation<DeactivateBusinessResponse, DeactivateBusinessVariables>(
+    DEACTIVATE_BUSINESS,
+    {
+      onCompleted: (data) => {
+        if (data.deactivateBusiness?.success) {
+          // After successful deactivation, proceed with logout
+          logout();
+        } else {
+          // alert(data.deactivateBusiness?.message || "Failed to deactivate business. Please try again.");
+          setOpenDeactivateModal(false);
+        }
+      },
+      onError: (error) => {
+        // alert(error.message || "An error occurred while deactivating the business. Please try again.");
+        setOpenDeactivateModal(false);
+      }
+    }
+  );
+
+  const [logout] = useMutation<LogoutResponse>(LOGOUT, {
+    onCompleted: (data) => {
+      if (data.logout?.success) {
+        localStorage.clear();
+        window.location.href = "/login";
+      } else {
+        alert("Logout failed. Please try again.");
+        setOpenDeactivateModal(false);
+      }
+    },
+    onError: (error) => {
+      alert("Logout failed. Please try again.");
+      setOpenDeactivateModal(false);
+    }
+  });
 
   // Replace with actual businessId and inviterName from context/store
   const [businessId, setBusinessId] = useState<string>("");
@@ -146,7 +182,7 @@ const account = () => {
 
   type DeactivateBusinessVariables = {
     input: {
-      businessId: string;
+      // businessId: string;
       reason: string;
       detailedReason: string;
     };
@@ -754,57 +790,29 @@ const account = () => {
                 </p>
                 <div className="flex justify-center gap-4">
                   <button
-                    onClick={() => setSteps(1)}
-                    className="bg-[#E7302B] text-white p-3 rounded-md"
-                  >
-                    Yes Deactivate
-                  </button>
-                  <button
-                    onClick={async () => {
+                    onClick={() => {
                       if (!detailedReason.trim()) {
                         alert("Please provide a reason for deactivation.");
+                        setSteps(0);
                         return;
                       }
-                      try {
-                        const { DEACTIVATE_BUSINESS, LOGOUT } = await import("@/apollo/mutations/account");
-                        const [deactivateBusiness] = useMutation<DeactivateBusinessResponse, DeactivateBusinessVariables>(DEACTIVATE_BUSINESS);
-                        const [logout] = useMutation<LogoutResponse>(LOGOUT);
-
-                        // First try to deactivate the business
-                        const deactivateResponse = await deactivateBusiness({
-                          variables: {
-                            input: {
-                              businessId,
-                              reason: "USER_REQUEST",
-                              detailedReason: detailedReason,
-                            },
+                      deactivateBusiness({
+                        variables: {
+                          input: {
+                            reason: "USER_REQUEST",
+                            detailedReason: detailedReason,
                           },
-                        });
-
-                        if (deactivateResponse?.data?.deactivateBusiness?.success) {
-                          try {
-                            // Try to log out the user
-                            const logoutResponse = await logout();
-                            if (logoutResponse?.data?.logout?.success) {
-                              localStorage.clear(); // Clear any stored data
-                              window.location.href = "/login"; // Redirect to login
-                            } else {
-                              // alert("Business deactivated successfully, but logout failed. Please manually log out.");
-                              setOpenDeactivateModal(false);
-                            }
-                          } catch (logoutError) {
-                            // alert("Business deactivated successfully, but logout failed. Please manually log out.");
-                            setOpenDeactivateModal(false);
-                          }
-                        } else {
-                          // Show the specific error message from the API if available
-                          // alert(deactivateResponse?.data?.deactivateBusiness?.message || "Failed to deactivate business. Please try again.");
-                        }
-                      } catch (error: any) {
-                        // Show a more specific error message if available
-                        alert(error.message || "An error occurred while deactivating the business. Please try again.");
-                      }
-                    }} className="bg-gray-500 text-white p-3 rounded-md"
+                        },
+                      });
+                    }}
+                    disabled={deactivateLoading}
+                    className="bg-[#E7302B] text-white p-3 rounded-md"
+                  >
+                    {deactivateLoading ? "Processing..." : "Yes Deactivate"}
+                  </button>
+                  <button
+                    onClick={() => setOpenDeactivateModal(false)}
+                    className="bg-gray-500 text-white p-3 rounded-md"
                   >
                     Cancel
                   </button>
