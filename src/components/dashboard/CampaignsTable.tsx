@@ -5,7 +5,7 @@ import { Dropdown, Button, message } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { GET_BUSINESS_CAMPAIGNS, GET_PAYOUT } from "@/apollo/queries/campaigns";
-import { ACTIVATE_CAMPAIGN, APPROVE_OR_REJECT_PROOF,PAUSE_CAMPAIGN } from "@/apollo/mutations/campaigns";
+import { ACTIVATE_CAMPAIGN, APPROVE_OR_REJECT_PROOF, PAUSE_CAMPAIGN, END_CAMPAIGN } from "@/apollo/mutations/campaigns";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
 import { useParams, useRouter } from "next/navigation";
@@ -89,6 +89,28 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
       },
     }
   );
+
+  const [endCampaign, { loading: endLoading }] = useMutation(
+    END_CAMPAIGN,
+    {
+      refetchQueries: [
+        { query: GET_BUSINESS_CAMPAIGNS, variables: { businessId } },
+      ],
+      onCompleted: (data: any) => {
+        if (data.endCampaign.success) {
+          message.success(data.endCampaign.message);
+        } else {
+          message.error(
+            data.endCampaign.message || "Failed to end campaign"
+          );
+        }
+      },
+      onError: (error) => {
+        message.error(`Error: ${error.message}`);
+      },
+    }
+  );
+
   const formatDate = (dateString: string): string => {
     try {
       const date = new Date(dateString);
@@ -120,6 +142,14 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
       variables: {
         id: campaignId,
         pause: true,
+      },
+    });
+  };
+
+  const handleEndCampaign = (campaignId: string) => {
+    endCampaign({
+      variables: {
+        id: campaignId,
       },
     });
   };
@@ -252,7 +282,16 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
                 </td>
                 <td className="px-4 py-3">
                   <span
-                    className={`inline-block px-3 py-1 rounded-[5px] text-white text-xs bg-green-500`}
+                    className={`inline-block px-3 py-1 rounded-[5px] text-white text-xs ${row.status === 'ACTIVE' || row.status === 'active'
+                        ? 'bg-green-500'
+                        : row.status === 'PAUSED' || row.status === 'paused'
+                          ? 'bg-yellow-500 text-black'
+                          : row.status === 'ENDED' || row.status === 'ended'
+                            ? 'bg-red-500'
+                            : row.status === 'COMPLETED' || row.status === 'completed'
+                              ? 'bg-blue-500'
+                              : 'bg-gray-500'
+                      }`}
                   >
                     {row.status}
                   </span>
@@ -275,13 +314,14 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
                           label: row.isActive
                             ? "Pause Campaign"
                             : "Activate Campaign",
-                          onClick: () =>
-                            {row.isActive ? handlePauseCampaignStatus(
+                          onClick: () => {
+                            row.isActive ? handlePauseCampaignStatus(
                               row.id
                             ) : handleToggleCampaignStatus(
                               row.id,
                               row.isActive
-                            )},
+                            )
+                          },
                           disabled: activateLoading,
                         },
                         // { key: "edit", label: "Edit Campaign" },
@@ -291,7 +331,12 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
                           onClick: () =>
                             router.push(`/business/campaigns/${row.id}`),
                         },
-                        { key: "end", label: "End Campaign" },
+                        {
+                          key: "end",
+                          label: "End Campaign",
+                          onClick: () => handleEndCampaign(row.id),
+                          disabled: endLoading || row.status === 'ENDED' || row.status === 'ended',
+                        },
                         // { key: "settings", label: "Campaign Settings" },
                         // { key: "payouts", label: "View Payouts" },
                         // { key: "download", label: "Download Report" },

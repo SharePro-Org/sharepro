@@ -108,6 +108,15 @@ export const PAUSE_CAMPAIGN = gql`
   }
 `;
 
+export const END_CAMPAIGN = gql`
+  mutation EndCampaign($id: UUID!) {
+    endCampaign(id: $id) {
+      message
+      success
+    }
+  }
+`;
+
 export const JOIN_CAMPAIGN = gql`
   mutation JoinCampaign($campaignId: UUID!, $userId: UUID!) {
     joinCampaign(campaignId: $campaignId, userId: $userId) {
