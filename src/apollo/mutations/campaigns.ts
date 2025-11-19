@@ -122,6 +122,7 @@ export const DELETE_CAMPAIGN = gql`
     deleteCampaign(id: $id) {
       message
       success
+      errors
     }
   }
 `;
