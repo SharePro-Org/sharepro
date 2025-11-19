@@ -5,7 +5,7 @@ import { Dropdown, Button, message } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { GET_BUSINESS_CAMPAIGNS, GET_PAYOUT } from "@/apollo/queries/campaigns";
-import { ACTIVATE_CAMPAIGN, APPROVE_OR_REJECT_PROOF, PAUSE_CAMPAIGN, END_CAMPAIGN } from "@/apollo/mutations/campaigns";
+import { ACTIVATE_CAMPAIGN, APPROVE_OR_REJECT_PROOF, PAUSE_CAMPAIGN, END_CAMPAIGN, DELETE_CAMPAIGN } from "@/apollo/mutations/campaigns";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
 import { useParams, useRouter } from "next/navigation";
@@ -111,6 +111,27 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
     }
   );
 
+  const [deleteCampaign, { loading: deleteLoading }] = useMutation(
+    DELETE_CAMPAIGN,
+    {
+      refetchQueries: [
+        { query: GET_BUSINESS_CAMPAIGNS, variables: { businessId } },
+      ],
+      onCompleted: (data: any) => {
+        if (data.deleteCampaign.success) {
+          message.success(data.deleteCampaign.message);
+        } else {
+          message.error(
+            data.deleteCampaign.message || "Failed to delete campaign"
+          );
+        }
+      },
+      onError: (error) => {
+        message.error(`Error: ${error.message}`);
+      },
+    }
+  );
+
   const formatDate = (dateString: string): string => {
     try {
       const date = new Date(dateString);
@@ -152,6 +173,16 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
         id: campaignId,
       },
     });
+  };
+
+  const handleDeleteCampaign = (campaignId: string) => {
+    if (window.confirm("Are you sure you want to delete this campaign? This action cannot be undone.")) {
+      deleteCampaign({
+        variables: {
+          id: campaignId,
+        },
+      });
+    }
   };
 
   const handleAddReward = (campaignType: string, campaignId: string) => {
@@ -283,14 +314,14 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
                 <td className="px-4 py-3">
                   <span
                     className={`inline-block px-3 py-1 rounded-[5px] text-white text-xs ${row.status === 'ACTIVE' || row.status === 'active'
-                        ? 'bg-green-500'
-                        : row.status === 'PAUSED' || row.status === 'paused'
-                          ? 'bg-yellow-500 text-black'
-                          : row.status === 'ENDED' || row.status === 'ended'
-                            ? 'bg-red-500'
-                            : row.status === 'COMPLETED' || row.status === 'completed'
-                              ? 'bg-blue-500'
-                              : 'bg-gray-500'
+                      ? 'bg-green-500'
+                      : row.status === 'PAUSED' || row.status === 'paused'
+                        ? 'bg-yellow-500 text-black'
+                        : row.status === 'ENDED' || row.status === 'ended'
+                          ? 'bg-red-500'
+                          : row.status === 'COMPLETED' || row.status === 'completed'
+                            ? 'bg-blue-500'
+                            : 'bg-gray-500'
                       }`}
                   >
                     {row.status}
@@ -345,6 +376,13 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
                           label: "Add Reward",
                           onClick: () =>
                             handleAddReward(row.campaignType, row.id),
+                        },
+                        {
+                          key: "delete",
+                          label: "Delete Campaign",
+                          onClick: () => handleDeleteCampaign(row.id),
+                          disabled: deleteLoading,
+                          danger: true,
                         },
                       ],
                     }}
