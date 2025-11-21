@@ -281,6 +281,11 @@ export const GET_SINGLE_PAYOUT = gql`
       lastName
       email
       phone
+      bankAccounts{
+        bankName
+        accountName
+        accountNumber
+      }
     }
   }
 }

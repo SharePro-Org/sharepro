@@ -25,7 +25,7 @@ const PayoutDetails = () => {
     });
 
     const [handleToggleRewardStatus, { loading: setLoading }] = useMutation(APPROVE_OR_REJECT_PROOF)
-
+    console.log(data?.reward?.user?.bankAccounts?.accountNumber)
 
     return (
         <DashboardLayout>
@@ -102,13 +102,13 @@ const PayoutDetails = () => {
                                 <p className="font-medium text-gray-800">{data?.reward?.user.phone}</p>
 
                                 <p className="text-gray-500">Account Number</p>
-                                <p className="font-medium text-gray-800"></p>
+                                <p className="font-medium text-gray-800">{data?.reward?.user?.bankAccounts?.[0]?.accountNumber}</p>
 
                                 <p className="text-gray-500">Bank Name</p>
-                                <p className="font-medium text-gray-800"></p>
+                                <p className="font-medium text-gray-800">{data?.reward?.user?.bankAccounts?.[0]?.bankName}</p>
 
                                 <p className="text-gray-500">Bank Holder’s Name</p>
-                                <p className="font-medium text-gray-800"></p>
+                                <p className="font-medium text-gray-800">{data?.reward?.user?.bankAccounts?.[0]?.accountName}</p>
                             </div>
                         </div>
                     </div>
