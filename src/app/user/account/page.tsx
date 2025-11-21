@@ -146,15 +146,18 @@ const account = () => {
         phone: userData.currentUser.phone || "",
       });
 
-      if (userData.currentUser.bankAccounts) {
+      const accounts = userData.currentUser.bankAccounts;
+      // Guard: only read index 0 when array exists and has at least one element
+      if (Array.isArray(accounts) && accounts.length > 0 && accounts[0]) {
+        const first = accounts[0];
         setBankForm({
-          accountName: userData.currentUser.bankAccounts[0].accountName || "",
-          bankName: userData.currentUser.bankAccounts[0].bankName || "",
-          accountNumber: userData.currentUser.bankAccounts[0].accountNumber || "",
-          phoneNumber: userData.currentUser.bankAccounts[0].phoneNumber || "",
-          networkProvider: userData.currentUser.bankAccounts[0].networkProvider || "",
-          accountType: userData.currentUser.bankAccounts[0].accountType || "savings",
-          bankCode: userData.currentUser.bankAccounts[0].bankCode || "",
+          accountName: first.accountName || "",
+          bankName: first.bankName || "",
+          accountNumber: first.accountNumber || "",
+          phoneNumber: first.phoneNumber || "",
+          networkProvider: first.networkProvider || "",
+          accountType: first.accountType || "savings",
+          bankCode: first.bankCode || "",
         });
       }
     }
