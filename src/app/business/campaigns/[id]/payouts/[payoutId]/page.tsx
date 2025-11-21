@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { CheckCircle, XCircle } from "lucide-react";
+import { CheckCircle, CopyIcon, XCircle } from "lucide-react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { IoWarning } from "react-icons/io5";
 import { useMutation, useQuery } from "@apollo/client/react";
@@ -15,6 +15,16 @@ const PayoutDetails = () => {
     const id = params.payoutId;
     const [modalOpen, setModalOpen] = useState(false);
     const [modalImage, setModalImage] = useState<string | null>(null);
+    // New modals for payout actions
+    const [airtimeOpen, setAirtimeOpen] = useState(false);
+    const [cashbackOpen, setCashbackOpen] = useState(false);
+    const [voucherOpen, setVoucherOpen] = useState(false);
+
+    const [voucherCode, setVoucherCode] = useState("");
+    const [voucherDiscount, setVoucherDiscount] = useState("");
+    const [voucherValidUntil, setVoucherValidUntil] = useState("");
+    const [voucherNotes, setVoucherNotes] = useState("");
+
     const {
         data,
         loading,
@@ -174,6 +184,26 @@ const PayoutDetails = () => {
                                     {setLoading ? 'loading...' : 'Approve Payout'}
 
                                 </button>)}
+                        {/* <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => setAirtimeOpen(true)}
+                                className="px-4 py-2 rounded-md border bg-white text-sm"
+                            >
+                                Airtime Details
+                            </button>
+                            <button
+                                onClick={() => setCashbackOpen(true)}
+                                className="px-4 py-2 rounded-md border bg-white text-sm"
+                            >
+                                Cashback Details
+                            </button>
+                            <button
+                                onClick={() => setVoucherOpen(true)}
+                                className="px-4 py-2 rounded-md border bg-white text-sm"
+                            >
+                                Voucher Details
+                            </button>
+                        </div> */}
                     </div>
                 </div>
                 {/* Modal for image preview */}
@@ -190,6 +220,138 @@ const PayoutDetails = () => {
                             <div className="bg-white rounded-md overflow-hidden">
                                 <Image src={modalImage} alt="Preview" width={1200} height={800} className="w-full h-auto object-contain bg-black" />
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Airtime Details Modal */}
+                {airtimeOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                        <div className="bg-white rounded-md p-6 w-full max-w-md mx-4 relative">
+                            {/* <button className="absolute left-6 top-6 text-gray-600" onClick={() => setAirtimeOpen(false)}>←</button> */}
+                            <button className="absolute right-6 top-6 text-gray-600" onClick={() => setAirtimeOpen(false)}>✕</button>
+                            <h3 className="text-center text-xl font-semibold mb-4">Airtime Details</h3>
+                            <div className="border border-[#E4E7EC] rounded-lg p-4 mb-4">
+                                <div className="grid grid-cols-2 gap-4 items-center">
+                                    <div>
+                                        <p className="text-sm text-gray-500">Network</p>
+                                        <p className="font-medium">{data?.reward?.user?.bankAccounts?.[0]?.networkProvider || data?.reward?.user?.network || 'MTN'}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm text-gray-500">Phone Number</p>
+                                        <div className="flex items-center justify-end gap-2">
+                                            <p className="font-medium">{data?.reward?.user?.bankAccounts?.[0]?.phoneNumber || data?.reward?.user?.phone || 'N/A'}</p>
+                                            <button
+                                                className="p-2 bg-gray-100 rounded-md"
+                                                onClick={() => {
+                                                    const val = data?.reward?.user?.bankAccounts?.[0]?.phoneNumber || data?.reward?.user?.phone || '';
+                                                    if (val && navigator.clipboard) navigator.clipboard.writeText(val).then(() => alert('Copied'));
+                                                }}
+                                            >
+                                                <CopyIcon size={10} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {/* duplicate row for convenience matching screenshot */}
+                                    <div>
+                                        <p className="text-sm text-gray-500">Network</p>
+                                        <p className="font-medium">{data?.reward?.user?.bankAccounts?.[0]?.networkProvider || data?.reward?.user?.network || 'MTN'}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm text-gray-500">Phone Number</p>
+                                        <div className="flex items-center justify-end gap-2">
+                                            <p className="font-medium">{data?.reward?.user?.bankAccounts?.[0]?.phoneNumber || data?.reward?.user?.phone || 'N/A'}</p>
+                                            <button
+                                                className="p-2 bg-gray-100 rounded-md"
+                                                onClick={() => {
+                                                    const val = data?.reward?.user?.bankAccounts?.[0]?.phoneNumber || data?.reward?.user?.phone || '';
+                                                    if (val && navigator.clipboard) navigator.clipboard.writeText(val).then(() => alert('Copied'));
+                                                }}
+                                            >
+                                                <CopyIcon size={10} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p className="text-sm italic text-gray-600 mb-6">Airtime rewards are to be done manually. Ensure to make payment to maintain trust and uphold business name.</p>
+                            <div className="text-center">
+                                <button onClick={() => { setAirtimeOpen(false); alert('Marked as paid (UI only)'); }} className="px-6 py-3 bg-[#24348B] text-white rounded-full">I Have Paid</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Cashback Details Modal */}
+                {cashbackOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                        <div className="bg-white rounded-md p-6 w-full max-w-md mx-4 relative">
+                            {/* <button className="absolute left-6 top-6 text-gray-600" onClick={() => setCashbackOpen(false)}>←</button> */}
+                            <button className="absolute right-6 top-6 text-gray-600" onClick={() => setCashbackOpen(false)}>✕</button>
+                            <h3 className="text-center text-xl font-semibold mb-4">Cashback Details</h3>
+                            <div className="border border-[#E4E7EC] rounded-lg p-4 mb-4">
+                                <div className="grid grid-cols-2 gap-y-4">
+                                    <div>
+                                        <p className="text-sm text-gray-500">Bank Name</p>
+                                        <p className="font-medium">{data?.reward?.user?.bankAccounts?.[0]?.bankName || 'Opay'}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm text-gray-500">Account Number</p>
+                                        <div className="flex items-center justify-end gap-2">
+                                            <p className="font-medium">{data?.reward?.user?.bankAccounts?.[0]?.accountNumber || '0123456789'}</p>
+                                            <button className="p-2 bg-gray-100 rounded-md" onClick={() => { const v = data?.reward?.user?.bankAccounts?.[0]?.accountNumber || ''; if (v && navigator.clipboard) navigator.clipboard.writeText(v).then(() => alert('Copied')); }}><CopyIcon size={10} /></button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <p className="text-sm text-gray-500">Bank Holder’s Name</p>
+                                        <p className="font-medium">{data?.reward?.user?.bankAccounts?.[0]?.accountName || `${data?.reward?.user?.firstName} ${data?.reward?.user?.lastName}`}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm text-gray-500">Amount to Send</p>
+                                        <div className="flex items-center justify-end gap-2">
+                                            <p className="font-medium">{data?.reward?.amount || 'N 20,250'}</p>
+                                            <button className="p-2 bg-gray-100 rounded-md" onClick={() => { const v = data?.reward?.amount || ''; if (v && navigator.clipboard) navigator.clipboard.writeText(String(v)).then(() => alert('Copied')); }}><CopyIcon size={10} /></button>
+                                        </div>
+                                        <p className="text-sm text-green-600 mt-1">A processing fee of N250 is required</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="text-center">
+                                <button onClick={() => { setCashbackOpen(false); alert('Proceed to Paystack (UI only)'); }} className="px-6 py-3 bg-[#24348B] text-white rounded-full">Proceed to Paystack</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Voucher Details Modal */}
+                {voucherOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                        <div className="bg-white rounded-md p-6 w-full max-w-md mx-4 relative">
+                            {/* <button className="absolute left-6 top-6 text-gray-600" onClick={() => setVoucherOpen(false)}>←</button> */}
+                            <button className="absolute right-6 top-6 text-gray-600" onClick={() => setVoucherOpen(false)}>✕</button>
+                            <h3 className="text-center text-xl font-semibold mb-4">Voucher Details</h3>
+                            <form onSubmit={(e) => { e.preventDefault(); alert(`Voucher sent: ${voucherCode} (${voucherDiscount})`); setVoucherCode(''); setVoucherDiscount(''); setVoucherValidUntil(''); setVoucherNotes(''); setVoucherOpen(false); }} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm mb-1">Enter Voucher Code*</label>
+                                    <input value={voucherCode} onChange={(e) => setVoucherCode(e.target.value)} className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="e.g DSC2000" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm mb-1">Discount Amount *</label>
+                                    <input value={voucherDiscount} onChange={(e) => setVoucherDiscount(e.target.value)} className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="e.g 20%" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm mb-1">Valid Until *</label>
+                                    <input value={voucherValidUntil} onChange={(e) => setVoucherValidUntil(e.target.value)} type="date" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="YYYY-MM-DD" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm mb-1">Additional Notes</label>
+                                    <textarea value={voucherNotes} onChange={(e) => setVoucherNotes(e.target.value)} className="border border-[#E4E7EC] rounded-md p-3 w-full" />
+                                </div>
+                                <div className="text-center">
+                                    <button type="submit" className="px-6 py-3 bg-[#24348B] text-white rounded-full">Send Voucher</button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 )}
