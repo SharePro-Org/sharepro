@@ -19,6 +19,16 @@ const PayoutDetails = () => {
     const [airtimeOpen, setAirtimeOpen] = useState(false);
     const [cashbackOpen, setCashbackOpen] = useState(false);
     const [voucherOpen, setVoucherOpen] = useState(false);
+    // Wallet Setup modal state
+    const [walletOpen, setWalletOpen] = useState(false);
+    const [walletForm, setWalletForm] = useState({
+        firstName: "",
+        lastName: "",
+        email: "",
+        bank: "",
+        accountNumber: "",
+        bvn: ""
+    });
 
     const [voucherCode, setVoucherCode] = useState("");
     const [voucherDiscount, setVoucherDiscount] = useState("");
@@ -181,29 +191,11 @@ const PayoutDetails = () => {
                                     }
                                 })} className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-md bg-[#0A1B88] text-white font-medium hover:bg-[#0A1B88]/90 transition">
                                     <CheckCircle className="w-5 h-5" />
+
                                     {setLoading ? 'loading...' : 'Approve Payout'}
 
                                 </button>)}
-                        {/* <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setAirtimeOpen(true)}
-                                className="px-4 py-2 rounded-md border bg-white text-sm"
-                            >
-                                Airtime Details
-                            </button>
-                            <button
-                                onClick={() => setCashbackOpen(true)}
-                                className="px-4 py-2 rounded-md border bg-white text-sm"
-                            >
-                                Cashback Details
-                            </button>
-                            <button
-                                onClick={() => setVoucherOpen(true)}
-                                className="px-4 py-2 rounded-md border bg-white text-sm"
-                            >
-                                Voucher Details
-                            </button>
-                        </div> */}
+
                     </div>
                 </div>
                 {/* Modal for image preview */}
@@ -350,6 +342,59 @@ const PayoutDetails = () => {
                                 </div>
                                 <div className="text-center">
                                     <button type="submit" className="px-6 py-3 bg-[#24348B] text-white rounded-full">Send Voucher</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {walletOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                        <div className="bg-white rounded-[32px] p-8 w-full max-w-lg mx-4 relative">
+                            <button className="absolute right-6 top-6" onClick={() => setWalletOpen(false)}>✕</button>
+                            <h2 className="text-center text-2xl font-bold mb-2 mt-2">Wallet Setup</h2>
+                            <p className="text-center text-gray-600 mb-4">You can use personal bank information, if you do not have business bank information.</p>
+                            <div className="bg-[#EEF3FF] rounded-xl p-4 mb-6">
+                                <span className="font-bold text-sm">Note:</span> <span className="text-sm">Sharepro does not save your BVN, It will only be used for verification purposes.</span>
+                            </div>
+                            <form className="space-y-4" onSubmit={e => { e.preventDefault(); alert('Wallet info submitted (UI only)'); setWalletOpen(false); }}>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">First Name *</label>
+                                    <input type="text" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="e.g DSC2000" value={walletForm.firstName} onChange={e => setWalletForm(f => ({ ...f, firstName: e.target.value }))} required />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Last Name*</label>
+                                    <input type="text" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="e.g 20%" value={walletForm.lastName} onChange={e => setWalletForm(f => ({ ...f, lastName: e.target.value }))} required />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Email Address</label>
+                                    <input type="email" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="e.g 20%" value={walletForm.email} onChange={e => setWalletForm(f => ({ ...f, email: e.target.value }))} />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Select Bank</label>
+                                    <select className="border border-[#E4E7EC] rounded-md p-3 w-full" value={walletForm.bank} onChange={e => setWalletForm(f => ({ ...f, bank: e.target.value }))} required>
+                                        <option value="">Select Bank</option>
+                                        <option value="wema">Wema Bank</option>
+                                        <option value="gtbank">GTBank</option>
+                                        <option value="access">Access Bank</option>
+                                        <option value="zenith">Zenith Bank</option>
+                                        <option value="uba">UBA</option>
+                                        <option value="fidelity">Fidelity Bank</option>
+                                        <option value="union">Union Bank</option>
+                                        <option value="fcmb">FCMB</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Account Number</label>
+                                    <input type="text" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="02334456789" value={walletForm.accountNumber} onChange={e => setWalletForm(f => ({ ...f, accountNumber: e.target.value }))} />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Bank Verification Number (BVN)</label>
+                                    <input type="text" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="02334456789" value={walletForm.bvn} onChange={e => setWalletForm(f => ({ ...f, bvn: e.target.value }))} />
+                                </div>
+                                <div className="pt-2">
+                                    <button type="submit" className="w-full py-4 rounded-xl bg-[#24348B] text-white text-lg font-medium">Proceed</button>
                                 </div>
                             </form>
                         </div>
