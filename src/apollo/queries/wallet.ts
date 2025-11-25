@@ -22,3 +22,12 @@ export const WALLET_TRANSACTIONS = gql`
       }
     }
 `;
+
+export const BANK_LIST = gql`
+  query bankList {
+    bankList {
+      name
+      code
+    }
+  }
+`;
