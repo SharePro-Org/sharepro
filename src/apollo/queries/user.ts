@@ -188,3 +188,26 @@ export const TRACK_LOYALTY_ACTION = gql`
     }
   }
 `;
+
+export const USER_INVITED_CAMPAIGNS = gql`
+  query UserInvitedCampaigns {
+    userInvitedCampaigns {
+      id
+      name
+      description
+      campaignType
+      status
+      startDate
+      endDate
+      referralLink
+      websiteLink
+      business {
+        id
+        name
+      }
+       rewards{
+        id
+       }
+    }
+  }
+`;

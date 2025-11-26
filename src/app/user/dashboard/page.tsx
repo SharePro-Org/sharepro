@@ -3,7 +3,7 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import DiscoverCampaign from "@/components/dashboard/DiscoverCampaign";
 import UserDashboardTable from "@/components/dashboard/UserDashboardTable";
-import { USER_DASHBOARD_SUMMARY, USER_REFERALS } from "@/apollo/queries/user";
+import { USER_DASHBOARD_SUMMARY, USER_INVITED_CAMPAIGNS } from "@/apollo/queries/user";
 import { useQuery, useMutation } from "@apollo/client/react";
 
 import { Calendar, Users, XIcon } from "lucide-react";
@@ -44,10 +44,11 @@ const userDashboard = () => {
     skip: !user?.userId,
   });
 
-  // const { data: userCode } = useQuery(USER_REFERALS, {
-  //   variables: { userId: user?.userId },
-  //   skip: !user?.userId,
-  // })
+  const { data: userInvitedCampaigns } = useQuery(USER_INVITED_CAMPAIGNS, {
+    variables: { },
+    // skip: !user?.userId,
+  })
+  console.log("User Invited Campaigns: ", userInvitedCampaigns);
 
   useEffect(() => {
     if (data?.userDashboardSummary) {
