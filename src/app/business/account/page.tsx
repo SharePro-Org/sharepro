@@ -145,7 +145,7 @@ const account = () => {
           input: {
             businessId,
             email: inviteEmail,
-            role: inviteRole.toUpperCase(),
+            role: inviteRole,
             inviterName: inviteName,
           },
         },
@@ -160,7 +160,7 @@ const account = () => {
         setInviteRole("");
       } else {
         setInviteError(
-          data?.inviteMember?.error || "Failed to send invite."
+          data?.inviteMember?.message || "Failed to send invite. Please try again."
         );
       }
     } catch (err: any) {
@@ -882,9 +882,9 @@ const account = () => {
                 onChange={(e) => setInviteRole(e.target.value)}
               >
                 <option value="">Select a role</option>
-                <option value="admin">Admin</option>
-                <option value="manager">Manager</option>
-                <option value="viewer">Viewer</option>
+                <option value="Admin">Admin</option>
+                <option value="Manager">Manager</option>
+                <option value="Viewer">Viewer</option>
               </select>
             </div>
             <div className="text-center">
