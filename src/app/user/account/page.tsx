@@ -13,6 +13,7 @@ import {
   CREATE_USER_BANK_DETAILS,
   DEACTIVATE_USER_ACCOUNT
 } from "@/apollo/mutations/account";
+import { BANK_LIST } from "@/apollo/queries/wallet";
 
 type UserProfile = {
   firstName: string;
@@ -84,6 +85,11 @@ const account = () => {
     variables: { id: user?.userId },
     skip: !user?.userId,
   });
+
+
+  const { data: bankList } = useQuery<any>(BANK_LIST, {
+    variables: {}
+  })
 
   const [updateUser, { loading: updateLoading, error: updateError }] = useMutation(UPDATE_USER);
   const [editForm, setEditForm] = useState({
@@ -493,25 +499,9 @@ const account = () => {
                   required
                 >
                   <option value="">Select Bank</option>
-                  <option value="access_bank">Access Bank</option>
-                  <option value="gtbank">GTBank</option>
-                  <option value="first_bank">First Bank</option>
-                  <option value="zenith_bank">Zenith Bank</option>
-                  <option value="uba">UBA</option>
-                  <option value="fidelity_bank">Fidelity Bank</option>
-                  <option value="union_bank">Union Bank</option>
-                  <option value="sterling_bank">Sterling Bank</option>
-                  <option value="stanbic_ibtc">Stanbic IBTC</option>
-                  <option value="fcmb">FCMB</option>
-                  <option value="wema_bank">Wema Bank</option>
-                  <option value="ecobank">Ecobank</option>
-                  <option value="keystone_bank">Keystone Bank</option>
-                  <option value="polaris_bank">Polaris Bank</option>
-                  <option value="providus_bank">Providus Bank</option>
-                  <option value="opay">OPay</option>
-                  <option value="palmpay">PalmPay</option>
-                  <option value="kuda">Kuda</option>
-                  <option value="other">Other</option>
+                  {bankList?.bankList.map((bank: { name: string; code: string }) => (
+                    <option key={bank.code} value={bank.name}>{bank.name}</option>
+                  ))}
                 </select>
               </div>
               <div>

@@ -5,7 +5,9 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { EyeIcon, SearchIcon } from "lucide-react";
 import { useQuery } from "@apollo/client/react";
 import React, { useEffect, useState } from "react";
-import {GET_WALLET_BALANCE, WALLET_TRANSACTIONS, BANK_LIST} from "@/apollo/queries/wallet"
+import { GET_WALLET_BALANCE, WALLET_TRANSACTIONS, BANK_LIST } from "@/apollo/queries/wallet"
+import { useAtom } from "jotai";
+import { userAtom } from "@/store/User";
 
 interface WalletBalance {
   businessWallet: {
@@ -22,24 +24,28 @@ const wallets = () => {
   const [isClient, setIsClient] = useState(false);
   const [showWalletBalance, setShowWalletBalance] = useState(false);
   // Wallet Setup modal state
-      const [walletOpen, setWalletOpen] = useState(true);
-      const [walletForm, setWalletForm] = useState({
-          firstName: "",
-          lastName: "",
-          email: "",
-          bank: "",
-          accountNumber: "",
-          bvn: ""
-      });
+  const [user] = useAtom(userAtom);
+  
+  const [walletOpen, setWalletOpen] = useState(true);
+  const [walletForm, setWalletForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: user?.email || "",
+    bank: "",
+    accountNumber: "",
+    bvn: ""
+  });
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
 
-  const {data:bankList} = useQuery<any>(BANK_LIST,{
-    variables:{}
+    setWalletForm(f => ({ ...f, email: user?.email }));
+  }, [user]);
+
+  const { data: bankList } = useQuery<any>(BANK_LIST, {
+    variables: {}
   })
-console.log("Bank List:", bankList);
+  console.log("Bank List:", bankList);
   const [cash, setCash] = useState({
     series: [30, 70],
     options: {
@@ -88,15 +94,15 @@ console.log("Bank List:", bankList);
     },
   });
 
-  const {data:balanceData, error, loading} = useQuery<WalletBalance>(GET_WALLET_BALANCE,{
-    variables:{}
+  const { data: balanceData, error, loading } = useQuery<WalletBalance>(GET_WALLET_BALANCE, {
+    variables: {}
   })
-  const {data:transactionsData, error:transactionError, loading:transactionLoading} = useQuery<WalletTransactions>(WALLET_TRANSACTIONS,{
-    variables:{}
+  const { data: transactionsData, error: transactionError, loading: transactionLoading } = useQuery<WalletTransactions>(WALLET_TRANSACTIONS, {
+    variables: {}
   })
 
   const toggleWalletBalance = () => {
-   setShowWalletBalance(!showWalletBalance);
+    setShowWalletBalance(!showWalletBalance);
   }
   return (
     <DashboardLayout>
@@ -140,51 +146,51 @@ console.log("Bank List:", bankList);
           <TransactionHistory transHistory={transactionsData?.walletTransactions} />
         </section>
         {walletOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-                        <div className="bg-white rounded-[32px] p-8 w-full max-w-lg mx-4 relative">
-                            <button className="absolute right-6 top-6" onClick={() => setWalletOpen(false)}>✕</button>
-                            <h2 className="text-center text-2xl font-bold mb-2 mt-2">Wallet Setup</h2>
-                            <p className="text-center text-gray-600 mb-4">You can use personal bank information, if you do not have business bank information.</p>
-                            <div className="bg-[#EEF3FF] rounded-xl p-4 mb-6">
-                                <span className="font-bold text-sm">Note:</span> <span className="text-sm">Sharepro does not save your BVN, It will only be used for verification purposes.</span>
-                            </div>
-                            <form className="space-y-4" onSubmit={e => { e.preventDefault(); alert('Wallet info submitted (UI only)'); setWalletOpen(false); }}>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">First Name *</label>
-                                    <input type="text" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="e.g John" value={walletForm.firstName} onChange={e => setWalletForm(f => ({ ...f, firstName: e.target.value }))} required />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Last Name*</label>
-                                    <input type="text" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="e.g James" value={walletForm.lastName} onChange={e => setWalletForm(f => ({ ...f, lastName: e.target.value }))} required />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Email Address</label>
-                                    <input type="email" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="e.g business email address" value={walletForm.email} onChange={e => setWalletForm(f => ({ ...f, email: e.target.value }))} />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Select Bank</label>
-                                    <select className="border border-[#E4E7EC] rounded-md p-3 w-full" value={walletForm.bank} onChange={e => setWalletForm(f => ({ ...f, bank: e.target.value }))} required>
-                                        <option value="">Select Bank</option>
-                                         {bankList?.bankList?.map((bank: any) => (
-                                            <option key={bank.code} value={bank.code}>{bank.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Account Number</label>
-                                    <input type="text" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="02334456789" value={walletForm.accountNumber} onChange={e => setWalletForm(f => ({ ...f, accountNumber: e.target.value }))} />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium mb-1">Bank Verification Number (BVN)</label>
-                                    <input type="text" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="02334456709" value={walletForm.bvn} onChange={e => setWalletForm(f => ({ ...f, bvn: e.target.value }))} />
-                                </div>
-                                <div className="pt-2">
-                                    <button type="submit" className="w-full py-4 rounded-xl bg-[#24348B] text-white text-lg font-medium">Proceed</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+            <div className="bg-white rounded-[32px] p-8 w-full max-w-3xl mx-4 relative">
+              <button className="absolute right-6 top-6" onClick={() => setWalletOpen(false)}>✕</button>
+              <h2 className="text-center text-2xl font-bold mb-2 mt-2">Wallet Setup</h2>
+              <p className="text-center text-gray-600 mb-4">You can use personal bank information, if you do not have business bank information.</p>
+              <div className="bg-[#EEF3FF] rounded-xl p-4 mb-6">
+                <span className="font-bold text-sm">Note:</span> <span className="text-sm">Sharepro does not save your BVN, It will only be used for verification purposes.</span>
+              </div>
+              <form className="space-y-4 grid grid-cols-2 gap-3" onSubmit={e => { e.preventDefault(); alert('Wallet info submitted (UI only)'); setWalletOpen(false); }}>
+                <div>
+                  <label className="block text-sm font-medium mb-1">First Name *</label>
+                  <input type="text" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="e.g John" value={walletForm.firstName} onChange={e => setWalletForm(f => ({ ...f, firstName: e.target.value }))} required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Last Name*</label>
+                  <input type="text" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="e.g James" value={walletForm.lastName} onChange={e => setWalletForm(f => ({ ...f, lastName: e.target.value }))} required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Email Address</label>
+                  <input disabled type="email" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="e.g business email address" value={walletForm.email} onChange={e => setWalletForm(f => ({ ...f, email: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Select Bank</label>
+                  <select className="border border-[#E4E7EC] rounded-md p-3 w-full" value={walletForm.bank} onChange={e => setWalletForm(f => ({ ...f, bank: e.target.value }))} required>
+                    <option value="">Select Bank</option>
+                    {bankList?.bankList?.map((bank: any) => (
+                      <option key={bank.code} value={bank.code}>{bank.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Account Number</label>
+                  <input type="text" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="02334456789" value={walletForm.accountNumber} onChange={e => setWalletForm(f => ({ ...f, accountNumber: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Bank Verification Number (BVN)</label>
+                  <input type="text" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="02334456709" value={walletForm.bvn} onChange={e => setWalletForm(f => ({ ...f, bvn: e.target.value }))} />
+                </div>
+                <div className="pt-2 col-span-2">
+                  <button type="submit" className="w-full py-4 rounded-xl bg-[#24348B] text-white text-lg font-medium">Proceed</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </>
     </DashboardLayout>
   );

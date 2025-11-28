@@ -18,7 +18,7 @@ import Image from "next/image";
 import userCheck from "../../../public/assets/Check.svg";
 import Link from "next/link";
 
-const DiscoverCampaign = ({
+const InvitedCampaign = ({
   max = 4,
   grid,
   camp,
@@ -45,11 +45,6 @@ const DiscoverCampaign = ({
   const [trackConversion] = useMutation(TRACK_CONVERSION);
   const [joinCampaign] = useMutation(JOIN_CAMPAIGN);
 
-  // Fetch available campaigns
-  const { data, loading, error } = useQuery(AVAILABLE_CAMPAIGNS, {
-    variables: { userId: user?.userId },
-    skip: !user?.userId,
-  });
 
   // Format date function
   const formatDate = (dateString: string): string => {
@@ -126,13 +121,6 @@ const DiscoverCampaign = ({
   );
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // Get campaigns and slice if max is provided
-  const campaigns: Campaign[] =
-    (data && typeof data === "object" && data !== null && "availableCampaigns" in data
-      ? (data as { availableCampaigns: Campaign[] }).availableCampaigns
-      : []);
-  const displayCampaigns = max ? campaigns.slice(0, max) : campaigns;
-  const campaignsToShow = displayCampaigns;
 
   const createUrlWithParams = (
     baseUrl: string,
@@ -270,16 +258,9 @@ const DiscoverCampaign = ({
 
   return (
     <div>
-      <p className="text-lg font-medium">Discover Campaigns</p>
       <div className={` ${grid ? "grid md:grid-cols-2 grid-cols-1" : "flex flex-col"} gap-3`}>
-        {loading ? (
-          <div className="text-center py-4">Loading available campaigns...</div>
-        ) : error ? (
-          <div className="text-center py-4 text-red-500">
-            Error loading campaigns
-          </div>
-        ) : campaignsToShow.length > 0 ? (
-          campaignsToShow.map((campaign: Campaign) => (
+        {camp.length > 0 ? (
+          camp.map((campaign: Campaign) => (
             <div
               key={campaign.campaignId}
               className="border border-[#CCCCCC33] rounded-md"
@@ -289,7 +270,7 @@ const DiscoverCampaign = ({
                   <button className="bg-[#ECF3FF] rounded-sm p-3">
                     <MdCampaign color="#A16AD4" />
                   </button>
-                  <p className="my-auto">{campaign.campaignName}</p>
+                          <p className="my-auto">{campaign.name}</p>
                 </div>
 
                 <button className="px-2 py-1 text-sm bg-gray-100 rounded-full my-auto">
@@ -298,10 +279,10 @@ const DiscoverCampaign = ({
               </div>
 
               <div className="p-2 my-1">
-                <p className="flex gap-2 my-2">
+                {/* <p className="flex gap-2 my-2">
                   <GiPriceTag className="my-auto" />
-                  <span>{campaign.rewardInfo}</span>
-                </p>
+                  <span>{campaign.rewards}</span>
+                </p> */}
 
                 <p className="flex gap-2 my-2">
                   <Calendar size={15} className="my-auto" />
@@ -359,7 +340,7 @@ const DiscoverCampaign = ({
           {joining?.campaignType === "Loyalty" && (
             <div>
               <h3 className="text-lg font-medium text-center mb-3">
-                {joining.campaignName}
+                              {joining.name}
               </h3>
               <div className="grid md:grid-cols-4 grid-cols-">
                 <div className="flex gap-2">
@@ -368,7 +349,7 @@ const DiscoverCampaign = ({
                   </button>
                   <div>
                     <p className="text-sm"> Campaign Name</p>
-                    <p> {joining.campaignName}</p>
+                                      <p> {joining.name}</p>
                   </div>
                 </div>
                 <div>
@@ -803,4 +784,4 @@ const DiscoverCampaign = ({
   );
 };
 
-export default DiscoverCampaign;
+export default InvitedCampaign;

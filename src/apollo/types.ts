@@ -1,4 +1,5 @@
 export interface Campaign {
+  name: ReactNode;
   campaignId: string;
   campaignName: string;
   campaignType: string;

@@ -1,14 +1,19 @@
 'use client'
 
+import { USER_INVITED_CAMPAIGNS } from "@/apollo/queries/user";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import DiscoverCampaign from "@/components/dashboard/DiscoverCampaign";
+import InvitedCampaign from "@/components/dashboard/InvitedCampaign";
 import UserDashboardTable from "@/components/dashboard/UserDashboardTable";
+import { useQuery } from "@apollo/client/react";
 import { RefreshCwIcon, SearchIcon } from "lucide-react";
 import React from "react";
 
 const userCampaigns = () => {
+  type InvitedCampaignsData = { userInvitedCampaigns: any[] | null };
   const [activeTab, setActiveTab] = React.useState<'my' | 'discover' | 'invite'>('my');
-  const [inviteEmail, setInviteEmail] = React.useState<string>("");
+  const { data: invitedData, loading: invitedLoading, error: invitedError } = useQuery<InvitedCampaignsData>(USER_INVITED_CAMPAIGNS);
+
   return (
     <DashboardLayout user={true}>
       <section className="mt-4">
@@ -16,8 +21,8 @@ const userCampaigns = () => {
           <div className="flex gap-4 border-b border-[#E4E7EC] mb-6">
             <button
               className={`px-6 py-2 font-medium text-base border-b-2 transition-colors ${activeTab === 'my'
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-500 hover:text-primary'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-gray-500 hover:text-primary'
                 }`}
               onClick={() => setActiveTab('my')}
             >
@@ -25,8 +30,8 @@ const userCampaigns = () => {
             </button>
             <button
               className={`px-6 py-2 font-medium text-base border-b-2 transition-colors ${activeTab === 'discover'
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-500 hover:text-primary'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-gray-500 hover:text-primary'
                 }`}
               onClick={() => setActiveTab('discover')}
             >
@@ -34,8 +39,8 @@ const userCampaigns = () => {
             </button>
             <button
               className={`px-6 py-2 font-medium text-base border-b-2 transition-colors ${activeTab === 'invite'
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-500 hover:text-primary'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-gray-500 hover:text-primary'
                 }`}
               onClick={() => setActiveTab('invite')}
             >
@@ -66,7 +71,8 @@ const userCampaigns = () => {
           )}
           {activeTab === 'invite' && (
             <div>
-              <p className="text-xl font-medium mb-3">Campaign Invite</p>
+              <p className="text-xl font-medium mb-3">Invited Campaigns</p>
+              <InvitedCampaign camp={invitedData?.userInvitedCampaigns} grid={true} />
             </div>
           )}
         </div>
