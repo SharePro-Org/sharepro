@@ -7,12 +7,27 @@ import InvitedCampaign from "@/components/dashboard/InvitedCampaign";
 import UserDashboardTable from "@/components/dashboard/UserDashboardTable";
 import { useQuery } from "@apollo/client/react";
 import { RefreshCwIcon, SearchIcon } from "lucide-react";
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 const userCampaigns = () => {
   type InvitedCampaignsData = { userInvitedCampaigns: any[] | null };
-  const [activeTab, setActiveTab] = React.useState<'my' | 'discover' | 'invite'>('my');
+  const [activeTab, setActiveTab] = useState<'my' | 'discover' | 'invite'>('my');
   const { data: invitedData, loading: invitedLoading, error: invitedError } = useQuery<InvitedCampaignsData>(USER_INVITED_CAMPAIGNS);
+
+  // Check if any invited campaign has a non-null reward object
+  const hasRewardInInvited = useMemo(() => {
+    const campaigns = invitedData?.userInvitedCampaigns;
+    if (!campaigns || campaigns.length === 0) return false;
+    return campaigns.some((c: any) => c?.rewards !== null && c?.rewards !== undefined);
+  }, [invitedData]);
+
+  // If Discover tab should be hidden and it's currently active, fall back to 'my'
+  useEffect(() => {
+    if (!hasRewardInInvited && activeTab === 'discover') {
+      setActiveTab('my');
+    }
+  }, [hasRewardInInvited, activeTab]);
+
 
   return (
     <DashboardLayout user={true}>
@@ -28,15 +43,17 @@ const userCampaigns = () => {
             >
               My Campaigns
             </button>
-            <button
-              className={`px-6 py-2 font-medium text-base border-b-2 transition-colors ${activeTab === 'discover'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-primary'
-                }`}
-              onClick={() => setActiveTab('discover')}
-            >
-              Discover Campaigns
-            </button>
+            {hasRewardInInvited && (
+              <button
+                className={`px-6 py-2 font-medium text-base border-b-2 transition-colors ${activeTab === 'discover'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-gray-500 hover:text-primary'
+                  }`}
+                onClick={() => setActiveTab('discover')}
+              >
+                Discover Campaigns
+              </button>
+            )}
             <button
               className={`px-6 py-2 font-medium text-base border-b-2 transition-colors ${activeTab === 'invite'
                 ? 'border-primary text-primary'

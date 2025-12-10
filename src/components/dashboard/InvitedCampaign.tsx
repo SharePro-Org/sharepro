@@ -259,7 +259,7 @@ const InvitedCampaign = ({
   return (
     <div>
       <div className={` ${grid ? "grid md:grid-cols-2 grid-cols-1" : "flex flex-col"} gap-3`}>
-        {camp.length > 0 ? (
+        {camp?.length > 0 ? (
           camp.map((campaign: Campaign) => (
             <div
               key={campaign.campaignId}
@@ -270,7 +270,7 @@ const InvitedCampaign = ({
                   <button className="bg-[#ECF3FF] rounded-sm p-3">
                     <MdCampaign color="#A16AD4" />
                   </button>
-                          <p className="my-auto">{campaign.name}</p>
+                  <p className="my-auto">{campaign.name}</p>
                 </div>
 
                 <button className="px-2 py-1 text-sm bg-gray-100 rounded-full my-auto">
@@ -283,6 +283,7 @@ const InvitedCampaign = ({
                   <GiPriceTag className="my-auto" />
                   <span>{campaign.rewards}</span>
                 </p> */}
+                <span>{campaign.description}</span>
 
                 <p className="flex gap-2 my-2">
                   <Calendar size={15} className="my-auto" />
@@ -291,13 +292,13 @@ const InvitedCampaign = ({
               </div>
 
               <div className="p-2 flex justify-between">
-                <p>
+                {/* <p>
                   {campaign.participantsCount}{" "}
                   {campaign.participantsCount === 1 ? "user" : "users"} joined
                   {campaign.maxParticipants > 0 &&
                     ` (max: ${campaign.maxParticipants})`}
-                </p>
-                <button
+                </p> */}
+                {/* <button
                   onClick={() =>
                     campaign.isJoinable && handleJoinCampaign(campaign)
                   }
@@ -316,7 +317,7 @@ const InvitedCampaign = ({
                     : campaign.isJoinable
                       ? "Join Campaign"
                       : "Not Available"}
-                </button>
+                </button> */}
               </div>
             </div>
           ))
@@ -340,7 +341,7 @@ const InvitedCampaign = ({
           {joining?.campaignType === "Loyalty" && (
             <div>
               <h3 className="text-lg font-medium text-center mb-3">
-                              {joining.name}
+                {joining.name}
               </h3>
               <div className="grid md:grid-cols-4 grid-cols-">
                 <div className="flex gap-2">
@@ -349,7 +350,7 @@ const InvitedCampaign = ({
                   </button>
                   <div>
                     <p className="text-sm"> Campaign Name</p>
-                                      <p> {joining.name}</p>
+                    <p> {joining.name}</p>
                   </div>
                 </div>
                 <div>
