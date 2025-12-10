@@ -7,13 +7,27 @@ import { USER_DASHBOARD_SUMMARY, USER_INVITED_CAMPAIGNS } from "@/apollo/queries
 import { useQuery, useMutation } from "@apollo/client/react";
 
 import { Calendar, Users, XIcon } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { userAtom } from "@/store/User";
 import { useAtom } from "jotai";
 import Link from "next/link";
 
 const userDashboard = () => {
   const [user] = useAtom(userAtom);
+
+  type InvitedCampaignsData = { userInvitedCampaigns: any[] | null };
+  const { data: invitedData, loading: invitedLoading, error: invitedError } = useQuery<InvitedCampaignsData>(USER_INVITED_CAMPAIGNS);
+
+  // Check if any invited campaign has a non-null reward object (accepts `reward` or `rewards` keys)
+  const hasRewardInInvited = useMemo(() => {
+    const campaigns = invitedData?.userInvitedCampaigns;
+    if (!campaigns || campaigns.length === 0) return false;
+    return campaigns.some((c: any) => {
+      const rewardVal = c?.rewards ?? c?.rewards;
+      return rewardVal !== null && rewardVal !== undefined;
+    });
+  }, [invitedData]);
+
   const [summary, setSummary] = useState({
     totalRewardsEarned: "₦0.00",
     recentRewardChange: "",
@@ -45,7 +59,7 @@ const userDashboard = () => {
   });
 
   const { data: userInvitedCampaigns } = useQuery(USER_INVITED_CAMPAIGNS, {
-    variables: { },
+    variables: {},
     // skip: !user?.userId,
   })
   console.log("User Invited Campaigns: ", userInvitedCampaigns);
@@ -110,8 +124,8 @@ const userDashboard = () => {
                   </div>
                   <div
                     className={`text-sm ${summary.recentRewardPercentage >= 0
-                        ? "text-green-600"
-                        : "text-red-600"
+                      ? "text-green-600"
+                      : "text-red-600"
                       } mt-1 font-bold`}
                   >
                     {summary.recentRewardPercentage}%{" "}
@@ -223,8 +237,8 @@ const userDashboard = () => {
             </div>
           </div> */}
 
-          <div className="grid md:grid-cols-3 grid-cols-1 gap-6">
-            <div className="col-span-2 p-4 bg-white rounded-md">
+          <div className={`grid ${hasRewardInInvited ? 'md:grid-cols-3' : 'grid-cols-1'} grid-cols-1 gap-6`}>
+            <div className={`${hasRewardInInvited ? 'col-span-2' : 'col-span-1'} p-4 bg-white rounded-md`}>
               <div className="flex justify-between">
                 <div>
                   <p className="font-medium">Joined Campaigns</p>
@@ -238,10 +252,12 @@ const userDashboard = () => {
               </div>
               <UserDashboardTable type="campaigns" max={6} />
             </div>
-            <div className="row-span-2 p-4 bg-white rounded-md">
-              <DiscoverCampaign />
-            </div>
-            <div className="col-span-2 p-4 bg-white rounded-md">
+            {hasRewardInInvited && (
+              <div className="row-span-2 p-4 bg-white rounded-md">
+                <DiscoverCampaign />
+              </div>
+            )}
+            <div className={`${hasRewardInInvited ? 'col-span-2' : 'col-span-1'} p-4 bg-white rounded-md`}>
               <div className="flex justify-between">
                 <div>
                   <p className="font-medium">Rewards</p>
