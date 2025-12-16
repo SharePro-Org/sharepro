@@ -50,7 +50,6 @@ export const GET_USER = gql`
       bankAccounts {
         accountName
         accountNumber
-        accountType
         bankCode
         bankName
         phoneNumber

@@ -26,7 +26,6 @@ type UserProfile = {
 type BankAccount = {
   accountName: string;
   accountNumber: string;
-  accountType: string;
   bankCode: string;
   bankName: string;
   phoneNumber: string;
@@ -164,7 +163,7 @@ const account = () => {
           accountNumber: first.accountNumber || "",
           phoneNumber: first.phoneNumber || "",
           networkProvider: first.networkProvider || "",
-          accountType: first.accountType || "savings",
+          accountType:  "savings",
           bankCode: first.bankCode || "",
         });
       }
