@@ -7,6 +7,10 @@ export const GET_WALLET_BALANCE = gql`
       id
       balance
       currency
+      isVerified
+      accountName
+      accountNumber
+      bankName
     }
   }
 `;
@@ -21,6 +25,16 @@ export const WALLET_TRANSACTIONS = gql`
       createdAt
       }
     }
+`;
+
+export const GET_WALLET_STATS = gql`
+  query GetWalletStats {
+    walletTransactions {
+      transactionType
+      amount
+      status
+    }
+  }
 `;
 
 export const BANK_LIST = gql`

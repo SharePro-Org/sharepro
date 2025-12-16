@@ -76,3 +76,13 @@ export const ADD_PAYMENT_METHOD = gql`
   }
 `;
 
+export const CREATE_DEDICATED_VIRTUAL_ACCOUNT = gql`
+  mutation CreateDedicatedVirtualAccount($input: ValidateCustomerInput!) {
+    createDedicatedVirtualAccount(input: $input) {
+    message
+    errors
+    success
+    }
+  }
+`;
+
