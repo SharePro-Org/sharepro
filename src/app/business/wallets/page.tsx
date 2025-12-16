@@ -19,6 +19,7 @@ interface WalletBalance {
     accountName: string;
     accountNumber: string;
     bankName: string;
+    autoRechargeThreshold: number;
   }
 }
 interface WalletTransactions {
@@ -52,6 +53,7 @@ const wallets = () => {
   
   const [walletOpen, setWalletOpen] = useState(!balanceData?.businessWallet?.isVerified);
   const [bankSearch, setBankSearch] = useState("");
+  const [isBankDropdownOpen, setIsBankDropdownOpen] = useState(false);
   const [walletForm, setWalletForm] = useState({
     firstName: "",
     lastName: "",
@@ -66,6 +68,18 @@ const wallets = () => {
 
     setWalletForm(f => ({ ...f, email: user?.email }));
   }, [user]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.bank-dropdown-container')) {
+        setIsBankDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const { data: bankList } = useQuery<any>(BANK_LIST, {
     variables: {}
@@ -142,6 +156,11 @@ const wallets = () => {
     bank.name.toLowerCase().includes(bankSearch.toLowerCase())
   ) || [];
 
+  const getSelectedBankName = () => {
+    const bank = bankList?.bankList?.find((b: any) => b.code === walletForm.bankCode);
+    return bank?.name || "";
+  };
+
   const [createDVA] = useMutation(CREATE_DEDICATED_VIRTUAL_ACCOUNT, {
       onCompleted: (data: any) => {
       if (data?.createDedicatedVirtualAccount?.success) {
@@ -174,14 +193,32 @@ const wallets = () => {
       <>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
           {/* Available Balance Section */}
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className={`p-6 rounded-lg shadow-sm ${
+            (balanceData?.businessWallet?.balance || 0) <= (balanceData?.businessWallet?.autoRechargeThreshold || 0)
+              ? 'bg-red-50 border-2 border-red-300'
+              : 'bg-white'
+          }`}>
             <p className="text-sm text-[#030229B2] mb-2">Available Balance</p>
             {showWalletBalance ? (
-              <h1 className="text-3xl my-3 font-bold text-[#030229]">
+              <h1 className={`text-3xl my-3 font-bold ${
+                (balanceData?.businessWallet?.balance || 0) <= (balanceData?.businessWallet?.autoRechargeThreshold || 0)
+                  ? 'text-red-600'
+                  : 'text-[#030229]'
+              }`}>
                 {`${balanceData?.businessWallet?.currency || 'NGN'} ${Number(balanceData?.businessWallet?.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
               </h1>
             ) : (
               <h1 className="text-3xl my-3 font-bold text-[#030229]">****</h1>
+            )}
+            {(balanceData?.businessWallet?.balance || 0) <= (balanceData?.businessWallet?.autoRechargeThreshold || 0) && showWalletBalance && (
+              <div className="mb-2 p-2 bg-red-100 rounded-md">
+                <p className="text-xs text-red-700 font-medium">
+                  ⚠️ Low Balance Warning
+                </p>
+                <p className="text-xs text-red-600 mt-1">
+                  Threshold: {balanceData?.businessWallet?.currency || 'NGN'} {Number(balanceData?.businessWallet?.autoRechargeThreshold || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </p>
+              </div>
             )}
             <div className="flex justify-start">
               <button onClick={toggleWalletBalance} className="text-[#CCCCCC] hover:text-[#030229] transition-colors">
@@ -282,37 +319,62 @@ const wallets = () => {
                   <label className="block text-sm font-medium mb-1">Email Address</label>
                   <input disabled type="email" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="e.g business email address" value={walletForm.email} onChange={e => setWalletForm(f => ({ ...f, email: e.target.value }))} />
                 </div>
-                <div>
+                <div className="bank-dropdown-container">
                   <label className="block text-sm font-medium mb-1">Select Bank</label>
                   <div className="relative">
-                    <input
-                      type="text"
-                      className="border border-[#E4E7EC] rounded-md p-3 w-full bg-white text-gray-900 focus:ring-2 focus:ring-[#24348B] focus:border-[#24348B] outline-none transition-all duration-200 hover:border-[#24348B]"
-                      placeholder="Search for your bank..."
-                      value={bankSearch}
-                      onChange={e => setBankSearch(e.target.value)}
-                      onFocus={() => setBankSearch("")}
-                    />
-                    <SearchIcon size={16} className="absolute top-4 right-3 text-gray-400" />
+                    <div
+                      className="border border-[#E4E7EC] rounded-md p-3 w-full bg-white text-gray-900 focus-within:ring-2 focus-within:ring-[#24348B] focus-within:border-[#24348B] outline-none cursor-pointer transition-all duration-200 hover:border-[#24348B] flex items-center justify-between"
+                      onClick={() => setIsBankDropdownOpen(!isBankDropdownOpen)}
+                    >
+                      <span className={walletForm.bankCode ? "text-gray-900" : "text-gray-400"}>
+                        {walletForm.bankCode ? getSelectedBankName() : "Select your bank"}
+                      </span>
+                      <svg className={`w-4 h-4 transition-transform ${isBankDropdownOpen ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+
+                    {isBankDropdownOpen && (
+                      <div className="absolute z-50 mt-1 w-full bg-white border border-[#E4E7EC] rounded-md shadow-lg max-h-64 overflow-hidden">
+                        <div className="p-2 border-b border-[#E4E7EC]">
+                          <div className="relative">
+                            <input
+                              type="text"
+                              className="w-full pl-8 pr-3 py-2 border border-[#E4E7EC] rounded-md focus:ring-2 focus:ring-[#24348B] focus:border-[#24348B] outline-none text-sm"
+                              placeholder="Search banks..."
+                              value={bankSearch}
+                              onChange={e => setBankSearch(e.target.value)}
+                              onClick={e => e.stopPropagation()}
+                            />
+                            <SearchIcon size={14} className="absolute top-2.5 left-2 text-gray-400" />
+                          </div>
+                        </div>
+                        <div className="max-h-48 overflow-y-auto">
+                          {filteredBanks.length > 0 ? (
+                            filteredBanks.map((bank: any) => (
+                              <div
+                                key={bank.code}
+                                className={`px-3 py-2 cursor-pointer hover:bg-[#EEF3FF] transition-colors ${
+                                  walletForm.bankCode === bank.code ? 'bg-[#EEF3FF] text-[#24348B] font-medium' : 'text-gray-900'
+                                }`}
+                                onClick={() => {
+                                  setWalletForm(f => ({ ...f, bankCode: bank.code }));
+                                  setBankSearch("");
+                                  setIsBankDropdownOpen(false);
+                                }}
+                              >
+                                {bank.name}
+                              </div>
+                            ))
+                          ) : (
+                            <div className="px-3 py-4 text-center text-gray-500 text-sm">
+                              No banks found matching "{bankSearch}"
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <select 
-                    className="border border-[#E4E7EC] rounded-md p-3 w-full bg-white text-gray-900 focus:ring-2 focus:ring-[#24348B] focus:border-[#24348B] outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%23333%22%20d%3D%22M10.293%203.293L6%207.586%201.707%203.293A1%201%200%2000.293%204.707l5%205a1%201%200%2001.414%200l5-5a1%201%200%2000-1.414-1.414z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px_16px] bg-[position:calc(100%-12px)_center] bg-no-repeat pr-10 transition-all duration-200 hover:border-[#24348B] mt-2"
-                    value={walletForm.bankCode} 
-                    onChange={e => {
-                      setWalletForm(f => ({ ...f, bankCode: e.target.value }));
-                      const selectedBank = bankList?.bankList?.find((b: any) => b.code === e.target.value);
-                      if (selectedBank) setBankSearch(selectedBank.name);
-                    }} 
-                    required
-                  >
-                    <option value="" disabled>Select Bank</option>
-                    {filteredBanks.map((bank: any) => (
-                      <option key={bank.code} value={bank.code}>{bank.name}</option>
-                    ))}
-                  </select>
-                  {bankSearch && filteredBanks.length === 0 && (
-                    <p className="text-xs text-red-500 mt-1">No banks found matching "{bankSearch}"</p>
-                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Account Number</label>

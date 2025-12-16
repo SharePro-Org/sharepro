@@ -11,6 +11,7 @@ export const GET_WALLET_BALANCE = gql`
       accountName
       accountNumber
       bankName
+      autoRechargeThreshold
     }
   }
 `;
