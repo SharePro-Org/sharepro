@@ -1,7 +1,7 @@
 "use client";
 
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import { Camera, Edit, Plus } from "lucide-react";
+import { Camera, Edit, Plus, SearchIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAtom } from "jotai";
@@ -80,6 +80,8 @@ type CreateBankDetailsVariables = {
 const account = () => {
   const [openBusinessModal, setOpenBusinessModal] = useState(false);
   const [openBankModal, setOpenBankModal] = useState(false);
+  const [bankSearch, setBankSearch] = useState("");
+   const [isBankDropdownOpen, setIsBankDropdownOpen] = useState(false);
   const [user] = useAtom(userAtom);
   const { data: userData, loading: userLoading, error: userError } = useQuery<GetUserData>(GET_USER, {
     variables: { id: user?.userId },
@@ -171,6 +173,16 @@ const account = () => {
 
   const [openDeactivateModal, setOpenDeactivateModal] = useState(false);
   const [steps, setSteps] = useState(0);
+
+  // Filter banks based on search
+  const filteredBanks = bankList?.bankList?.filter((bank: any) =>
+    bank.name.toLowerCase().includes(bankSearch.toLowerCase())
+  ) || [];
+
+  const getSelectedBankName = () => {
+    const bank = bankList?.bankList?.find((b: any) => b.code === bankForm.bankCode);
+    return bank?.name || "";
+  };
 
   return (
     <DashboardLayout>
@@ -489,21 +501,63 @@ const account = () => {
                   required
                 />
               </div>
-              <div>
-                <label htmlFor="bankName" className="mb-2 text-[#030229CC] text-sm">Bank Name</label>
-                <select
-                  id="bankName"
-                  value={bankForm.bankName}
-                  onChange={(e) => setBankForm({ ...bankForm, bankName: e.target.value })}
-                  className="border border-[#E5E5EA] rounded-md p-2 w-full capitalize"
-                  required
-                >
-                  <option value="">Select Bank</option>
-                  {bankList?.bankList.map((bank: { name: string; code: string }) => (
-                    <option key={bank.code} value={bank.name}>{bank.name}</option>
-                  ))}
-                </select>
-              </div>
+              <div className="bank-dropdown-container">
+                                <label className="block text-sm font-medium mb-1">Select Bank</label>
+                                <div className="relative">
+                                  <div
+                                    className="border border-[#E4E7EC] rounded-md p-3 w-full bg-white text-gray-900 focus-within:ring-2 focus-within:ring-[#24348B] focus-within:border-[#24348B] outline-none cursor-pointer transition-all duration-200 hover:border-[#24348B] flex items-center justify-between"
+                                    onClick={() => setIsBankDropdownOpen(!isBankDropdownOpen)}
+                                  >
+                                    <span className={bankForm.bankCode ? "text-gray-900" : "text-gray-400"}>
+                                      {bankForm.bankCode ? getSelectedBankName() : "Select your bank"}
+                                    </span>
+                                    <svg className={`w-4 h-4 transition-transform ${isBankDropdownOpen ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                                    </svg>
+                                  </div>
+              
+                                  {isBankDropdownOpen && (
+                                    <div className="absolute z-50 mt-1 w-full bg-white border border-[#E4E7EC] rounded-md shadow-lg max-h-64 overflow-hidden">
+                                      <div className="p-2 border-b border-[#E4E7EC]">
+                                        <div className="relative">
+                                          <input
+                                            type="text"
+                                            className="w-full pl-8 pr-3 py-2 border border-[#E4E7EC] rounded-md focus:ring-2 focus:ring-[#24348B] focus:border-[#24348B] outline-none text-sm"
+                                            placeholder="Search banks..."
+                                            value={bankSearch}
+                                            onChange={e => setBankSearch(e.target.value)}
+                                            onClick={e => e.stopPropagation()}
+                                          />
+                                          <SearchIcon size={14} className="absolute top-2.5 left-2 text-gray-400" />
+                                        </div>
+                                      </div>
+                                      <div className="max-h-48 overflow-y-auto">
+                                        {filteredBanks.length > 0 ? (
+                                          filteredBanks.map((bank: any) => (
+                                            <div
+                                              key={bank.code}
+                                              className={`px-3 py-2 cursor-pointer hover:bg-[#EEF3FF] transition-colors ${
+                                                bankForm.bankCode === bank.code ? 'bg-[#EEF3FF] text-[#24348B] font-medium' : 'text-gray-900'
+                                              }`}
+                                              onClick={() => {
+                                                setBankForm(f => ({ ...f, bankCode: bank.code }));
+                                                setBankSearch("");
+                                                setIsBankDropdownOpen(false);
+                                              }}
+                                            >
+                                              {bank.name}
+                                            </div>
+                                          ))
+                                        ) : (
+                                          <div className="px-3 py-4 text-center text-gray-500 text-sm">
+                                            No banks found matching "{bankSearch}"
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
               <div>
                 <label htmlFor="accountNumber" className="mb-2 text-[#030229CC] text-sm">Account Number</label>
                 <input

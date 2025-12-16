@@ -46,8 +46,6 @@ const wallets = () => {
 
   const [isClient, setIsClient] = useState(false);
   const [showWalletBalance, setShowWalletBalance] = useState(false);
-   const [errorMsg, setErrorMsg] = useState("");
-    const [success, setSuccess] = useState(false);
   // Wallet Setup modal state
   const [user] = useAtom(userAtom);
   
@@ -164,7 +162,6 @@ const wallets = () => {
   const [createDVA] = useMutation(CREATE_DEDICATED_VIRTUAL_ACCOUNT, {
       onCompleted: (data: any) => {
       if (data?.createDedicatedVirtualAccount?.success) {
-        setSuccess(true);
          setWalletOpen(true)
         message.success(data?.createDedicatedVirtualAccount?.message);
       } else {
