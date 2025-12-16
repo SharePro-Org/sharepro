@@ -25,7 +25,7 @@ const userDashboard = () => {
   type InvitedCampaignsData = { userInvitedCampaigns: any[] | null };
   const { data: invitedData, loading: invitedLoading, error: invitedError } = useQuery<InvitedCampaignsData>(USER_INVITED_CAMPAIGNS);
 
-  const { data: userData } = useQuery(GET_USER, {
+  const { data: userData } = useQuery<UserData>(GET_USER, {
     variables: { id: user?.userId },
     skip: !user?.userId,
   });
@@ -62,6 +62,17 @@ const userDashboard = () => {
       pendingActions: number;
       walletBalance: number;
       // Add any other fields as needed
+    };
+  }
+
+  interface UserData {
+    currentUser: {
+      bankAccounts: Array<{
+        id: string;
+        bankName: string;
+        accountNumber: string;
+        accountName: string;
+      }>;
     };
   }
 
