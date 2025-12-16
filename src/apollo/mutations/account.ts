@@ -48,6 +48,7 @@ export const GET_USER = gql`
         language
       }
       bankAccounts {
+        id
         accountName
         accountNumber
         bankCode
@@ -159,11 +160,35 @@ export const CREATE_USER_BANK_DETAILS = gql`
   }
 `;
 
+export const DELETE_USER_BANK_ACCOUNT = gql`
+  mutation DeleteUserBankAccount($accountId: UUID!) {
+    deleteUserBankAccount(accountId: $accountId) {
+      success
+      message
+    }
+  }
+`;
+
 export const DEACTIVATE_USER_ACCOUNT = gql`
   mutation DeactivateUserAccount($input: DeactivateUserAccountInput!) {
     deactivateUserAccount(input: $input) {
       success
       message
+    }
+  }
+`;
+
+export const REQUEST_PAYOUT = gql`
+  mutation RequestPayout($input: RequestPayoutInput!) {
+    requestPayout(input: $input) {
+      success
+      message
+      payout {
+        id
+        amount
+        status
+        createdAt
+      }
     }
   }
 `;

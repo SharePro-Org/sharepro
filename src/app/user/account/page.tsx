@@ -11,7 +11,8 @@ import {
   GET_USER,
   UPDATE_USER,
   CREATE_USER_BANK_DETAILS,
-  DEACTIVATE_USER_ACCOUNT
+  DEACTIVATE_USER_ACCOUNT,
+  DELETE_USER_BANK_ACCOUNT
 } from "@/apollo/mutations/account";
 import { BANK_LIST } from "@/apollo/queries/wallet";
 
@@ -24,6 +25,7 @@ type UserProfile = {
 };
 
 type BankAccount = {
+  id: string;
   accountName: string;
   accountNumber: string;
   bankCode: string;
@@ -143,7 +145,20 @@ const account = () => {
     },
     onError: (error) => {
       console.error('Error creating bank details:', error);
-    }
+    },
+    refetchQueries: [{ query: GET_USER, variables: { id: user?.userId } }]
+  });
+
+  const [deleteBankAccount, { loading: deleteLoading }] = useMutation(DELETE_USER_BANK_ACCOUNT, {
+    onCompleted: (data: any) => {
+      if (data.deleteUserBankAccount.success) {
+        alert(data.deleteUserBankAccount.message || "Bank account deleted successfully!");
+      }
+    },
+    onError: (error) => {
+      alert(error.message);
+    },
+    refetchQueries: [{ query: GET_USER, variables: { id: user?.userId } }]
   });
   useEffect(() => {
     if (userData?.currentUser?.userProfile) {
@@ -248,20 +263,51 @@ const account = () => {
                   <Plus size={16} className="my-auto" />
                 </button>
               </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <p className="text-sm text-[#030229B2] mb-2">Account Holder</p>
-                  <p className="font-medium">{userData?.currentUser?.bankAccounts?.[0]?.accountName || "-"}</p>
+              {userData?.currentUser?.bankAccounts && userData.currentUser.bankAccounts.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-[#E5E5EA]">
+                        <th className="text-left py-3 px-2 text-sm font-medium text-[#030229B2]">Account Holder</th>
+                        <th className="text-left py-3 px-2 text-sm font-medium text-[#030229B2]">Bank Name</th>
+                        <th className="text-left py-3 px-2 text-sm font-medium text-[#030229B2]">Account Number</th>
+                        <th className="text-left py-3 px-2 text-sm font-medium text-[#030229B2]">Mobile Money</th>
+                        <th className="text-left py-3 px-2 text-sm font-medium text-[#030229B2]">Network</th>
+                        <th className="text-left py-3 px-2 text-sm font-medium text-[#030229B2]">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {userData.currentUser.bankAccounts.map((account: BankAccount) => (
+                        <tr key={account.id} className="border-b border-[#E5E5EA]">
+                          <td className="py-3 px-2 font-medium">{account.accountName}</td>
+                          <td className="py-3 px-2">{account.bankName}</td>
+                          <td className="py-3 px-2">{account.accountNumber}</td>
+                          <td className="py-3 px-2">{account.phoneNumber || "-"}</td>
+                          <td className="py-3 px-2 capitalize">{account.networkProvider || "-"}</td>
+                          <td className="py-3 px-2">
+                            <button
+                              onClick={() => {
+                                if (confirm("Are you sure you want to delete this bank account?")) {
+                                  deleteBankAccount({ variables: { accountId: account.id } });
+                                }
+                              }}
+                              disabled={deleteLoading}
+                              className="text-red-600 hover:text-red-800 text-sm"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-                <div>
-                  <p className="text-sm text-[#030229B2] mb-2">Bank Name</p>
-                  <p className="font-medium">{userData?.currentUser?.bankAccounts?.[0]?.bankName || "-"}</p>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>No bank accounts added yet</p>
+                  <p className="text-sm mt-2">Click "Add" to add your first bank account</p>
                 </div>
-                <div>
-                  <p className="text-sm text-[#030229B2] mb-2">Account Number</p>
-                  <p className="font-medium">{userData?.currentUser?.bankAccounts?.[0]?.accountNumber || "-"}</p>
-                </div>
-              </div>
+              )}
             </div>
 
             <div className="flex justify-end mt-10">
@@ -353,15 +399,7 @@ const account = () => {
                   campaigns, user access, and reward activities. You can
                   reactivate it anytime by logging back in.
                 </p>
-                {/* <p className="font-medium">What Will Happen?</p>
-                <ul className="text-sm text-[#030229CC]">
-                  <li>Your business profile will be hidden</li>
-                  <li>Ongoing campaigns will be paused</li>
-                  <li>You will stop receiving notifications</li>
-                  <li>
-                    You won’t be able to access the dashboard until reactivated
-                  </li>
-                </ul> */}
+                
                 <p className="font-medium">Reason for deactivating </p>
                 <span className="text-sm text-[#030229CC]">
                   Let us know why you're leaving, this helps us improve.
