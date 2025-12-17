@@ -82,7 +82,7 @@ const account = () => {
   const [openBusinessModal, setOpenBusinessModal] = useState(false);
   const [openBankModal, setOpenBankModal] = useState(false);
   const [bankSearch, setBankSearch] = useState("");
-   const [isBankDropdownOpen, setIsBankDropdownOpen] = useState(false);
+  const [isBankDropdownOpen, setIsBankDropdownOpen] = useState(false);
   const [user] = useAtom(userAtom);
   const { data: userData, loading: userLoading, error: userError } = useQuery<GetUserData>(GET_USER, {
     variables: { id: user?.userId },
@@ -178,7 +178,7 @@ const account = () => {
           accountNumber: first.accountNumber || "",
           phoneNumber: first.phoneNumber || "",
           networkProvider: first.networkProvider || "",
-          accountType:  "savings",
+          accountType: "savings",
           bankCode: first.bankCode || "",
         });
       }
@@ -255,13 +255,14 @@ const account = () => {
             <div className="border border-[#E5E5EA] rounded-sm p-4 my-4">
               <div className="border-b border-b-[#E5E5EA] flex py-3 mb-3 justify-between">
                 <p className="font-medium my-auto">Bank Account Details</p>
-                <button
+                {userData?.currentUser?.bankAccounts && userData.currentUser.bankAccounts.length > 0 ? null : <button
                   onClick={() => setOpenBankModal(true)}
                   className="flex text-primary bg-[#ECF3FF] rounded-md my-auto gap-2  p-2"
                 >
                   <span className="text-sm">Add</span>
                   <Plus size={16} className="my-auto" />
-                </button>
+                </button>}
+
               </div>
               {userData?.currentUser?.bankAccounts && userData.currentUser.bankAccounts.length > 0 ? (
                 <div className="overflow-x-auto">
@@ -399,7 +400,7 @@ const account = () => {
                   campaigns, user access, and reward activities. You can
                   reactivate it anytime by logging back in.
                 </p>
-                
+
                 <p className="font-medium">Reason for deactivating </p>
                 <span className="text-sm text-[#030229CC]">
                   Let us know why you're leaving, this helps us improve.
@@ -539,62 +540,61 @@ const account = () => {
                 />
               </div>
               <div className="bank-dropdown-container">
-                                <label className="block text-sm font-medium mb-1">Select Bank</label>
-                                <div className="relative">
-                                  <div
-                                    className="border border-[#E4E7EC] rounded-md p-3 w-full bg-white text-gray-900 focus-within:ring-2 focus-within:ring-[#24348B] focus-within:border-[#24348B] outline-none cursor-pointer transition-all duration-200 hover:border-[#24348B] flex items-center justify-between"
-                                    onClick={() => setIsBankDropdownOpen(!isBankDropdownOpen)}
-                                  >
-                                    <span className={bankForm.bankCode ? "text-gray-900" : "text-gray-400"}>
-                                      {bankForm.bankCode ? getSelectedBankName() : "Select your bank"}
-                                    </span>
-                                    <svg className={`w-4 h-4 transition-transform ${isBankDropdownOpen ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
-                                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                                    </svg>
-                                  </div>
-              
-                                  {isBankDropdownOpen && (
-                                    <div className="absolute z-50 mt-1 w-full bg-white border border-[#E4E7EC] rounded-md shadow-lg max-h-64 overflow-hidden">
-                                      <div className="p-2 border-b border-[#E4E7EC]">
-                                        <div className="relative">
-                                          <input
-                                            type="text"
-                                            className="w-full pl-8 pr-3 py-2 border border-[#E4E7EC] rounded-md focus:ring-2 focus:ring-[#24348B] focus:border-[#24348B] outline-none text-sm"
-                                            placeholder="Search banks..."
-                                            value={bankSearch}
-                                            onChange={e => setBankSearch(e.target.value)}
-                                            onClick={e => e.stopPropagation()}
-                                          />
-                                          <SearchIcon size={14} className="absolute top-2.5 left-2 text-gray-400" />
-                                        </div>
-                                      </div>
-                                      <div className="max-h-48 overflow-y-auto">
-                                        {filteredBanks.length > 0 ? (
-                                          filteredBanks.map((bank: any) => (
-                                            <div
-                                              key={bank.code}
-                                              className={`px-3 py-2 cursor-pointer hover:bg-[#EEF3FF] transition-colors ${
-                                                bankForm.bankCode === bank.code ? 'bg-[#EEF3FF] text-[#24348B] font-medium' : 'text-gray-900'
-                                              }`}
-                                              onClick={() => {
-                                                setBankForm(f => ({ ...f, bankCode: bank.code }));
-                                                setBankSearch("");
-                                                setIsBankDropdownOpen(false);
-                                              }}
-                                            >
-                                              {bank.name}
-                                            </div>
-                                          ))
-                                        ) : (
-                                          <div className="px-3 py-4 text-center text-gray-500 text-sm">
-                                            No banks found matching "{bankSearch}"
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
+                <label className="block text-sm font-medium mb-1">Select Bank</label>
+                <div className="relative">
+                  <div
+                    className="border border-[#E4E7EC] rounded-md p-3 w-full bg-white text-gray-900 focus-within:ring-2 focus-within:ring-[#24348B] focus-within:border-[#24348B] outline-none cursor-pointer transition-all duration-200 hover:border-[#24348B] flex items-center justify-between"
+                    onClick={() => setIsBankDropdownOpen(!isBankDropdownOpen)}
+                  >
+                    <span className={bankForm.bankCode ? "text-gray-900" : "text-gray-400"}>
+                      {bankForm.bankCode ? getSelectedBankName() : "Select your bank"}
+                    </span>
+                    <svg className={`w-4 h-4 transition-transform ${isBankDropdownOpen ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+
+                  {isBankDropdownOpen && (
+                    <div className="absolute z-50 mt-1 w-full bg-white border border-[#E4E7EC] rounded-md shadow-lg max-h-64 overflow-hidden">
+                      <div className="p-2 border-b border-[#E4E7EC]">
+                        <div className="relative">
+                          <input
+                            type="text"
+                            className="w-full pl-8 pr-3 py-2 border border-[#E4E7EC] rounded-md focus:ring-2 focus:ring-[#24348B] focus:border-[#24348B] outline-none text-sm"
+                            placeholder="Search banks..."
+                            value={bankSearch}
+                            onChange={e => setBankSearch(e.target.value)}
+                            onClick={e => e.stopPropagation()}
+                          />
+                          <SearchIcon size={14} className="absolute top-2.5 left-2 text-gray-400" />
+                        </div>
+                      </div>
+                      <div className="max-h-48 overflow-y-auto">
+                        {filteredBanks.length > 0 ? (
+                          filteredBanks.map((bank: any) => (
+                            <div
+                              key={bank.code}
+                              className={`px-3 py-2 cursor-pointer hover:bg-[#EEF3FF] transition-colors ${bankForm.bankCode === bank.code ? 'bg-[#EEF3FF] text-[#24348B] font-medium' : 'text-gray-900'
+                                }`}
+                              onClick={() => {
+                                setBankForm(f => ({ ...f, bankCode: bank.code }));
+                                setBankSearch("");
+                                setIsBankDropdownOpen(false);
+                              }}
+                            >
+                              {bank.name}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-3 py-4 text-center text-gray-500 text-sm">
+                            No banks found matching "{bankSearch}"
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
               <div>
                 <label htmlFor="accountNumber" className="mb-2 text-[#030229CC] text-sm">Account Number</label>
                 <input
