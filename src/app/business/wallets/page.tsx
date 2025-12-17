@@ -36,7 +36,7 @@ interface WalletStats {
 
 const wallets = () => {
 
-   const { data: balanceData, error, loading } = useQuery<WalletBalance>(GET_WALLET_BALANCE, {
+  const { data: balanceData, error, loading } = useQuery<WalletBalance>(GET_WALLET_BALANCE, {
     variables: {}
   })
 
@@ -48,7 +48,7 @@ const wallets = () => {
   const [showWalletBalance, setShowWalletBalance] = useState(false);
   // Wallet Setup modal state
   const [user] = useAtom(userAtom);
-  
+
   const [walletOpen, setWalletOpen] = useState(false);
   const [bankSearch, setBankSearch] = useState("");
   const [isBankDropdownOpen, setIsBankDropdownOpen] = useState(false);
@@ -134,7 +134,7 @@ const wallets = () => {
     },
   });
 
- 
+
   const { data: transactionsData, error: transactionError, loading: transactionLoading } = useQuery<WalletTransactions>(WALLET_TRANSACTIONS, {
     variables: {}
   })
@@ -142,6 +142,33 @@ const wallets = () => {
   const toggleWalletBalance = () => {
     setShowWalletBalance(!showWalletBalance);
   }
+
+  // Copy account number to clipboard
+  const copyAccountNumber = async () => {
+    const acct = balanceData?.businessWallet?.accountNumber;
+    if (!acct) {
+      message.error("No account number available");
+      return;
+    }
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(String(acct));
+        message.success("Account number copied");
+      } else {
+        // Fallback: use a temporary textarea
+        const textarea = document.createElement('textarea');
+        textarea.value = String(acct);
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        message.success("Account number copied");
+      }
+    } catch (e) {
+      console.error(e);
+      message.error("Failed to copy account number");
+    }
+  };
 
   // Calculate total deposits and debits
   const totalDeposit = statsData?.walletTransactions
@@ -163,48 +190,48 @@ const wallets = () => {
   };
 
   const [createDVA] = useMutation(CREATE_DEDICATED_VIRTUAL_ACCOUNT, {
-      onCompleted: (data: any) => {
+    onCompleted: (data: any) => {
       if (data?.createDedicatedVirtualAccount?.success) {
-         setWalletOpen(true)
+        setWalletOpen(true)
         message.success(data?.createDedicatedVirtualAccount?.message);
       } else {
         message.error(
           data?.createDedicatedVirtualAccount?.message || "Failed to create campaign."
         );
-         setWalletOpen(false)
+        setWalletOpen(false)
       }
-      },
-      onError: (error) => {
-        console.error("Error creating dva:", error);
-      },
-    });
-  
-    const handleCreateDVA = () =>{
-      console.log("DVA :", walletForm)
-     createDVA({ variables:{
-        input:{
+    },
+    onError: (error) => {
+      console.error("Error creating dva:", error);
+    },
+  });
+
+  const handleCreateDVA = () => {
+    console.log("DVA :", walletForm)
+    createDVA({
+      variables: {
+        input: {
           ...walletForm
         }
-      }})
-    }
+      }
+    })
+  }
 
   return (
     <DashboardLayout>
       <>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
           {/* Available Balance Section */}
-          <div className={`p-6 rounded-lg shadow-sm ${
-            (balanceData?.businessWallet?.balance || 0) <= (balanceData?.businessWallet?.autoRechargeThreshold || 0)
+          <div className={`p-6 rounded-lg shadow-sm ${(balanceData?.businessWallet?.balance || 0) <= (balanceData?.businessWallet?.autoRechargeThreshold || 0)
               ? 'bg-red-50 border-2 border-red-300'
               : 'bg-white'
-          }`}>
+            }`}>
             <p className="text-sm text-[#030229B2] mb-2">Available Balance</p>
             {showWalletBalance ? (
-              <h1 className={`text-3xl my-3 font-bold ${
-                (balanceData?.businessWallet?.balance || 0) <= (balanceData?.businessWallet?.autoRechargeThreshold || 0)
+              <h1 className={`text-3xl my-3 font-bold ${(balanceData?.businessWallet?.balance || 0) <= (balanceData?.businessWallet?.autoRechargeThreshold || 0)
                   ? 'text-red-600'
                   : 'text-[#030229]'
-              }`}>
+                }`}>
                 {`${balanceData?.businessWallet?.currency || 'NGN'} ${Number(balanceData?.businessWallet?.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
               </h1>
             ) : (
@@ -233,15 +260,15 @@ const wallets = () => {
             <div className="space-y-3 my-3">
               <div>
                 <p className="text-xs text-gray-500">Total Deposits</p>
-                   <p className="text-xl font-semibold text-green-600">
-                    {`${balanceData?.businessWallet?.currency || 'NGN'} ${totalDeposit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                  </p>
+                <p className="text-xl font-semibold text-green-600">
+                  {`${balanceData?.businessWallet?.currency || 'NGN'} ${totalDeposit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-gray-500">Total Debits</p>
-                  <p className="text-xl font-semibold text-red-600">
-                    {`${balanceData?.businessWallet?.currency || 'NGN'} ${totalDebit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                  </p>
+                <p className="text-xl font-semibold text-red-600">
+                  {`${balanceData?.businessWallet?.currency || 'NGN'} ${totalDebit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                </p>
               </div>
             </div>
           </div>
@@ -259,7 +286,16 @@ const wallets = () => {
               {balanceData?.businessWallet?.accountNumber && (
                 <div>
                   <p className="text-xs text-gray-500">Account Number</p>
-                  <p className="text-sm font-medium text-[#030229]">{balanceData.businessWallet.accountNumber}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-[#030229]">{balanceData.businessWallet.accountNumber}</p>
+                    <button
+                      type="button"
+                      onClick={copyAccountNumber}
+                      className="text-primary text-xs underline hover:opacity-80"
+                    >
+                      Copy
+                    </button>
+                  </div>
                 </div>
               )}
               {balanceData?.businessWallet?.accountName && (
@@ -273,8 +309,10 @@ const wallets = () => {
               )}
             </div>
           </div>
+
+
         </div>
-       
+
         <section className="bg-white p-4 rounded-md mt-4">
           <div className="flex flex-col lg:flex-row justify-between gap-4">
             <p className="text-black font-semibold my-auto text-base">
@@ -306,7 +344,7 @@ const wallets = () => {
               <div className="bg-[#EEF3FF] rounded-xl p-4 mb-6">
                 <span className="font-bold text-sm">Note:</span> <span className="text-sm">Sharepro does not save your BVN, It will only be used for verification purposes.</span>
               </div>
-              <form className="space-y-4 grid grid-cols-2 gap-3" onSubmit={e =>  e.preventDefault()}>
+              <form className="space-y-4 grid grid-cols-2 gap-3" onSubmit={e => e.preventDefault()}>
                 <div>
                   <label className="block text-sm font-medium mb-1">First Name *</label>
                   <input type="text" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="e.g John" value={walletForm.firstName} onChange={e => setWalletForm(f => ({ ...f, firstName: e.target.value }))} required />
@@ -354,9 +392,8 @@ const wallets = () => {
                             filteredBanks.map((bank: any) => (
                               <div
                                 key={bank.code}
-                                className={`px-3 py-2 cursor-pointer hover:bg-[#EEF3FF] transition-colors ${
-                                  walletForm.bankCode === bank.code ? 'bg-[#EEF3FF] text-[#24348B] font-medium' : 'text-gray-900'
-                                }`}
+                                className={`px-3 py-2 cursor-pointer hover:bg-[#EEF3FF] transition-colors ${walletForm.bankCode === bank.code ? 'bg-[#EEF3FF] text-[#24348B] font-medium' : 'text-gray-900'
+                                  }`}
                                 onClick={() => {
                                   setWalletForm(f => ({ ...f, bankCode: bank.code }));
                                   setBankSearch("");
