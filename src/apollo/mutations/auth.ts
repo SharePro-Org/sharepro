@@ -120,8 +120,8 @@ export const FORGOT_PASSWORD = gql`
 `;
 
 export const RESET_PASSWORD = gql`
-  mutation ResetPassword($newPassword: String!, $restToken: String!) {
-    resetPassword(newPassword: $newPassword, restToken: $restToken) {
+  mutation ResetPassword($newPassword: String!, $resetToken: String!) {
+    resetPassword(newPassword: $newPassword, resetToken: $resetToken) {
       message
       success
     }

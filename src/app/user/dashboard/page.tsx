@@ -5,8 +5,10 @@ import DiscoverCampaign from "@/components/dashboard/DiscoverCampaign";
 import UserDashboardTable from "@/components/dashboard/UserDashboardTable";
 import { USER_DASHBOARD_SUMMARY, USER_INVITED_CAMPAIGNS } from "@/apollo/queries/user";
 import { useQuery, useMutation } from "@apollo/client/react";
-
-import { Calendar, Users, XIcon } from "lucide-react";
+import { REQUEST_PAYOUT, GET_USER } from "@/apollo/mutations/account";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { message } from "antd"
+import { Calendar, Users, XIcon, Wallet } from "lucide-react";
 import React, { useEffect, useState, useMemo } from "react";
 import { userAtom } from "@/store/User";
 import { useAtom } from "jotai";
@@ -14,9 +16,19 @@ import Link from "next/link";
 
 const userDashboard = () => {
   const [user] = useAtom(userAtom);
+  const [openPayoutModal, setOpenPayoutModal] = useState(false);
+  const [payoutForm, setPayoutForm] = useState({
+    amount: "",
+    bankAccountId: "",
+  });
 
   type InvitedCampaignsData = { userInvitedCampaigns: any[] | null };
   const { data: invitedData, loading: invitedLoading, error: invitedError } = useQuery<InvitedCampaignsData>(USER_INVITED_CAMPAIGNS);
+
+  const { data: userData } = useQuery<UserData>(GET_USER, {
+    variables: { id: user?.userId },
+    skip: !user?.userId,
+  });
 
   // Check if any invited campaign has a non-null reward object (accepts `reward` or `rewards` keys)
   const hasRewardInInvited = useMemo(() => {
@@ -53,16 +65,38 @@ const userDashboard = () => {
     };
   }
 
+  interface UserData {
+    currentUser: {
+      bankAccounts: Array<{
+        id: string;
+        bankName: string;
+        accountNumber: string;
+        accountName: string;
+      }>;
+    };
+  }
+
   const { data, loading, error } = useQuery<UserDashboardSummaryData>(USER_DASHBOARD_SUMMARY, {
     variables: { userId: user?.userId },
     skip: !user?.userId,
   });
 
-  const { data: userInvitedCampaigns } = useQuery(USER_INVITED_CAMPAIGNS, {
-    variables: {},
-    // skip: !user?.userId,
-  })
-  console.log("User Invited Campaigns: ", userInvitedCampaigns);
+
+  const [requestPayout, { loading: payoutLoading }] = useMutation(REQUEST_PAYOUT, {
+    onCompleted: (data:any) => {
+      if (data.requestPayout.success) {
+        message.success(data.requestPayout.message || "Payout request submitted successfully!");
+        setOpenPayoutModal(false);
+        setPayoutForm({ amount: "", bankAccountId: "" });
+      } else {
+        message.error(data.requestPayout.message || "Failed to request payout");
+      }
+    },
+    onError: (error) => {
+      message.error(error.message);
+    },
+    refetchQueries: [{ query: USER_DASHBOARD_SUMMARY, variables: { userId: user?.userId } }]
+  });
 
   useEffect(() => {
     if (data?.userDashboardSummary) {
@@ -101,6 +135,16 @@ const userDashboard = () => {
     <DashboardLayout user={true}>
       <>
         <section className="flex flex-col gap-8">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl font-bold">Dashboard</h1>
+            <button
+              onClick={() => setOpenPayoutModal(true)}
+              className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+            >
+              <Wallet size={18} />
+              <span>Request Payout</span>
+            </button>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Card 1: Total Rewards Earned */}
             <div className="flex flex-col bg-[#fff] rounded-md p-4 items-start min-h-[100px] justify-center">
@@ -156,7 +200,8 @@ const userDashboard = () => {
                     Ongoing: {summary.ongoingCampaigns}
                   </div>
                   <div className="text-sm text-green-600 mt-1 font-bold">
-                    {summary.recentRewardPercentage}% ↑
+                    {summary.recentRewardPercentage}%{" "}
+                    {summary.recentRewardPercentage >= 0 ? "↑" : "↓"}
                   </div>
                 </div>
               </div>
@@ -183,7 +228,8 @@ const userDashboard = () => {
                     {summary.convertedReferrals} converted
                   </div>
                   <div className="text-sm text-green-600 mt-1 font-bold">
-                    {summary.recentRewardPercentage}% ↑
+                   {summary.recentRewardPercentage}%{" "}
+                    {summary.recentRewardPercentage >= 0 ? "↑" : "↓"}
                   </div>
                 </div>
               </div>
@@ -210,32 +256,13 @@ const userDashboard = () => {
                     Rewards Awaiting Claim
                   </div>
                   <div className="text-sm text-green-600 mt-1 font-bold">
-                    {summary.recentRewardPercentage}% ↑
+                    {summary.recentRewardPercentage}%{" "}
+                    {summary.recentRewardPercentage >= 0 ? "↑" : "↓"}
                   </div>
                 </div>
               </div>
             </div>
           </div>
-
-          {/* <div className="bg-white relative p-4 rounded-md">
-            <button className="absolute top-2 right-4 mb-2">
-              <XIcon />
-            </button>
-            <div className="bg-[#ECF3FF] p-4 my-5 rounded-md flex justify-between">
-              <div>
-                <p className="text-primary mb-2 text-lg font-medium">
-                  New Reward!
-                </p>
-                <p className="text-[#030229B2]">
-                  Someone signed up with your referral link, you’ve earned a
-                  reward.
-                </p>
-              </div>
-              <button className="bg-primary text-white px-6 my-auto py-3 rounded-md">
-                Claim Reward
-              </button>
-            </div>
-          </div> */}
 
           <div className={`grid ${hasRewardInInvited ? 'md:grid-cols-3' : 'grid-cols-1'} grid-cols-1 gap-6`}>
             <div className={`${hasRewardInInvited ? 'col-span-2' : 'col-span-1'} p-4 bg-white rounded-md`}>
@@ -273,6 +300,103 @@ const userDashboard = () => {
             </div>
           </div>
         </section>
+
+        {/* Payout Request Modal */}
+        <Dialog open={openPayoutModal} onOpenChange={() => setOpenPayoutModal(false)}>
+          <DialogContent>
+            <h2 className="font-medium text-center text-xl mb-4">Request Payout</h2>
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
+              <p className="text-sm text-blue-800">
+                <strong>Available Balance:</strong> {summary.walletBalance}
+              </p>
+            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!payoutForm.amount || !payoutForm.bankAccountId) {
+                  alert("Please fill in all fields");
+                  return;
+                }
+                const amount = parseFloat(payoutForm.amount);
+                if (isNaN(amount) || amount <= 0) {
+                  alert("Please enter a valid amount");
+                  return;
+                }
+                requestPayout({
+                  variables: {
+                    input: {
+                      amount: amount,
+                      bankAccountId: payoutForm.bankAccountId,
+                    },
+                  },
+                });
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label htmlFor="amount" className="block text-sm font-medium mb-2">
+                  Amount to Withdraw
+                </label>
+                <input
+                  type="number"
+                  id="amount"
+                  step="0.01"
+                  min="0"
+                  value={payoutForm.amount}
+                  onChange={(e) => setPayoutForm({ ...payoutForm, amount: e.target.value })}
+                  placeholder="Enter amount"
+                  className="border border-[#E5E5EA] rounded-md p-3 w-full"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="bankAccount" className="block text-sm font-medium mb-2">
+                  Select Bank Account
+                </label>
+                {userData?.currentUser?.bankAccounts && userData.currentUser.bankAccounts.length > 0 ? (
+                  <select
+                    id="bankAccount"
+                    value={payoutForm.bankAccountId}
+                    onChange={(e) => setPayoutForm({ ...payoutForm, bankAccountId: e.target.value })}
+                    className="border border-[#E5E5EA] rounded-md p-3 w-full"
+                    required
+                  >
+                    <option value="">Select Bank Account</option>
+                    {userData.currentUser.bankAccounts.map((account: any) => (
+                      <option key={account.id} value={account.id}>
+                        {account.bankName} - {account.accountNumber} ({account.accountName})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="text-sm text-gray-500 p-3 bg-gray-50 rounded-md">
+                    No bank accounts found. Please{" "}
+                    <Link href="/user/account" className="text-primary underline">
+                      add a bank account
+                    </Link>{" "}
+                    first.
+                  </div>
+                )}
+              </div>
+              <div className="text-center space-y-2">
+                <button
+                  type="submit"
+                  className="w-full p-3 bg-primary rounded-md text-white hover:bg-primary/90 transition-colors"
+                  disabled={payoutLoading || !userData?.currentUser?.bankAccounts?.length}
+                >
+                  {payoutLoading ? "Processing..." : "Submit Request"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOpenPayoutModal(false)}
+                  className="w-full p-3 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </>
     </DashboardLayout>
   );

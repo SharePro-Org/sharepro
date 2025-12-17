@@ -1,7 +1,7 @@
 "use client";
 
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import { Camera, Edit, Plus } from "lucide-react";
+import { Camera, Edit, Plus, SearchIcon } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAtom } from "jotai";
@@ -11,7 +11,8 @@ import {
   GET_USER,
   UPDATE_USER,
   CREATE_USER_BANK_DETAILS,
-  DEACTIVATE_USER_ACCOUNT
+  DEACTIVATE_USER_ACCOUNT,
+  DELETE_USER_BANK_ACCOUNT
 } from "@/apollo/mutations/account";
 import { BANK_LIST } from "@/apollo/queries/wallet";
 
@@ -24,9 +25,9 @@ type UserProfile = {
 };
 
 type BankAccount = {
+  id: string;
   accountName: string;
   accountNumber: string;
-  accountType: string;
   bankCode: string;
   bankName: string;
   phoneNumber: string;
@@ -80,6 +81,8 @@ type CreateBankDetailsVariables = {
 const account = () => {
   const [openBusinessModal, setOpenBusinessModal] = useState(false);
   const [openBankModal, setOpenBankModal] = useState(false);
+  const [bankSearch, setBankSearch] = useState("");
+   const [isBankDropdownOpen, setIsBankDropdownOpen] = useState(false);
   const [user] = useAtom(userAtom);
   const { data: userData, loading: userLoading, error: userError } = useQuery<GetUserData>(GET_USER, {
     variables: { id: user?.userId },
@@ -142,7 +145,20 @@ const account = () => {
     },
     onError: (error) => {
       console.error('Error creating bank details:', error);
-    }
+    },
+    refetchQueries: [{ query: GET_USER, variables: { id: user?.userId } }]
+  });
+
+  const [deleteBankAccount, { loading: deleteLoading }] = useMutation(DELETE_USER_BANK_ACCOUNT, {
+    onCompleted: (data: any) => {
+      if (data.deleteUserBankAccount.success) {
+        alert(data.deleteUserBankAccount.message || "Bank account deleted successfully!");
+      }
+    },
+    onError: (error) => {
+      alert(error.message);
+    },
+    refetchQueries: [{ query: GET_USER, variables: { id: user?.userId } }]
   });
   useEffect(() => {
     if (userData?.currentUser?.userProfile) {
@@ -162,7 +178,7 @@ const account = () => {
           accountNumber: first.accountNumber || "",
           phoneNumber: first.phoneNumber || "",
           networkProvider: first.networkProvider || "",
-          accountType: first.accountType || "savings",
+          accountType:  "savings",
           bankCode: first.bankCode || "",
         });
       }
@@ -171,6 +187,16 @@ const account = () => {
 
   const [openDeactivateModal, setOpenDeactivateModal] = useState(false);
   const [steps, setSteps] = useState(0);
+
+  // Filter banks based on search
+  const filteredBanks = bankList?.bankList?.filter((bank: any) =>
+    bank.name.toLowerCase().includes(bankSearch.toLowerCase())
+  ) || [];
+
+  const getSelectedBankName = () => {
+    const bank = bankList?.bankList?.find((b: any) => b.code === bankForm.bankCode);
+    return bank?.name || "";
+  };
 
   return (
     <DashboardLayout>
@@ -237,20 +263,51 @@ const account = () => {
                   <Plus size={16} className="my-auto" />
                 </button>
               </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <p className="text-sm text-[#030229B2] mb-2">Account Holder</p>
-                  <p className="font-medium">{userData?.currentUser?.bankAccounts?.[0]?.accountName || "-"}</p>
+              {userData?.currentUser?.bankAccounts && userData.currentUser.bankAccounts.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-[#E5E5EA]">
+                        <th className="text-left py-3 px-2 text-sm font-medium text-[#030229B2]">Account Holder</th>
+                        <th className="text-left py-3 px-2 text-sm font-medium text-[#030229B2]">Bank Name</th>
+                        <th className="text-left py-3 px-2 text-sm font-medium text-[#030229B2]">Account Number</th>
+                        <th className="text-left py-3 px-2 text-sm font-medium text-[#030229B2]">Mobile Money</th>
+                        <th className="text-left py-3 px-2 text-sm font-medium text-[#030229B2]">Network</th>
+                        <th className="text-left py-3 px-2 text-sm font-medium text-[#030229B2]">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {userData.currentUser.bankAccounts.map((account: BankAccount) => (
+                        <tr key={account.id} className="border-b border-[#E5E5EA]">
+                          <td className="py-3 px-2 font-medium">{account.accountName}</td>
+                          <td className="py-3 px-2">{account.bankName}</td>
+                          <td className="py-3 px-2">{account.accountNumber}</td>
+                          <td className="py-3 px-2">{account.phoneNumber || "-"}</td>
+                          <td className="py-3 px-2 capitalize">{account.networkProvider || "-"}</td>
+                          <td className="py-3 px-2">
+                            <button
+                              onClick={() => {
+                                if (confirm("Are you sure you want to delete this bank account?")) {
+                                  deleteBankAccount({ variables: { accountId: account.id } });
+                                }
+                              }}
+                              disabled={deleteLoading}
+                              className="text-red-600 hover:text-red-800 text-sm"
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-                <div>
-                  <p className="text-sm text-[#030229B2] mb-2">Bank Name</p>
-                  <p className="font-medium">{userData?.currentUser?.bankAccounts?.[0]?.bankName || "-"}</p>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>No bank accounts added yet</p>
+                  <p className="text-sm mt-2">Click "Add" to add your first bank account</p>
                 </div>
-                <div>
-                  <p className="text-sm text-[#030229B2] mb-2">Account Number</p>
-                  <p className="font-medium">{userData?.currentUser?.bankAccounts?.[0]?.accountNumber || "-"}</p>
-                </div>
-              </div>
+              )}
             </div>
 
             <div className="flex justify-end mt-10">
@@ -342,15 +399,7 @@ const account = () => {
                   campaigns, user access, and reward activities. You can
                   reactivate it anytime by logging back in.
                 </p>
-                {/* <p className="font-medium">What Will Happen?</p>
-                <ul className="text-sm text-[#030229CC]">
-                  <li>Your business profile will be hidden</li>
-                  <li>Ongoing campaigns will be paused</li>
-                  <li>You will stop receiving notifications</li>
-                  <li>
-                    You won’t be able to access the dashboard until reactivated
-                  </li>
-                </ul> */}
+                
                 <p className="font-medium">Reason for deactivating </p>
                 <span className="text-sm text-[#030229CC]">
                   Let us know why you're leaving, this helps us improve.
@@ -489,21 +538,63 @@ const account = () => {
                   required
                 />
               </div>
-              <div>
-                <label htmlFor="bankName" className="mb-2 text-[#030229CC] text-sm">Bank Name</label>
-                <select
-                  id="bankName"
-                  value={bankForm.bankName}
-                  onChange={(e) => setBankForm({ ...bankForm, bankName: e.target.value })}
-                  className="border border-[#E5E5EA] rounded-md p-2 w-full capitalize"
-                  required
-                >
-                  <option value="">Select Bank</option>
-                  {bankList?.bankList.map((bank: { name: string; code: string }) => (
-                    <option key={bank.code} value={bank.name}>{bank.name}</option>
-                  ))}
-                </select>
-              </div>
+              <div className="bank-dropdown-container">
+                                <label className="block text-sm font-medium mb-1">Select Bank</label>
+                                <div className="relative">
+                                  <div
+                                    className="border border-[#E4E7EC] rounded-md p-3 w-full bg-white text-gray-900 focus-within:ring-2 focus-within:ring-[#24348B] focus-within:border-[#24348B] outline-none cursor-pointer transition-all duration-200 hover:border-[#24348B] flex items-center justify-between"
+                                    onClick={() => setIsBankDropdownOpen(!isBankDropdownOpen)}
+                                  >
+                                    <span className={bankForm.bankCode ? "text-gray-900" : "text-gray-400"}>
+                                      {bankForm.bankCode ? getSelectedBankName() : "Select your bank"}
+                                    </span>
+                                    <svg className={`w-4 h-4 transition-transform ${isBankDropdownOpen ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                                    </svg>
+                                  </div>
+              
+                                  {isBankDropdownOpen && (
+                                    <div className="absolute z-50 mt-1 w-full bg-white border border-[#E4E7EC] rounded-md shadow-lg max-h-64 overflow-hidden">
+                                      <div className="p-2 border-b border-[#E4E7EC]">
+                                        <div className="relative">
+                                          <input
+                                            type="text"
+                                            className="w-full pl-8 pr-3 py-2 border border-[#E4E7EC] rounded-md focus:ring-2 focus:ring-[#24348B] focus:border-[#24348B] outline-none text-sm"
+                                            placeholder="Search banks..."
+                                            value={bankSearch}
+                                            onChange={e => setBankSearch(e.target.value)}
+                                            onClick={e => e.stopPropagation()}
+                                          />
+                                          <SearchIcon size={14} className="absolute top-2.5 left-2 text-gray-400" />
+                                        </div>
+                                      </div>
+                                      <div className="max-h-48 overflow-y-auto">
+                                        {filteredBanks.length > 0 ? (
+                                          filteredBanks.map((bank: any) => (
+                                            <div
+                                              key={bank.code}
+                                              className={`px-3 py-2 cursor-pointer hover:bg-[#EEF3FF] transition-colors ${
+                                                bankForm.bankCode === bank.code ? 'bg-[#EEF3FF] text-[#24348B] font-medium' : 'text-gray-900'
+                                              }`}
+                                              onClick={() => {
+                                                setBankForm(f => ({ ...f, bankCode: bank.code }));
+                                                setBankSearch("");
+                                                setIsBankDropdownOpen(false);
+                                              }}
+                                            >
+                                              {bank.name}
+                                            </div>
+                                          ))
+                                        ) : (
+                                          <div className="px-3 py-4 text-center text-gray-500 text-sm">
+                                            No banks found matching "{bankSearch}"
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
               <div>
                 <label htmlFor="accountNumber" className="mb-2 text-[#030229CC] text-sm">Account Number</label>
                 <input
