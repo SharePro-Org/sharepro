@@ -49,7 +49,7 @@ const wallets = () => {
   // Wallet Setup modal state
   const [user] = useAtom(userAtom);
   
-  const [walletOpen, setWalletOpen] = useState(balanceData?.businessWallet?.isVerified === false ? true : false);
+  const [walletOpen, setWalletOpen] = useState(false);
   const [bankSearch, setBankSearch] = useState("");
   const [isBankDropdownOpen, setIsBankDropdownOpen] = useState(false);
   const [walletForm, setWalletForm] = useState({
@@ -62,6 +62,9 @@ const wallets = () => {
   });
 
   useEffect(() => {
+    if (!balanceData?.businessWallet?.isVerified) {
+      setWalletOpen(true);
+    }
     setIsClient(true);
 
     setWalletForm(f => ({ ...f, email: user?.email }));

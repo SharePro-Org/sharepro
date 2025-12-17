@@ -1,13 +1,30 @@
 "use client";
 
+import { USER_DASHBOARD_SUMMARY } from "@/apollo/queries/user";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import UserDashboardTable from "@/components/dashboard/UserDashboardTable";
+import { userAtom } from "@/store/User";
+import { useQuery } from "@apollo/client/react";
+import { useAtom } from "jotai";
 import { HeartIcon, RefreshCwIcon, SearchIcon, Users } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const userRewards = () => {
-  const [loading, setLoading] = useState(false);
-  const [summary, setSummary] = useState({
+  interface UserDashboardSummaryData {
+    userDashboardSummary: {
+      totalRewardsEarned: number;
+      recentRewardChange: number;
+      recentRewardPercentage: number;
+      totalCampaignsJoined: number;
+      totalReferrals: number;
+      pendingActions: number;
+      walletBalance: number;
+      // Add any other fields as needed
+    };
+  }
+  const [user] = useAtom(userAtom);
+
+  const [summary, setSummary] = useState<any>({
     totalRewardsEarned: "₦0.00",
     recentRewardChange: "",
     recentRewardPercentage: 0,
@@ -19,6 +36,18 @@ const userRewards = () => {
     walletBalance: "₦0.00",
   });
 
+  const { data, loading, error } = useQuery<UserDashboardSummaryData>(USER_DASHBOARD_SUMMARY, {
+    variables: { userId: user?.userId },
+    skip: !user?.userId,
+  });
+
+  useEffect(() => {
+    if (data && data.userDashboardSummary) {
+      const s = data.userDashboardSummary;
+      setSummary(data.userDashboardSummary);
+    }
+  }, [data]);
+
   return (
     <DashboardLayout user={true}>
       <section className="p-4 rounded-md bg-white">
@@ -26,8 +55,8 @@ const userRewards = () => {
           <p className="text-xl font-medium">My Rewards</p>
           <button
             className="flex text-primary items-center gap-2"
-            // onClick={() => refetch()}
-            // disabled={analyticsLoading}
+          // onClick={() => refetch()}
+          // disabled={analyticsLoading}
           >
             <RefreshCwIcon size={15} />
             <span className="text-sm">Refresh</span>
@@ -59,13 +88,13 @@ const userRewards = () => {
           <div className="flex flex-col bg-[#fff] rounded-md p-4 items-start min-h-[100px] justify-center">
             <div className="flex w-full flex-col">
               <div className="flex justify-between">
-                <p className="my-auto font-medium">Referral Rewards</p>
+                <p className="my-auto font-medium">Wallet Balance</p>
                 <div className="rounded-full ml-auto bg-[#233E97]/20 w-[30px] h-[30px] flex items-center justify-center">
                   <Users size={16} fill="#233E97" className="text-[#233E97]" />
                 </div>
               </div>
               <div className="text-xl my-3 font-bold">
-                {loading ? "Loading..." : summary.totalCampaignsJoined}
+                {loading ? "Loading..." : summary.walletBalance}
               </div>
               <div className="w-full mt-2">
                 <div className="text-sm text-gray-500">
@@ -79,7 +108,7 @@ const userRewards = () => {
           <div className="flex flex-col bg-[#fff] rounded-md p-4 items-start min-h-[100px] justify-center">
             <div className="flex w-full flex-col">
               <div className="flex justify-between">
-                <p className="my-auto font-medium">Loyalty Rewards</p>
+                <p className="my-auto font-medium">Total Referrals</p>
                 <div className="rounded-full ml-auto bg-[#233E97]/20 w-[30px] h-[30px] flex items-center justify-center">
                   <Users size={16} fill="#233E97" className="text-[#233E97]" />
                 </div>
@@ -99,13 +128,13 @@ const userRewards = () => {
           <div className="flex flex-col bg-[#fff] rounded-md p-4 items-start min-h-[100px] justify-center">
             <div className="flex w-full flex-col">
               <div className="flex justify-between">
-                <p className="my-auto font-medium">Combo Rewards</p>
+                <p className="my-auto font-medium">Recent Reward Change</p>
                 <div className="rounded-full ml-auto bg-[#233E97]/20 w-[30px] h-[30px] flex items-center justify-center">
                   <Users size={16} fill="#233E97" className="text-[#233E97]" />
                 </div>
               </div>
               <div className="text-xl my-3 font-bold">
-                {loading ? "Loading..." : summary.pendingActions}
+                {loading ? "Loading..." : summary.recentRewardChange}
               </div>
               <div className=" w-full mt-2">
                 <div className="text-sm text-gray-500">

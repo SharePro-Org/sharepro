@@ -491,7 +491,8 @@ function fileToBase64(file: Blob): Promise<string> {
                       <td className="px-4 py-3">{reward.campaignName}</td>
                       <td className="px-4 py-3">{reward.rewardType}</td>
                       <td className="px-4 py-3">
-                        {formatCurrency(reward.amount, reward.currency)}
+                        {/* {formatCurrency(reward.amount, reward.currency)} */}
+                        {reward.amount} Points
                       </td>
                       <td className="px-4 py-3">
                         <span
