@@ -74,7 +74,7 @@ const InvitedCampaign = ({
     try {
       const response = await joinCampaign({
         variables: {
-          campaignId: joining.campaignId,
+          campaignId: joining.campaignId || joining.id,
           userId: user?.userId,
         },
       });
@@ -298,26 +298,23 @@ const InvitedCampaign = ({
                   {campaign.maxParticipants > 0 &&
                     ` (max: ${campaign.maxParticipants})`}
                 </p> */}
-                {/* <button
+                <button
                   onClick={() =>
-                    campaign.isJoinable && handleJoinCampaign(campaign)
+                    handleJoinCampaign(campaign)
                   }
                   disabled={
-                    !campaign.isJoinable || joining === campaign.campaignId
+                    joining === campaign.campaignId
                   }
-                  className={`rounded-md px-4 py-2 ${!campaign.isJoinable
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : joining === campaign.campaignId
-                      ? "bg-[#ECF3FF] text-primary opacity-70"
-                      : "bg-[#ECF3FF] text-primary hover:bg-[#d9e8ff]"
+                  className={`rounded-md px-4 py-2 ${joining === campaign.campaignId
+                    ? "bg-[#ECF3FF] text-primary opacity-70"
+                    : "bg-[#ECF3FF] text-primary hover:bg-[#d9e8ff]"
                     }`}
                 >
                   {joining === campaign.campaignId
-                    ? "Joining..."
-                    : campaign.isJoinable
-                      ? "Join Campaign"
-                      : "Not Available"}
-                </button> */}
+                    ? "Joining..." :
+                    "Join Campaign"
+                  }
+                </button>
               </div>
             </div>
           ))
@@ -338,7 +335,7 @@ const InvitedCampaign = ({
         }}
       >
         <DialogContent size="3xl" className="w-full flex flex-col gap-6 py-6">
-          {joining?.campaignType === "Loyalty" && (
+          {joining?.campaignType === "LOYALTY" && (
             <div>
               <h3 className="text-lg font-medium text-center mb-3">
                 {joining.name}
@@ -373,7 +370,7 @@ const InvitedCampaign = ({
               </div>
             </div>
           )}
-          {joining?.campaignType === "Combo" && (
+          {joining?.campaignType === "COMBO" && (
             <div>
               <h3 className="text-lg font-medium text-center mb-3">
                 {joining.campaignName}
@@ -408,7 +405,7 @@ const InvitedCampaign = ({
               </div>
             </div>
           )}
-          {joining?.campaignType === "Referral" && (
+          {joining?.campaignType === "REFERRAL" && (
             <div>
               <h3 className="text-lg font-medium text-center mb-3">
                 {joining.campaignName}
@@ -477,7 +474,7 @@ const InvitedCampaign = ({
               You have successfully joined this {joining?.campaignType}{" "}
               campaign!
             </p>
-            {joining?.campaignType === "Loyalty" && (
+            {joining?.campaignType === "LOYALTY" && (
               <div>
                 <div className="grid md:grid-cols-3 grid-cols-1 gap-4 mt-4 text-center">
                   <div className="border border-[#CCCCCC] rounded-md p-4">
@@ -525,7 +522,7 @@ const InvitedCampaign = ({
               </div>
             )}
 
-            {joining?.campaignType === "Combo" && (
+            {joining?.campaignType === "COMBO" && (
               <>
                 <p className="text-center">Your Two Ways to Earn:</p>
                 <div className="grid md:grid-cols-2 grid-cols-1 gap-4">
@@ -578,7 +575,7 @@ const InvitedCampaign = ({
                             </button>
                           </div>
                         </div>
-                        {/* <div className="bg-gray-50 p-3 rounded-md">
+                        <div className="bg-gray-50 p-3 rounded-md">
                           <p className="text-sm font-medium mb-1">
                             Referral Link:
                           </p>
@@ -598,7 +595,7 @@ const InvitedCampaign = ({
                               )}
                             </button>
                           </div>
-                        </div> */}
+                        </div>
                       </div>
                     )}
                     <div className="grid grid-cols-5 gap-6 w-full">
@@ -661,7 +658,7 @@ const InvitedCampaign = ({
               </>
             )}
 
-            {joining?.campaignType === "Referral" && (
+            {joining?.campaignType === "REFERRAL" && (
               <>
                 <p className="text-center mb-2">How to Earn Rewards:</p>
                 <div className="grid md:grid-cols-2 grid-cols-1 gap-4">
@@ -693,7 +690,7 @@ const InvitedCampaign = ({
                             </button>
                           </div>
                         </div>
-                        {/* <div className="bg-gray-50 p-3 rounded-md">
+                        <div className="bg-gray-50 p-3 rounded-md">
                           <p className="text-sm font-medium mb-1">
                             Referral Link:
                           </p>
@@ -713,7 +710,7 @@ const InvitedCampaign = ({
                               )}
                             </button>
                           </div>
-                        </div> */}
+                        </div>
                       </div>
                     )}
                   </div>
