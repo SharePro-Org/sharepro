@@ -61,7 +61,7 @@ const userCampaigns = () => {
                 }`}
               onClick={() => setActiveTab('invite')}
             >
-              Campaign Invite
+              Invited Campaigns
             </button>
           </div>
           {activeTab === 'my' && (
