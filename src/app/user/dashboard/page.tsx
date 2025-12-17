@@ -35,8 +35,8 @@ const userDashboard = () => {
     const campaigns = invitedData?.userInvitedCampaigns;
     if (!campaigns || campaigns.length === 0) return false;
     return campaigns.some((c: any) => {
-      const rewardVal = c?.rewards ?? c?.rewards;
-      return rewardVal !== null && rewardVal !== undefined;
+      const rewardVal = c?.userRewards ?? c?.userRewards;
+      return rewardVal !== null && rewardVal !== undefined && (Array.isArray(rewardVal) ? rewardVal.length > 0 : true);
     });
   }, [invitedData]);
 

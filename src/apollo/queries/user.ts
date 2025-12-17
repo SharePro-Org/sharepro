@@ -205,9 +205,14 @@ export const USER_INVITED_CAMPAIGNS = gql`
         id
         name
       }
-       rewards{
-        id
-       }
+        userRewards { 
+         id
+         amount
+         status
+         rewardType
+         createdAt
+         }
+
     }
   }
 `;

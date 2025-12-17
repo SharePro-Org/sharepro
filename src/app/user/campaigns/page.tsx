@@ -18,7 +18,7 @@ const userCampaigns = () => {
   const hasRewardInInvited = useMemo(() => {
     const campaigns = invitedData?.userInvitedCampaigns;
     if (!campaigns || campaigns.length === 0) return false;
-    return campaigns.some((c: any) => c?.rewards !== null && c?.rewards !== undefined);
+    return campaigns.some((c: any) => c?.userRewards !== null && c?.userRewards !== undefined && c?.userRewards.length > 0);
   }, [invitedData]);
 
   // If Discover tab should be hidden and it's currently active, fall back to 'my'
