@@ -25,7 +25,7 @@ const ComboRewards = ({ id }: { id: string | null }) => {
 
   const [businessType, setBusinessType] = useState<string>("");
   const [triggerAmount, setTriggerAmount] = useState<string>("");
-  const [triggerPurchases, setTriggerPurchases] = useState<string>("");
+  const [triggerPurchases, setTriggerPurchases] = useState<string>("purchases");
   const [pointsAwarded, setPointsAwarded] = useState<string>("");
 
   const [rewardType, setRewardType] = useState<string>("");
@@ -69,7 +69,7 @@ const ComboRewards = ({ id }: { id: string | null }) => {
 
   const loyaltyBusinessTypes = [
     { label: "Make a Purchase", value: "purchase" },
-    { label: "Leave a Review", value: "review" },
+    // { label: "Leave a Review", value: "review" },
   ];
 
   const businessTypes = [

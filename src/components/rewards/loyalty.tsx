@@ -40,7 +40,7 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
   };
   const [businessType, setBusinessType] = useState("");
   const [triggerAmount, setTriggerAmount] = useState("");
-  const [triggerPurchases, setTriggerPurchases] = useState("");
+  const [triggerPurchases, setTriggerPurchases] = useState("purchases");
   const [pointsAwarded, setPointsAwarded] = useState("");
   const [currency, setCurrency] = useState("NGN");
   const [rewardType, setRewardType] = useState("");
@@ -50,7 +50,7 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
   const [validityPeriod, setValidityPeriod] = useState("");
   const businessTypes = [
     { label: "Make a Purchase", value: "purchase" },
-    { label: "Leave a Review", value: "review" },
+    // { label: "Leave a Review", value: "review" },
   ];
 
   const redemptionTypes = [

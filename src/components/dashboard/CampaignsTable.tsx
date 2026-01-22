@@ -284,117 +284,137 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
               num
                 ? (isAdmin ? data?.campaigns?.slice(0, num) : data?.businessCampaigns?.slice(0, num)) || []
                 : (isAdmin ? data?.campaigns : data?.businessCampaigns) || []
-            ).map((row: any, i: number) => (
-              <tr
-                key={row.id || i}
-                className="border-b border-[#E2E8F0] py-2 last:border-0"
-              >
-                <td className="px-4 font-black font-normal py-3">{row.name}</td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs ${row.campaignType === "LOYALTY"
-                      ? "bg-[#A16AD4]"
-                      : row.campaignType === "COMBO"
-                        ? "bg-[#6192AE]"
-                        : "bg-[#4C8AFF]"
-                      }`}
-                  >
-                    {row.campaignType || "-"}
-                  </span>
-                </td>
-                <td className="px-4 black font-normal py-3">
-                  {row.totalReferrals ?? "-"}
-                </td>
-                <td className="px-4 black font-normal py-3">
-                  {row.conversionRate ?? "-"}
-                </td>
-                <td className="px-4 black font-normal py-3">
-                  {row.totalRewardsGiven ?? "-"}
-                </td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`inline-block px-3 py-1 rounded-[5px] text-white text-xs ${row.status === 'ACTIVE' || row.status === 'active'
-                      ? 'bg-green-500'
-                      : row.status === 'PAUSED' || row.status === 'paused'
-                        ? 'bg-yellow-500 text-black'
-                        : row.status === 'ENDED' || row.status === 'ended'
-                          ? 'bg-red-500'
-                          : row.status === 'COMPLETED' || row.status === 'completed'
-                            ? 'bg-blue-500'
-                            : 'bg-gray-500'
-                      }`}
-                  >
-                    {row.status}
-                  </span>
-                </td>
-                <td className="px-4 black font-normal py-3">
-                  {row.startDate
-                    ? new Date(row.startDate).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "2-digit",
-                    })
-                    : "-"}
-                </td>
-                <td className="px-4 py-3">
-                  <Dropdown
-                    menu={{
-                      items: [
-                        {
-                          key: "toggleActive",
-                          label: row.isActive
-                            ? "Pause Campaign"
-                            : "Activate Campaign",
-                          onClick: () => {
-                            row.isActive ? handlePauseCampaignStatus(
-                              row.id
-                            ) : handleToggleCampaignStatus(
-                              row.id,
-                              row.isActive
-                            )
+            ).length > 0 ? (
+              (
+                num
+                  ? (isAdmin ? data?.campaigns?.slice(0, num) : data?.businessCampaigns?.slice(0, num)) || []
+                  : (isAdmin ? data?.campaigns : data?.businessCampaigns) || []
+              ).map((row: any, i: number) => (
+                <tr
+                  key={row.id || i}
+                  className="border-b border-[#E2E8F0] py-2 last:border-0"
+                >
+                  <td className="px-4 font-black font-normal py-3">{row.name}</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs ${row.campaignType === "LOYALTY"
+                        ? "bg-[#A16AD4]"
+                        : row.campaignType === "COMBO"
+                          ? "bg-[#6192AE]"
+                          : "bg-[#4C8AFF]"
+                        }`}
+                    >
+                      {row.campaignType || "-"}
+                    </span>
+                  </td>
+                  <td className="px-4 black font-normal py-3">
+                    {row.totalReferrals ?? "-"}
+                  </td>
+                  <td className="px-4 black font-normal py-3">
+                    {row.conversionRate ?? "-"}
+                  </td>
+                  <td className="px-4 black font-normal py-3">
+                    {row.totalRewardsGiven ?? "-"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`inline-block px-3 py-1 rounded-[5px] text-white text-xs ${row.status === 'ACTIVE' || row.status === 'active'
+                        ? 'bg-green-500'
+                        : row.status === 'PAUSED' || row.status === 'paused'
+                          ? 'bg-yellow-500 text-black'
+                          : row.status === 'ENDED' || row.status === 'ended'
+                            ? 'bg-red-500'
+                            : row.status === 'COMPLETED' || row.status === 'completed'
+                              ? 'bg-blue-500'
+                              : 'bg-gray-500'
+                        }`}
+                    >
+                      {row.status}
+                    </span>
+                  </td>
+                  <td className="px-4 black font-normal py-3">
+                    {row.startDate
+                      ? new Date(row.startDate).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "2-digit",
+                      })
+                      : "-"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <Dropdown
+                      menu={{
+                        items: [
+                          {
+                            key: "toggleActive",
+                            label: row.isActive
+                              ? "Pause Campaign"
+                              : "Activate Campaign",
+                            onClick: () => {
+                              row.isActive ? handlePauseCampaignStatus(
+                                row.id
+                              ) : handleToggleCampaignStatus(
+                                row.id,
+                                row.isActive
+                              )
+                            },
+                            disabled: activateLoading,
                           },
-                          disabled: activateLoading,
-                        },
-                        // { key: "edit", label: "Edit Campaign" },
-                        {
-                          key: "view",
-                          label: "View Campaign",
-                          onClick: () =>
-                            router.push(`/business/campaigns/${row.id}`),
-                        },
-                        {
-                          key: "end",
-                          label: "End Campaign",
-                          onClick: () => handleEndCampaign(row.id),
-                          disabled: endLoading || row.status === 'ENDED' || row.status === 'ended',
-                        },
-                        // { key: "settings", label: "Campaign Settings" },
-                        // { key: "payouts", label: "View Payouts" },
-                        // { key: "download", label: "Download Report" },
-                        {
-                          key: "reward",
-                          label: "Add Reward",
-                          onClick: () =>
-                            handleAddReward(row.campaignType, row.id),
-                        },
-                        {
-                          key: "delete",
-                          label: "Delete Campaign",
-                          onClick: () => handleDeleteCampaign(row.id),
-                          disabled: deleteLoading,
-                          danger: true,
-                        },
-                      ],
-                    }}
-                    trigger={["click"]}
-                  >
-                    <Button type="text">
-                      <MoreOutlined />
-                    </Button>
-                  </Dropdown>
+                          // { key: "edit", label: "Edit Campaign" },
+                          {
+                            key: "view",
+                            label: "View Campaign",
+                            onClick: () =>
+                              router.push(`/business/campaigns/${row.id}`),
+                          },
+                          {
+                            key: "end",
+                            label: "End Campaign",
+                            onClick: () => handleEndCampaign(row.id),
+                            disabled: endLoading || row.status === 'ENDED' || row.status === 'ended',
+                          },
+                          // { key: "settings", label: "Campaign Settings" },
+                          // { key: "payouts", label: "View Payouts" },
+                          // { key: "download", label: "Download Report" },
+                          {
+                            key: "reward",
+                            label: "Add Reward",
+                            onClick: () =>
+                              handleAddReward(row.campaignType, row.id),
+                          },
+                          {
+                            key: "delete",
+                            label: "Delete Campaign",
+                            onClick: () => handleDeleteCampaign(row.id),
+                            disabled: deleteLoading,
+                            danger: true,
+                          },
+                        ],
+                      }}
+                      trigger={["click"]}
+                    >
+                      <Button type="text">
+                        <MoreOutlined />
+                      </Button>
+                    </Dropdown>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={8} className="px-4 py-12 text-center">
+                  <div className="flex flex-col items-center justify-center gap-3">
+                    <svg className="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-700">No campaigns yet</h3>
+                      <p className="text-sm text-gray-500">Create your first campaign to get started</p>
+                    </div>
+                  </div>
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       )}
