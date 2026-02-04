@@ -67,7 +67,7 @@ const wallets = () => {
     }
     setIsClient(true);
 
-    setWalletForm(f => ({ ...f, email: user?.email }));
+    setWalletForm(f => ({ ...f, email: user?.email || "" }));
   }, [user]);
 
   useEffect(() => {
