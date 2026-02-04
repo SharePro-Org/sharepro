@@ -2,15 +2,16 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { CheckCircle, CopyIcon, XCircle } from "lucide-react";
+import { CheckCircle, CopyIcon, XCircle, ArrowLeft } from "lucide-react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { IoWarning } from "react-icons/io5";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { GET_SINGLE_PAYOUT } from "@/apollo/queries/campaigns";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { APPROVE_OR_REJECT_PROOF } from "@/apollo/mutations/campaigns";
 
 const PayoutDetails = () => {
+    const router = useRouter();
     const params = useParams();
     const id = params.payoutId;
     const [modalOpen, setModalOpen] = useState(false);
@@ -44,10 +45,15 @@ const PayoutDetails = () => {
                 <div className="bg-white rounded-lg shadow-sm p-6 space-y-6">
                     {/* Header */}
                     <div className="flex justify-between items-start">
-                        <div>
-                            <h2 className="text-lg font-semibold">Payout Details</h2>
-                            {/* <p className="text-sm text-gray-500">Transaction ID: TXN-2025-001234</p> */}
-                        </div>
+                        <button
+                            className="text-black cursor-pointer flex items-center"
+                            onClick={() => router.back()}
+                        >
+                            <ArrowLeft className="mr-3" />
+                            <span className="text-lg font-semibold">
+                                Payout Details
+                            </span>
+                        </button>
                         <button className={`flex gap-2 text-white text-sm px-4 py-1.5 rounded-full font-medium
                                     ${data?.reward?.status === 'APPROVED' ? 'bg-green-500'
                                 : data?.reward?.status === 'PENDING' ? 'bg-yellow-500 text-black'
@@ -130,18 +136,38 @@ const PayoutDetails = () => {
                             Proof of Purchase
                         </h3>
                         <div className="flex flex-wrap gap-4">
-                            {data?.reward?.proofFile ? (
+                            {data?.reward?.proofFiles?.length > 0 ? (
+                                data.reward.proofFiles.map((proof: any) => (
+                                    <button
+                                        key={proof.id}
+                                        type="button"
+                                        onClick={() => {
+                                            setModalImage(proof.fileUrl);
+                                            setModalOpen(true);
+                                        }}
+                                        className="border border-[#E4E7EC] rounded-lg overflow-hidden w-56 shadow-sm p-0"
+                                    >
+                                        <Image
+                                            src={proof.fileUrl}
+                                            alt={proof.originalFilename || "Receipt"}
+                                            width={224}
+                                            height={580}
+                                            className="object-cover"
+                                        />
+                                    </button>
+                                ))
+                            ) : data?.reward?.proofFile ? (
+                                // Backward compatibility for single file
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        const src = `https://api.mysharepro.com/media/${data.reward.proofFile}`;
-                                        setModalImage(src);
+                                        setModalImage(data.reward.proofFile);
                                         setModalOpen(true);
                                     }}
                                     className="border border-[#E4E7EC] rounded-lg overflow-hidden w-56 shadow-sm p-0"
                                 >
                                     <Image
-                                        src={`https://api.mysharepro.com/media/${data.reward.proofFile}`}
+                                        src={data.reward.proofFile}
                                         alt="Receipt"
                                         width={224}
                                         height={580}

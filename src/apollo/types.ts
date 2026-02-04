@@ -15,6 +15,7 @@ export interface Campaign {
   participantsCount: number;
   maxParticipants: number;
   description: string;
+  id?: string;
 }
 
 export interface Reward {
@@ -65,4 +66,43 @@ export interface WalkthroughVideo {
   isFeatured: boolean;
   viewCount: number;
   createdAt: string;
+}
+
+export interface ReferralUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+}
+
+export interface CampaignReferral {
+  id: string;
+  referralCode: string;
+  status: 'pending' | 'clicked' | 'registered' | 'converted' | 'rejected' | 'expired';
+  createdAt: string;
+  clickedAt?: string;
+  registeredAt?: string;
+  convertedAt?: string;
+  purchaseAmount?: number;
+  commissionAmount?: number;
+  commissionPercentage?: number;
+  referrer: ReferralUser;
+  referee?: ReferralUser;
+  refereeEmail?: string;
+  refereeName?: string;
+  refereePhone?: string;
+}
+
+export interface CampaignReferralsResponse {
+  campaignReferrals: CampaignReferral[];
+}
+
+export interface AggregatedReferrer {
+  referrer: ReferralUser;
+  totalReferrals: number;
+  conversions: number;
+  totalCommission: number;
+  firstReferralDate: string;
+  referrals: CampaignReferral[];
 }

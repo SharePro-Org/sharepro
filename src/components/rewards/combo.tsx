@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Tiers from "./Tiers";
 import { useRouter } from "next/navigation";
 import { CustomSelect } from "@/components/ui/custom-select";
@@ -7,21 +7,35 @@ import { Label } from "@/components/ui/label";
 import { Select } from "antd";
 import { Country } from "country-state-city";
 import { BriefcaseIcon, Clock, ClockIcon, CurrencyIcon } from "lucide-react";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import ShareModal from "../ShareModal";
-import { CREATE_COMBO_REWARD } from "@/apollo/mutations/campaigns";
-import { useMutation } from "@apollo/client/react";
+import { CREATE_COMBO_REWARD, UPDATE_COMBO_REWARD } from "@/apollo/mutations/campaigns";
+import { GET_CAMPAIGN } from "@/apollo/queries/campaigns";
+import { useMutation, useQuery } from "@apollo/client/react";
 
 import { message } from "antd";
+import { userAtom } from "@/store/User";
+import { useAtom } from "jotai";
 
 const emptyTier = { name: "", pointsRequired: "", benefits: "" };
 
-const ComboRewards = ({ id }: { id: string | null }) => {
+const ComboRewards = ({ id, mode }: { id: string | null; mode?: string | null }) => {
+  const isEditMode = mode === "edit";
+  const [rewardId, setRewardId] = useState<string | null>(null);
   const [tiers, setTiers] = useState([{ ...emptyTier }]);
   const [success, setSuccess] = useState(false);
   const [campaignData, setCampaignData] = useState<any>(null);
   const router = useRouter();
   const [shareOpen, setShareOpen] = useState(false);
+  const [user] = useAtom(userAtom);
+  const [businessId, setBusinessId] = useState<string>("");
+
+  useEffect(() => {
+    if (user?.businessId) {
+      setBusinessId(user.businessId);
+    }
+  }, [user]);
 
   const [businessType, setBusinessType] = useState<string>("");
   const [triggerAmount, setTriggerAmount] = useState<string>("");
@@ -105,12 +119,131 @@ const ComboRewards = ({ id }: { id: string | null }) => {
 
   const currencyOptions = Country.getAllCountries();
 
+  type CampaignQueryResponse = {
+    campaign?: {
+      id: string;
+      name: string;
+      comboRewards?: Array<{
+        id: string;
+        earnRewardAction?: string;
+        earnRewardAmount?: string;
+        earnRewardPoints?: number;
+        currency?: string;
+        redeemRewardAction?: string;
+        redeemRewardValue?: string;
+        redeemRewardPointRequired?: number;
+        redeemRewardChannels?: string[];
+        redeemValidityPeriod?: number;
+        loyaltyPoints?: number;
+        loyaltyName?: string;
+        loyaltyTierBenefits?: string;
+        referralRewardAction?: string;
+        referralRewardAmount?: string;
+        referralRewardLimit?: number;
+        referralRewardType?: string;
+        referralRewardLimitType?: string;
+        referreeRewardAction?: string;
+        referreeRewardValue?: string;
+        referreeRewardType?: string;
+        referreeRewardChannels?: string[];
+        referreeValidityPeriod?: number;
+      }>;
+    };
+  };
+
+  // Fetch campaign data for edit mode
+  const { data: campaignDataQuery, loading: loadingCampaign } = useQuery<CampaignQueryResponse>(GET_CAMPAIGN, {
+    variables: { id, businessId },
+    skip: !isEditMode || !id || !businessId,
+  });
+
+  // Pre-populate form fields in edit mode
+  useEffect(() => {
+    if (isEditMode && campaignDataQuery?.campaign?.comboRewards?.[0]) {
+      const reward = campaignDataQuery.campaign.comboRewards[0];
+      setRewardId(reward.id);
+
+      // Loyalty fields
+      setBusinessType(reward.earnRewardAction || "");
+      setTriggerAmount(reward.earnRewardAmount || "");
+      setPointsAwarded(reward.earnRewardPoints?.toString() || "");
+      setCurrency(reward.currency || "NGN");
+      setRewardType(reward.redeemRewardAction || "");
+      setPointsRequired(reward.redeemRewardPointRequired?.toString() || "");
+      setRewardValue(reward.redeemRewardValue || "");
+
+      // Parse redeemRewardChannels from JSON string to array
+      try {
+        const channels = typeof reward.redeemRewardChannels === 'string'
+          ? JSON.parse(reward.redeemRewardChannels)
+          : reward.redeemRewardChannels;
+        setRedemptionChannel(Array.isArray(channels) && channels.length > 0 ? channels[0] : "");
+      } catch (e) {
+        console.error("Error parsing redemption channels:", e);
+        setRedemptionChannel("");
+      }
+
+      setValidityPeriod(reward.redeemValidityPeriod?.toString() || "");
+
+      // Referral fields
+      setReferrerAction(reward.referralRewardAction || "");
+      setReferrerRewardType(reward.referralRewardType || "");
+      setReferrerRewardValue(reward.referralRewardAmount || "");
+      setReferralRewardLimit(reward.referralRewardLimit?.toString() || "");
+      setReferralRewardLimitType(reward.referralRewardLimitType || "");
+      setRefereeAction(reward.referreeRewardAction || "");
+      setRefereeRewardType(reward.referreeRewardType || "");
+      setRefereeRewardValue(reward.referreeRewardValue || "");
+
+      // Parse referreeRewardChannels from JSON string to array
+      try {
+        const channels = typeof reward.referreeRewardChannels === 'string'
+          ? JSON.parse(reward.referreeRewardChannels)
+          : reward.referreeRewardChannels;
+        setRefereeRewardChannels(Array.isArray(channels) && channels.length > 0 ? channels[0] : "");
+      } catch (e) {
+        console.error("Error parsing referee reward channels:", e);
+        setRefereeRewardChannels("");
+      }
+
+      // Parse tier data
+      if (reward.loyaltyTierBenefits) {
+        try {
+          const tierData = JSON.parse(reward.loyaltyTierBenefits);
+          setTiers([{
+            name: reward.loyaltyName || "",
+            pointsRequired: reward.loyaltyPoints?.toString() || "",
+            benefits: tierData.benefits || ""
+          }]);
+        } catch (e) {
+          console.error("Error parsing tier data:", e);
+        }
+      }
+    }
+  }, [isEditMode, campaignDataQuery]);
+
   const [createComboReward, { loading }] = useMutation(CREATE_COMBO_REWARD, {
     onError: (error) => {
       console.log(error);
-      // setSuccessMsg("");
     },
   });
+
+  const [updateComboReward, { loading: updateLoading }] = useMutation<UpdateComboRewardResponse>(
+    UPDATE_COMBO_REWARD,
+    {
+      onCompleted: (data) => {
+        if (data?.updateComboReward?.success) {
+          setCampaignData(data.updateComboReward.campaign);
+          setSuccess(true);
+        } else {
+          message.error(data?.updateComboReward?.message || "Failed to update combo reward");
+        }
+      },
+      onError: (error) => {
+        message.error(error.message || "An error occurred while updating combo reward");
+      },
+    }
+  );
 
   type CreateCampaignRewardResponse = {
     createCampaignReward?: {
@@ -120,65 +253,87 @@ const ComboRewards = ({ id }: { id: string | null }) => {
     };
   };
 
+  type UpdateComboRewardResponse = {
+    updateComboReward?: {
+      success: boolean;
+      message?: string;
+      campaign?: any;
+    };
+  };
+
   const handleSubmit = async () => {
     const tier = tiers[0]; // You may want to support multiple tiers
 
-    try {
-      const { data } = await createComboReward({
-        variables: {
-          input: {
-            campaignId: id,
-            comboCampaignData: {
-              // Referral component
-              referralRewardAction: referrerAction || "",
-              referralRewardAmount: referrerRewardValue,
-              referralRewardLimit: parseInt(referralRewardLimit, 10),
-              referralRewardType: referrerRewardType || "",
-              referralRewardLimitType: referralRewardLimitType || "",
-              referreeRewardAction: refereeAction || "",
-              referreeRewardValue: refereeRewardValue,
-              referreeRewardType: refereeRewardType || "",
-              referreeRewardChannels: refereeRewardChannels
-                ? refereeRewardChannels.split(",").map((ch) => ch.trim())
-                : [],
-              referreeValidityPeriod: parseInt(refereeValidityPeriod, 10),
-              referralPoints: 50,
-              referralName: "Combo Referrer",
-              referralTierBenefits: JSON.stringify({ bonus_multiplier: 1.5 }),
+    const comboCampaignData = {
+      // Referral component
+      referralRewardAction: referrerAction || "",
+      referralRewardAmount: referrerRewardValue,
+      referralRewardLimit: parseInt(referralRewardLimit, 10),
+      referralRewardType: referrerRewardType || "",
+      referralRewardLimitType: referralRewardLimitType || "",
+      referreeRewardAction: refereeAction || "",
+      referreeRewardValue: refereeRewardValue,
+      referreeRewardType: refereeRewardType || "",
+      referreeRewardChannels: refereeRewardChannels
+        ? refereeRewardChannels.split(",").map((ch) => ch.trim())
+        : [],
+      referreeValidityPeriod: parseInt(refereeValidityPeriod, 10),
+      referralPoints: 50,
+      referralName: "Combo Referrer",
+      referralTierBenefits: JSON.stringify({ bonus_multiplier: 1.5 }),
 
-              // Loyalty component
-              earnRewardAction: businessType || "",
-              earnRewardAmount: triggerAmount,
-              earnRewardPoints: parseInt(pointsAwarded, 10),
-              currency: currency || "NGN",
-              redeemRewardAction: rewardType || "",
-              redeemRewardValue: rewardValue,
-              redeemRewardPointRequired: parseInt(pointsRequired, 10),
-              redeemRewardChannels: redemptionChannel
-                ? redemptionChannel.split(",").map((ch) => ch.trim())
-                : [],
-              redeemValidityPeriod: parseInt(validityPeriod, 10),
-              loyaltyPoints: 75,
-              loyaltyName: tier.name || "Platinum Combo",
-              loyaltyTierBenefits: JSON.stringify({ benefits: tier.benefits }),
+      // Loyalty component
+      earnRewardAction: businessType || "",
+      earnRewardAmount: triggerAmount,
+      earnRewardPoints: parseInt(pointsAwarded, 10),
+      currency: currency || "NGN",
+      redeemRewardAction: rewardType || "",
+      redeemRewardValue: rewardValue,
+      redeemRewardPointRequired: parseInt(pointsRequired, 10),
+      redeemRewardChannels: redemptionChannel
+        ? redemptionChannel.split(",").map((ch) => ch.trim())
+        : [],
+      redeemValidityPeriod: parseInt(validityPeriod, 10),
+      loyaltyPoints: 75,
+      loyaltyName: tier.name || "Platinum Combo",
+      loyaltyTierBenefits: JSON.stringify({ benefits: tier.benefits }),
+    };
+
+    try {
+      if (isEditMode && rewardId) {
+        // Update existing reward
+        await updateComboReward({
+          variables: {
+            rewardId,
+            input: comboCampaignData,
+          },
+        });
+      } else {
+        // Create new reward
+        const { data } = await createComboReward({
+          variables: {
+            input: {
+              campaignId: id,
+              comboCampaignData,
             },
           },
-        },
-      });
+        });
 
-      const response = data as CreateCampaignRewardResponse;
+        const response = data as CreateCampaignRewardResponse;
 
-      if (response?.createCampaignReward?.success) {
-        setCampaignData(response.createCampaignReward.campaign);
-        setSuccess(true);
-      } else {
-        message.error(
-          response?.createCampaignReward?.message ||
-            "Failed to create loyalty reward."
-        );
+        if (response?.createCampaignReward?.success) {
+          setCampaignData(response.createCampaignReward.campaign);
+          setSuccess(true);
+        } else {
+          message.error(
+            response?.createCampaignReward?.message ||
+              "Failed to create combo reward."
+          );
+        }
       }
     } catch (err) {
-      console.error("🚨 Mutation error:", err);
+      console.error(`🚨 ${isEditMode ? "Update" : "Mutation"} error:`, err);
+      message.error(`An error occurred while ${isEditMode ? "updating" : "creating"} combo reward.`);
     }
   };
 
@@ -910,10 +1065,16 @@ const ComboRewards = ({ id }: { id: string | null }) => {
       <button
         className="mt-6 px-6 py-2 bg-primary text-white rounded hover:bg-primary/90"
         onClick={handleSubmit}
-        disabled={loading}
+        disabled={loading || updateLoading || loadingCampaign}
         type="button"
       >
-        {loading ? "Creating..." : "Create Combo Reward"}
+        {loading || updateLoading
+          ? isEditMode
+            ? "Updating..."
+            : "Creating..."
+          : isEditMode
+          ? "Update Combo Reward"
+          : "Create Combo Reward"}
       </button>
 
       <Dialog
@@ -921,12 +1082,16 @@ const ComboRewards = ({ id }: { id: string | null }) => {
         onOpenChange={() => router.push(`/business/campaigns`)}
       >
         <DialogContent className="max-w-md w-full flex flex-col items-center justify-center gap-6 py-12">
+          <VisuallyHidden>
+            <DialogTitle>Combo Program {isEditMode ? "Updated" : "Created"}</DialogTitle>
+            <DialogDescription>Your combo program has been successfully {isEditMode ? "updated" : "created"}.</DialogDescription>
+          </VisuallyHidden>
           <div className="bg-[#009B541A] p-4 rounded-md">
             <div className="text-body text-base mb-2">
               <span role="img" aria-label="trophy" className="mr-2">
                 🏆
               </span>
-              You’ve created a Combo Program where:
+              You've {isEditMode ? "updated" : "created"} a Combo Program where:
             </div>
             <div>
               <ul className="check-list">

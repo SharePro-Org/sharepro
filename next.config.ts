@@ -29,8 +29,8 @@ const nextConfig: NextConfig = {
 
   // Environment variables that will be available to the browser
   env: {
-    NEXT_PUBLIC_API_URL: "https://api.mysharepro.com/graphql/",
-    NEXT_PUBLIC_WS_URL: "wss://api.mysharepro.com/ws/graphql/",
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:4000/graphql/",
+    NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL || "ws://127.0.0.1:4000/ws/graphql/",
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://app.mysharepro.com',
   },
 };

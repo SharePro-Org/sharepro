@@ -51,10 +51,11 @@ export const GET_USER = gql`
         id
         accountName
         accountNumber
-        bankCode
         bankName
+        bankCode
         phoneNumber
         networkProvider
+        isPrimary
       }
     }
   }

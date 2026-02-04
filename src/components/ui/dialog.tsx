@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
+import * as VisuallyHiddenPrimitive from "@radix-ui/react-visually-hidden";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -62,6 +63,7 @@ const DialogContent = React.forwardRef<
       <DialogOverlay />
       <DialogPrimitive.Content
         ref={ref}
+        aria-describedby={undefined}
         className={cn(
           "fixed z-50 grid w-full gap-4 m-4 rounded-lg bg-white p-6 shadow-[0_8px_40px_0_rgba(60,66,87,0.18)] duration-200 sm:rounded-lg",
           sizeClasses[size],
@@ -69,6 +71,9 @@ const DialogContent = React.forwardRef<
         )}
         {...props}
       >
+        <VisuallyHiddenPrimitive.Root>
+          <DialogPrimitive.Title>Dialog</DialogPrimitive.Title>
+        </VisuallyHiddenPrimitive.Root>
         {children}
         <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:pointer-events-none">
           <X className="h-4 w-4" />

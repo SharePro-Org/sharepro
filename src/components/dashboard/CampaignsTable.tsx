@@ -209,51 +209,67 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
           </tr>
         </thead>
         <tbody>
-          {payoutData?.campaignRewards.map((campaign: any) => (
-            <tr
-              key={campaign}
-              className="border-b border-[#E2E8F0] py-2 last:border-0"
-            >
-              <td className="px-4 font-black font-normal py-3">{campaign.campaign.name}</td>
-              <td className="px-4 py-3">{campaign.rewardType}</td>
-              <td className="px-4 py-3">{campaign.amount}</td>
-              {/* <td className="px-4 py-3">Airtime</td> */}
-              <td className="px-4 py-3">{campaign.user.email}</td>
-              <td className="px-4 py-3">
-                <span
-                  className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs
-                    ${campaign.status === 'APPROVED' ? 'bg-green-500'
-                      : campaign.status === 'PENDING' ? 'bg-yellow-500 text-black'
-                        : 'bg-red-500'}
-                  `}
-                >
-                  {campaign.status}
-                </span>
-              </td>
-              <td className="px-4 py-3">{formatDate(campaign.createdAt)}</td>
-              <td className="px-4 py-3">
-                <Dropdown
-                  menu={{
-                    items: [
-                      {
-                        key: "view",
-                        label: "Review Payout",
-                        onClick: () =>
-                          router.push(`/business/campaigns/${campaignId}/payouts/${campaign.id}`),
-                      },
-                      { key: "payouts", label: "Mark as paid" },
-                      // 
-                    ],
-                  }}
-                  trigger={["click"]}
-                >
-                  <Button type="text">
-                    <MoreOutlined />
-                  </Button>
-                </Dropdown>
+          {payoutData?.campaignRewards && payoutData.campaignRewards.length > 0 ? (
+            payoutData.campaignRewards.map((campaign: any) => (
+              <tr
+                key={campaign.id}
+                className="border-b border-[#E2E8F0] py-2 last:border-0"
+              >
+                <td className="px-4 font-black font-normal py-3">{campaign.campaign.name}</td>
+                <td className="px-4 py-3">{campaign.rewardType}</td>
+                <td className="px-4 py-3">{campaign.amount}</td>
+                {/* <td className="px-4 py-3">Airtime</td> */}
+                <td className="px-4 py-3">{campaign.user.email}</td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs
+                      ${campaign.status === 'APPROVED' ? 'bg-green-500'
+                        : campaign.status === 'PENDING' ? 'bg-yellow-500 text-black'
+                          : 'bg-red-500'}
+                    `}
+                  >
+                    {campaign.status}
+                  </span>
+                </td>
+                <td className="px-4 py-3">{formatDate(campaign.createdAt)}</td>
+                <td className="px-4 py-3">
+                  <Dropdown
+                    menu={{
+                      items: [
+                        {
+                          key: "view",
+                          label: "Review Payout",
+                          onClick: () =>
+                            router.push(`/business/campaigns/${campaignId}/payouts/${campaign.id}`),
+                        },
+                        { key: "payouts", label: "Mark as paid" },
+                        //
+                      ],
+                    }}
+                    trigger={["click"]}
+                  >
+                    <Button type="text">
+                      <MoreOutlined />
+                    </Button>
+                  </Dropdown>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={7} className="px-4 py-12 text-center">
+                <div className="flex flex-col items-center justify-center gap-3">
+                  <svg className="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-700">No payouts yet</h3>
+                    <p className="text-sm text-gray-500">Payouts will appear here once rewards are processed</p>
+                  </div>
+                </div>
               </td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
     </div>
@@ -360,7 +376,15 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
                             },
                             disabled: activateLoading,
                           },
-                          // { key: "edit", label: "Edit Campaign" },
+                          {
+                            key: "edit",
+                            label: "Edit Campaign",
+                            onClick: () =>
+                              router.push(
+                                `/business/campaigns/create/new?type=${row.campaignType.toLowerCase()}&id=${row.id}&mode=edit`
+                              ),
+                            disabled: row.status === 'ENDED' || row.status === 'COMPLETED' || row.status === 'ended' || row.status === 'completed',
+                          },
                           {
                             key: "view",
                             label: "View Campaign",
