@@ -49,9 +49,9 @@ const TransactionHistory = ( { transHistory }: { transHistory: any }) => {
           </tr>
         </thead>
         <tbody>
-          {transHistory?.map((transaction: any) => (
+          {transHistory?.map((transaction: any, index: number) => (
             <tr
-              key={transaction.id}
+              key={transaction.id || index}
               className="border-b border-[#E2E8F0] py-2 last:border-0"
             >
               <td className="px-4 py-3">{(transaction.reference).slice(0, 12)}</td>

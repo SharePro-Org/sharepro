@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import {
   Twitter,
   Facebook,
@@ -54,13 +55,18 @@ const ShareModal = ({
 
   // Create URL with tracking parameters
   const createUrlWithParams = (baseUrl: string, source: string = 'direct') => {
+    // Handle empty or invalid URLs
+    if (!baseUrl || baseUrl.trim() === '') {
+      return '#'; // Return a placeholder for empty URLs
+    }
+
     try {
       // Check if the URL is already complete (has protocol)
       let fullUrl = baseUrl;
       if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
         fullUrl = `https://${baseUrl}`;
       }
-      
+
       const urlWithParams = new URL(fullUrl);
       if (campaignId) {
         urlWithParams.searchParams.set('cid', campaignId);
@@ -251,6 +257,10 @@ const ShareModal = ({
   return (
     <Dialog open={open} onOpenChange={handleModalClose}>
       <DialogContent className="max-w-2xl w-full flex flex-col gap-6 py-6">
+        <VisuallyHidden>
+          <DialogTitle>Share Campaign</DialogTitle>
+          <DialogDescription>Share your campaign via social media, email, or copy the link.</DialogDescription>
+        </VisuallyHidden>
         {step === 1 && (
           <>
             <div className="flex items-center justify-center">

@@ -20,38 +20,37 @@ const createCampaign = () => {
             <span className='text-lg font-semibold'>Create campaign</span>
           </button>
           <div className='grid mt-8 lg:grid-cols-3 gap-4'>
-            <div className='bg-[#D1DAF442] p-4 rounded-md'>
+            <div className='bg-[#D1DAF442] p-4 rounded-md flex flex-col'>
               <p className='font-semibold'>Create a Loyalty Campaign</p>
               <p className='my-1'>For retaining existing customers</p>
               <p className='text-sm'>Reward your current customers for their continued loyalty and repeat actions to keep them engaged and coming back for more.</p>
-              <div className='flex justify-between mt-8'>
+              <div className='flex justify-between mt-auto pt-8'>
                 <Link href={'/business/campaigns/create/new?type=loyalty'}>
                   <button className='bg-primary cursor-pointer text-sm text-white py-2 px-4 rounded-sm'>Create Campaign</button>
                 </Link>
-
-                <button className='text-primary p-2 text-sm mt-auto'>Learn More</button>
+                <button className='text-primary p-2 text-sm'>Learn More</button>
               </div>
             </div>
-            <div className='bg-[#D1DAF442] p-4 rounded-md'>
+            <div className='bg-[#D1DAF442] p-4 rounded-md flex flex-col'>
               <p className='font-semibold'>Create a Referral Campaign</p>
               <p className='my-1'>For acquiring new customers via sharing</p>
               <p className='text-sm'>Use this campaign type to drive customer acquisition by encouraging your existing users to share your business with friends and contacts.</p>
-              <div className='flex justify-between mt-4'>
+              <div className='flex justify-between mt-auto pt-8'>
                 <Link href={'/business/campaigns/create/new?type=referral'}>
                   <button className='bg-primary cursor-pointer text-sm text-white py-2 px-4 rounded-sm'>Create Campaign</button>
                 </Link>
-                <button className='text-primary p-2 text-sm mt-auto'>Learn More</button>
+                <button className='text-primary p-2 text-sm'>Learn More</button>
               </div>
             </div>
-            <div className='bg-[#D1DAF442] p-4 rounded-md'>
+            <div className='bg-[#D1DAF442] p-4 rounded-md flex flex-col'>
               <p className='font-semibold'>Create a Combo Campaign</p>
               <p className='my-1'>Referral + repeat purchase rewards</p>
               <p className='text-sm'>Combine both referral and loyalty incentives to grow your customer base while rewarding repeat purchases and long-term engagement.</p>
-              <div className='flex justify-between mt-8'>
+              <div className='flex justify-between mt-auto pt-8'>
                 <Link href={'/business/campaigns/create/new?type=combo'}>
                   <button className='bg-primary cursor-pointer text-sm text-white py-2 px-4 rounded-sm'>Create Campaign</button>
                 </Link>
-                <button className='text-primary p-2 text-sm mt-auto'>Learn More</button>
+                <button className='text-primary p-2 text-sm'>Learn More</button>
               </div>
             </div>
           </div>

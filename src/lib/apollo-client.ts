@@ -36,8 +36,8 @@ export const clearAuth = (): void => {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.mysharepro.com/graphql/";
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "wss://api.mysharepro.com/ws/graphql/";
-// const API_BASE_URL = "http://localhost:8000/graphql/";
-// const WS_URL = "ws://localhost:8000/graphql/";
+// const API_BASE_URL = "http://localhost:4000/graphql/"; (development)
+// const WS_URL = "ws://localhost:4000/ws/graphql/"; (development)
 
 if (!API_BASE_URL) {
   throw new Error("NEXT_PUBLIC_API_URL is not set in environment variables.");

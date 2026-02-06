@@ -262,7 +262,7 @@ const InvitedCampaign = ({
         {camp?.length > 0 ? (
           camp.map((campaign: Campaign) => (
             <div
-              key={campaign.campaignId}
+              key={campaign.campaignId || campaign.id}
               className="border border-[#CCCCCC33] rounded-md"
             >
               <div className="border-b border-b-[#CCCCCC33] flex justify-between p-2">
@@ -319,7 +319,7 @@ const InvitedCampaign = ({
             </div>
           ))
         ) : (
-          <div className="text-center py-4">
+          <div className="col-span-full text-center py-12 text-gray-500">
             No campaigns available at the moment
           </div>
         )}

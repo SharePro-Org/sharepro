@@ -340,7 +340,7 @@ const DiscoverCampaign = ({
             </div>
           ))
         ) : (
-          <div className="text-center py-4">
+          <div className="col-span-full text-center py-12 text-gray-500">
             No campaigns available at the moment
           </div>
         )}

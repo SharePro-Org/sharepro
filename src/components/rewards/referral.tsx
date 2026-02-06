@@ -1,28 +1,42 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "antd";
 import { Country } from "country-state-city";
 import { BriefcaseIcon, Clock, CurrencyIcon } from "lucide-react";
-import { useMutation } from "@apollo/client/react";
+import { useMutation, useQuery } from "@apollo/client/react";
 
-import { CREATE_REFERRAL_REWARD } from "@/apollo/mutations/campaigns";
+import { CREATE_REFERRAL_REWARD, UPDATE_REFERRAL_REWARD } from "@/apollo/mutations/campaigns";
+import { GET_CAMPAIGN } from "@/apollo/queries/campaigns";
 import { message } from "antd";
 
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import { useRouter } from "next/navigation";
 import ShareModal from "../ShareModal";
 import Tiers from "./Tiers";
+import { userAtom } from "@/store/User";
+import { useAtom } from "jotai";
 
 const emptyTier = { name: "", pointsRequired: "", benefits: "" };
 
-const ReferralRewards = ({ id }: { id: string | null }) => {
+const ReferralRewards = ({ id, mode }: { id: string | null; mode?: string | null }) => {
+  const [isEditMode, setIsEditMode] = useState(mode === "edit");
+  const [rewardId, setRewardId] = useState<string | null>(null);
   const currencyOptions = Country.getAllCountries();
   const [tiers, setTiers] = useState([{ ...emptyTier }]);
   const [success, setSuccess] = useState(false);
   const router = useRouter();
   const [shareOpen, setShareOpen] = useState(false);
+  const [user] = useAtom(userAtom);
+  const [businessId, setBusinessId] = useState<string>("");
+
+  useEffect(() => {
+    if (user?.businessId) {
+      setBusinessId(user.businessId);
+    }
+  }, [user]);
 
   const handleTierChange = (index: number, field: string, value: string) => {
     setTiers((prev) => {
@@ -104,46 +118,163 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
     };
   }
 
+  type CampaignQueryResponse = {
+    campaign?: {
+      id: string;
+      name: string;
+      referralRewards?: Array<{
+        id: string;
+        referralRewardAction?: string;
+        referralRewardAmount?: string;
+        referralRewardLimit?: number;
+        referralRewardType?: string;
+        referralRewardLimitType?: string;
+        referreeRewardAction?: string;
+        referreeRewardValue?: string;
+        referreeRewardType?: string;
+        referreeRewardChannels?: string[];
+        referreeValidityPeriod?: number;
+        loyaltyPoints?: number;
+        loyaltyName?: string;
+        loyaltyTierBenefits?: string;
+      }>;
+    };
+  };
+
+  // Fetch campaign data - always fetch if ID exists to check for existing rewards
+  const { data: campaignDataQuery, loading: loadingCampaign } = useQuery<CampaignQueryResponse>(GET_CAMPAIGN, {
+    variables: { id, businessId },
+    skip: !id || !businessId,
+  });
+
+  // Pre-populate form fields if rewards exist (auto-detect edit mode)
+  useEffect(() => {
+    if (campaignDataQuery?.campaign?.referralRewards?.[0]) {
+      const reward = campaignDataQuery.campaign.referralRewards[0];
+
+      // Automatically switch to edit mode if rewards exist
+      if (!isEditMode) {
+        setIsEditMode(true);
+      }
+      setRewardId(reward.id);
+      setReferrerAction(reward.referralRewardAction || "");
+      setReferrerRewardType(reward.referralRewardType || "");
+      setReferrerRewardValue(reward.referralRewardAmount || "");
+      setReferralRewardLimit(reward.referralRewardLimit?.toString() || "");
+      setReferralRewardLimitType(reward.referralRewardLimitType || "daily");
+      setRefereeAction(reward.referreeRewardAction || "");
+      setRefereeRewardType(reward.referreeRewardType || "");
+      setRefereeRewardValue(reward.referreeRewardValue || "");
+
+      // Parse referreeRewardChannels from JSON string to array
+      try {
+        const channels = typeof reward.referreeRewardChannels === 'string'
+          ? JSON.parse(reward.referreeRewardChannels)
+          : reward.referreeRewardChannels;
+        setRefereeRewardChannels(Array.isArray(channels) && channels.length > 0 ? channels[0] : "");
+      } catch (e) {
+        console.error("Error parsing referee reward channels:", e);
+        setRefereeRewardChannels("");
+      }
+
+      setRefereeValidityPeriod(reward.referreeValidityPeriod?.toString() || "");
+
+      // Parse tier data if available
+      if (reward.loyaltyTierBenefits) {
+        try {
+          const tierData = JSON.parse(reward.loyaltyTierBenefits);
+          setTiers([{
+            name: reward.loyaltyName || "",
+            pointsRequired: reward.loyaltyPoints?.toString() || "",
+            benefits: tierData.benefits || ""
+          }]);
+        } catch (e) {
+          console.error("Error parsing tier data:", e);
+        }
+      }
+    }
+  }, [campaignDataQuery]);
+
+  interface UpdateReferralRewardResponse {
+    updateReferralReward?: {
+      success: boolean;
+      message?: string;
+      campaign?: any;
+    };
+  }
+
   const [createReferralReward, { loading }] = useMutation<CreateCampaignRewardResponse>(
     CREATE_REFERRAL_REWARD
   );
 
-  const handleSubmit = async () => {
-    const input = {
-      campaignId: id,
-      referralCampaignData: {
-        referralRewardAction: referrerAction,
-        referralRewardAmount: referrerRewardValue,
-        referralRewardLimit: Number(referralRewardLimit),
-        referralRewardType: referrerRewardType,
-        referralRewardLimitType: referralRewardLimitType,
-        referreeRewardAction: refereeAction,
-        referreeRewardValue: refereeRewardValue,
-        referreeRewardType: refereeRewardType,
-        referreeRewardChannels: refereeRewardChannels,
-        referreeValidityPeriod: Number(refereeValidityPeriod),
-        loyaltyPoints: 0, // Default value
-        loyaltyName: tiers[0]?.name || "",
-        loyaltyTierBenefits: JSON.stringify({
-          benefits: tiers[0]?.benefits || "",
-        }),
+  const [updateReferralReward, { loading: updateLoading }] = useMutation<UpdateReferralRewardResponse>(
+    UPDATE_REFERRAL_REWARD,
+    {
+      onCompleted: (data) => {
+        if (data?.updateReferralReward?.success) {
+          setCampaignData(data.updateReferralReward.campaign);
+          setSuccess(true);
+        } else {
+          message.error(data?.updateReferralReward?.message || "Failed to update referral reward");
+        }
       },
+      onError: (error) => {
+        message.error(error.message || "An error occurred while updating referral reward");
+      },
+    }
+  );
+
+  const handleSubmit = async () => {
+    const referralCampaignData = {
+      referralRewardAction: referrerAction,
+      referralRewardAmount: referrerRewardValue || "0",
+      referralRewardLimit: Number(referralRewardLimit) || 0,
+      referralRewardType: referrerRewardType,
+      referralRewardLimitType: referralRewardLimitType,
+      referreeRewardAction: refereeAction,
+      referreeRewardValue: refereeRewardValue || "0",
+      referreeRewardType: refereeRewardType,
+      referreeRewardChannels: refereeRewardChannels,
+      referreeValidityPeriod: Number(refereeValidityPeriod) || 0,
+      loyaltyPoints: 0, // Default value
+      loyaltyName: tiers[0]?.name || "",
+      loyaltyTierBenefits: JSON.stringify({
+        benefits: tiers[0]?.benefits || "",
+      }),
     };
+
     try {
-      const { data } = await createReferralReward({ variables: { input } });
-      if (data?.createCampaignReward?.success) {
-        setCampaignData(data.createCampaignReward.campaign);
-        setSuccess(true);
-        // message.success("Referral reward created successfully!");
+      if (isEditMode && rewardId) {
+        // Update existing reward
+        await updateReferralReward({
+          variables: {
+            rewardId,
+            input: referralCampaignData,
+          },
+        });
       } else {
-        message.error(
-          data?.createCampaignReward?.message ||
-            "Failed to create referral reward."
-        );
+        // Create new reward
+        const { data } = await createReferralReward({
+          variables: {
+            input: {
+              campaignId: id,
+              referralCampaignData,
+            },
+          },
+        });
+        if (data?.createCampaignReward?.success) {
+          setCampaignData(data.createCampaignReward.campaign);
+          setSuccess(true);
+        } else {
+          message.error(
+            data?.createCampaignReward?.message ||
+              "Failed to create referral reward."
+          );
+        }
       }
     } catch (e: any) {
       message.error(
-        e.message || "An error occurred while creating referral reward."
+        e.message || `An error occurred while ${isEditMode ? "updating" : "creating"} referral reward.`
       );
     }
   };
@@ -519,20 +650,30 @@ const ReferralRewards = ({ id }: { id: string | null }) => {
       <button
         className="mt-6 px-6 py-2 bg-primary text-white rounded hover:bg-primary/90"
         onClick={handleSubmit}
-        disabled={loading}
+        disabled={loading || updateLoading || loadingCampaign}
         type="button"
       >
-        {loading ? "Creating..." : "Create Referral Reward"}
+        {loading || updateLoading
+          ? isEditMode
+            ? "Updating..."
+            : "Creating..."
+          : isEditMode
+          ? "Update Referral Reward"
+          : "Create Referral Reward"}
       </button>
 
       <Dialog open={success}>
         <DialogContent className="max-w-md w-full flex flex-col items-center justify-center gap-6 py-12">
+          <VisuallyHidden>
+            <DialogTitle>Referral Program {isEditMode ? "Updated" : "Created"}</DialogTitle>
+            <DialogDescription>Your referral program has been successfully {isEditMode ? "updated" : "created"}.</DialogDescription>
+          </VisuallyHidden>
           <div className="bg-[#009B541A] p-4 rounded-md">
             <div className="text-body text-base mb-2">
               <span role="img" aria-label="trophy" className="mr-2">
                 🏆
               </span>
-              You've created a Referral Program where:
+              You've {isEditMode ? "updated" : "created"} a Referral Program where:
             </div>
             <div>
               <ul className="check-list">

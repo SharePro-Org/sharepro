@@ -78,7 +78,7 @@ export const GET_PAYMENT_METHODS = gql`
       deletedAt
       id
       isDeleted
-      stripePaymentMethodId
+      paymentMethodId
       updatedAt
     }
   }

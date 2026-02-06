@@ -26,6 +26,13 @@ export const GET_BUSINESS_REWARDS = gql`
       requiresProof
       reviewNotes
       reviewedAt
+      proofFiles {
+        id
+        fileUrl
+        originalFilename
+        fileSize
+        fileType
+      }
       expiresAt
       createdAt
       updatedAt

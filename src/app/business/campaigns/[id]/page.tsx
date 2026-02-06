@@ -10,6 +10,7 @@ import { Dropdown, Button } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import dynamic from "next/dynamic";
 import CampaignsTable from "@/components/dashboard/CampaignsTable";
+import CampaignReferrersTable from "@/components/dashboard/CampaignReferrersTable";
 import Link from "next/link";
 import { Filter } from "@/components/Filter";
 import { userAtom } from "@/store/User";
@@ -599,6 +600,24 @@ const singleCampaign = () => {
             <CampaignsTable type="payout" />
           </div>
         </section>
+
+        <section className="bg-white rounded-md md:p-6 p-3 mt-4">
+          <div>
+            <p className="text-black font-medium text-base mb-4">
+              Customers
+            </p>
+            <CampaignReferrersTable campaignId={campaignId as string} />
+          </div>
+        </section>
+
+        {/* <section className="bg-white rounded-md md:p-6 p-3 mt-4">
+          <div>
+            <p className="text-black font-medium text-base mb-4">
+              Referrals (New Signups)
+            </p>
+            <CampaignReferralsTable campaignId={campaignId as string} />
+          </div>
+        </section> */}
       </>
     </DashboardLayout>
   );

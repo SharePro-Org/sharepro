@@ -27,12 +27,9 @@ const nextConfig: NextConfig = {
     return config;
   },
 
-  // Environment variables that will be available to the browser
-  env: {
-    NEXT_PUBLIC_API_URL: "https://api.mysharepro.com/graphql/",
-    NEXT_PUBLIC_WS_URL: "wss://api.mysharepro.com/ws/graphql/",
-    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://app.mysharepro.com',
-  },
+  // Environment variables are automatically loaded from .env files
+  // NEXT_PUBLIC_* variables are exposed to the browser automatically in Next.js 15+
+  // No need to explicitly define them here - just ensure they exist in your .env file
 };
 
 export default nextConfig;

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,22 +6,36 @@ import { Select } from "antd";
 import { BriefcaseIcon, ClockIcon, CurrencyIcon } from "lucide-react";
 import { Country } from "country-state-city";
 import Tiers from "./Tiers";
-import { useMutation } from "@apollo/client/react";
+import { useMutation, useQuery } from "@apollo/client/react";
 
-import { CREATE_LOYALTY_REWARD } from "@/apollo/mutations/campaigns";
+import { CREATE_LOYALTY_REWARD, UPDATE_LOYALTY_REWARD } from "@/apollo/mutations/campaigns";
+import { GET_CAMPAIGN } from "@/apollo/queries/campaigns";
 import { message } from "antd";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import { useRouter } from "next/navigation";
 import ShareModal from "../ShareModal";
+import { userAtom } from "@/store/User";
+import { useAtom } from "jotai";
 
 const emptyTier = { name: "", pointsRequired: "", benefits: "" };
 
-const LoyaltyRewards = ({ id }: { id: string | null }) => {
+const LoyaltyRewards = ({ id, mode }: { id: string | null; mode?: string | null }) => {
+  const [isEditMode, setIsEditMode] = useState(mode === "edit");
+  const [rewardId, setRewardId] = useState<string | null>(null);
   const [tiers, setTiers] = useState([{ ...emptyTier }]);
   const [success, setSuccess] = useState(false);
   const [campaignData, setCampaignData] = useState<any>(null);
   const router = useRouter();
   const [shareOpen, setShareOpen] = useState(false);
+  const [user] = useAtom(userAtom);
+  const [businessId, setBusinessId] = useState<string>("");
+
+  useEffect(() => {
+    if (user?.businessId) {
+      setBusinessId(user.businessId);
+    }
+  }, [user]);
 
   const handleTierChange = (index: number, field: string, value: string) => {
     setTiers((prev) => {
@@ -68,12 +82,120 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
 
   const currencyOptions = Country.getAllCountries();
 
+  type CampaignQueryResponse = {
+    campaign?: {
+      id: string;
+      name: string;
+      campaignType?: string;
+      referralLink?: string;
+      loyaltyRewards?: Array<{
+        id: string;
+        earnRewardAction?: string;
+        earnRewardAmount?: string;
+        earnRewardPoints?: number;
+        currency?: string;
+        redeemRewardAction?: string;
+        redeemRewardValue?: string;
+        redeemRewardPointRequired?: number;
+        redeemRewardChannels?: string[];
+        redeemValidityPeriod?: number;
+        loyaltyPoints?: number;
+        loyaltyName?: string;
+        loyaltyTierBenefits?: string;
+      }>;
+    };
+  };
+
+  // Fetch campaign data - always fetch if ID exists to check for existing rewards
+  const { data: campaignDataQuery, loading: loadingCampaign } = useQuery<CampaignQueryResponse>(GET_CAMPAIGN, {
+    variables: { id, businessId },
+    skip: !id || !businessId,
+  });
+
+  // Pre-populate form fields if rewards exist (auto-detect edit mode)
+  useEffect(() => {
+    if (campaignDataQuery?.campaign?.loyaltyRewards?.[0]) {
+      const reward = campaignDataQuery.campaign.loyaltyRewards[0];
+
+      // Automatically switch to edit mode if rewards exist
+      if (!isEditMode) {
+        setIsEditMode(true);
+      }
+
+      setRewardId(reward.id);
+      setBusinessType(reward.earnRewardAction || "");
+      setTriggerAmount(reward.earnRewardAmount || "");
+      setPointsAwarded(reward.earnRewardPoints?.toString() || "");
+      setCurrency(reward.currency || "NGN");
+      setRewardType(reward.redeemRewardAction || "");
+      setPointsRequired(reward.redeemRewardPointRequired?.toString() || "");
+      setRewardValue(reward.redeemRewardValue || "");
+
+      // Parse redeemRewardChannels from JSON string to array
+      try {
+        const channels = typeof reward.redeemRewardChannels === 'string'
+          ? JSON.parse(reward.redeemRewardChannels)
+          : reward.redeemRewardChannels;
+        setRedemptionChannel(Array.isArray(channels) && channels.length > 0 ? channels[0] : "");
+      } catch (e) {
+        console.error("Error parsing redemption channels:", e);
+        setRedemptionChannel("");
+      }
+
+      setValidityPeriod(reward.redeemValidityPeriod?.toString() || "");
+
+      // Parse tier data
+      if (reward.loyaltyTierBenefits) {
+        try {
+          const tierData = JSON.parse(reward.loyaltyTierBenefits);
+          // Check if tierData is an array (new format) or object (old format)
+          if (Array.isArray(tierData) && tierData.length > 0) {
+            setTiers(tierData);
+          } else {
+            // Fallback for old format
+            setTiers([{
+              name: reward.loyaltyName || "",
+              pointsRequired: reward.loyaltyPoints?.toString() || "",
+              benefits: tierData.benefits || ""
+            }]);
+          }
+        } catch (e) {
+          console.error("Error parsing tier data:", e);
+        }
+      }
+    }
+  }, [campaignDataQuery]);
+
   const [createLoyaltyReward, { loading }] = useMutation(
     CREATE_LOYALTY_REWARD,
     {
       onError: (error) => {
         console.log(error);
-        // setSuccessMsg("");
+      },
+    }
+  );
+
+  type UpdateLoyaltyRewardResult = {
+    updateLoyaltyReward?: {
+      success: boolean;
+      message?: string;
+      campaign?: any;
+    };
+  };
+
+  const [updateLoyaltyReward, { loading: updateLoading }] = useMutation<UpdateLoyaltyRewardResult>(
+    UPDATE_LOYALTY_REWARD,
+    {
+      onCompleted: (data) => {
+        if (data?.updateLoyaltyReward?.success) {
+          setCampaignData(data.updateLoyaltyReward.campaign);
+          setSuccess(true);
+        } else {
+          message.error(data?.updateLoyaltyReward?.message || "Failed to update loyalty reward");
+        }
+      },
+      onError: (error) => {
+        message.error(error.message || "An error occurred while updating loyalty reward");
       },
     }
   );
@@ -88,43 +210,52 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
 
   const handleSubmit = async () => {
     const campaignId = id;
-    const tier = tiers[0]; // You may want to support multiple tiers
     const loyaltyCampaignData = {
       earnRewardAction: businessType,
-      earnRewardAmount: triggerAmount,
-      earnRewardPoints: Number(pointsAwarded),
+      earnRewardAmount: triggerAmount || "0",
+      earnRewardPoints: Number(pointsAwarded) || 0,
       currency,
       redeemRewardAction: rewardType,
-      redeemRewardValue: rewardValue,
-      redeemRewardPointRequired: Number(pointsRequired),
+      redeemRewardValue: rewardValue || "0",
+      redeemRewardPointRequired: Number(pointsRequired) || 0,
       redeemRewardChannels: [redemptionChannel],
-      redeemValidityPeriod: Number(validityPeriod),
-      loyaltyPoints: Number(pointsAwarded),
-      loyaltyName: tier.name,
-      loyaltyTierBenefits: JSON.stringify({ benefits: tier.benefits }),
+      redeemValidityPeriod: Number(validityPeriod) || 0,
+      loyaltyPoints: Number(pointsAwarded) || 0,
+      loyaltyName: tiers[0]?.name || "Loyalty Tier",
+      loyaltyTierBenefits: JSON.stringify(tiers),
     };
     try {
-      const { data } = await createLoyaltyReward({
-        variables: {
-          input: {
-            campaignId,
-            loyaltyCampaignData,
+      if (isEditMode && rewardId) {
+        // Update existing reward
+        await updateLoyaltyReward({
+          variables: {
+            rewardId,
+            input: loyaltyCampaignData,
           },
-        },
-      }) as { data: CreateCampaignRewardResult };
-      if (data?.createCampaignReward?.success) {
-        setCampaignData(data.createCampaignReward.campaign);
-        setSuccess(true);
-        // message.success("Loyalty reward created successfully!");
+        });
       } else {
-        message.error(
-          data?.createCampaignReward?.message ||
-            "Failed to create loyalty reward."
-        );
+        // Create new reward
+        const { data } = await createLoyaltyReward({
+          variables: {
+            input: {
+              campaignId,
+              loyaltyCampaignData,
+            },
+          },
+        }) as { data: CreateCampaignRewardResult };
+        if (data?.createCampaignReward?.success) {
+          setCampaignData(data.createCampaignReward.campaign);
+          setSuccess(true);
+        } else {
+          message.error(
+            data?.createCampaignReward?.message ||
+              "Failed to create loyalty reward."
+          );
+        }
       }
     } catch (e: any) {
       message.error(
-        e.message || "An error occurred while creating loyalty reward."
+        e.message || `An error occurred while ${isEditMode ? "updating" : "creating"} loyalty reward.`
       );
     }
   };
@@ -497,10 +628,16 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
       <button
         className="mt-6 px-6 py-2 bg-primary text-white rounded hover:bg-primary/90"
         onClick={handleSubmit}
-        disabled={loading}
+        disabled={loading || updateLoading || loadingCampaign}
         type="button"
       >
-        {loading ? "Creating..." : "Create Loyalty Reward"}
+        {loading || updateLoading
+          ? isEditMode
+            ? "Updating..."
+            : "Creating..."
+          : isEditMode
+          ? "Update Loyalty Reward"
+          : "Create Loyalty Reward"}
       </button>
 
       <Dialog
@@ -508,12 +645,22 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
         onOpenChange={() => router.push(`/business/campaigns`)}
       >
         <DialogContent className="max-w-md w-full flex flex-col items-center justify-center gap-6 py-12">
+          <VisuallyHidden>
+            <DialogTitle>
+              Loyalty Program {isEditMode ? "Updated" : "Created"}
+            </DialogTitle>
+          </VisuallyHidden>
+          <VisuallyHidden>
+            <DialogDescription>
+              Your loyalty program has been successfully {isEditMode ? "updated" : "created"}. Review the details and proceed to share your campaign.
+            </DialogDescription>
+          </VisuallyHidden>
           <div className="bg-[#009B541A] p-4 rounded-md">
             <div className="text-body text-base mb-2">
               <span role="img" aria-label="trophy" className="mr-2">
                 🏆
               </span>
-              You’ve created a Loyalty Program where:
+              You've {isEditMode ? "updated" : "created"} a Loyalty Program where:
             </div>
             <div>
               <ul className="check-list">
@@ -559,10 +706,10 @@ const LoyaltyRewards = ({ id }: { id: string | null }) => {
       <ShareModal
         open={shareOpen}
         onClose={() => router.push(`/business/campaigns`)}
-        campaignUrl={campaignData?.referralLink || ""}
-        campaignId={campaignData?.id || id || ""}
-        campaignName={campaignData?.name || ""}
-        campaignType={campaignData?.type || ""}
+        campaignUrl={campaignDataQuery?.campaign?.referralLink || campaignData?.referralLink || ""}
+        campaignId={campaignDataQuery?.campaign?.id || campaignData?.id || id || ""}
+        campaignName={campaignDataQuery?.campaign?.name || campaignData?.name || ""}
+        campaignType={campaignDataQuery?.campaign?.campaignType || campaignData?.type || ""}
       />
     </div>
   );

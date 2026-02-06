@@ -3,14 +3,16 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import React, { useState } from "react";
 import { useMutation, useQuery } from "@apollo/client/react";
-import { GET_INVOICES, GET_BILLING_SUMMARY, GET_PLANS, DELETE_PAYMENT_METHOD } from "@/apollo/queries/billing";
+import { GET_INVOICES, GET_BILLING_SUMMARY, GET_PLANS, DELETE_PAYMENT_METHOD, GET_PAYMENT_METHODS } from "@/apollo/queries/billing";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { message } from "antd";
 
 import Image from "next/image";
 import userCheck from "../../../../public/assets/Check.svg";
-import { ADD_PAYMENT_METHOD, UPDATE_SUBSCRIPTION, RENEW_SUBSCRIPTION,CREATE_DEDICATED_VIRTUAL_ACCOUNT } from "@/apollo/mutations/billing";
+import { UPDATE_SUBSCRIPTION, RENEW_SUBSCRIPTION } from "@/apollo/mutations/billing";
+import { AddPaymentMethodV4Form } from "@/components/payment/AddPaymentMethodV4Form";
+import { AddBankAccountForm } from "@/components/payment/AddBankAccountForm";
 interface Invoice {
   id: string;
   status: string;
@@ -67,10 +69,11 @@ const billingsSubscription = () => {
   const [isDefault, setIsDefault] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [messageApi, contextHolder] = message.useMessage();
-  const [paymentType, setPaymentType] = useState("card");
+  const [paymentMethodId, setPaymentMethodId] = useState("");
   const [upgrade, setUpgrade] = useState(false);
   const [renewPlan, setRenewPlan] = useState(false);
   const [newPlanId, setNewPlanId] = useState("")
+  const [isDowngrade, setIsDowngrade] = useState(false)
 
   const { data: billingSummary, refetch, loading: summaryLoading } = useQuery<BillingSummaryData>(GET_BILLING_SUMMARY);
 
@@ -82,20 +85,6 @@ const billingsSubscription = () => {
   });
 
   const invoices = data?.myInvoices;
-
-  const [addPaymentMethod, { loading: addingPaymentMethod }] = useMutation(ADD_PAYMENT_METHOD, {
-    onCompleted: (data: any) => {
-      if (data?.addPaymentMethod?.success) {
-        // setSuccess(true);
-        window.location.href = data?.addPaymentMethod?.checkOutData?.checkoutUrl;
-      } else {
-
-      }
-    },
-    onError: (error) => {
-      console.error("Error adding payment method:", error);
-    },
-  });
 
   const [updateSubscription, { loading: updatingSubscription }] = useMutation(UPDATE_SUBSCRIPTION, {
     onCompleted: (data: any) => {
@@ -130,20 +119,10 @@ const billingsSubscription = () => {
     },
   });
 
-  const handleCardSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle card submission here
-    addPaymentMethod({
-      variables: {
-        input: {
-          methodType: "card",
-          isDefault
-        }
-      }
-    })
-
-    // setSuccess(true);
-    // setOpen(false);
+  const handlePaymentMethodSuccess = () => {
+    setOpen(false);
+    setSuccess(true);
+    refetch();
   };
 
   // Fetch all available plans from API
@@ -164,27 +143,40 @@ const billingsSubscription = () => {
 
   const { data: plansData, loading: plansLoading, error: plansError } = useQuery<{ plans: PlanAPI[] }>(GET_PLANS);
 
-  function handleUpgradePlan(id: string, paymentType?: string): void {
+  interface PaymentMethod {
+    id: string;
+    type: string;
+    cardBrand?: string;
+    cardLast4?: string;
+    displayName?: string;
+    isDefault: boolean;
+  }
+
+  interface PaymentMethodsData {
+    myPaymentMethods: PaymentMethod[];
+  }
+
+  const { data: paymentMethodsData } = useQuery<PaymentMethodsData>(GET_PAYMENT_METHODS);
+
+  function handleUpgradePlan(id: string, paymentMethodId?: string): void {
     renewPlan ? renewSubscription({
       variables: {
         input: {
           planId: id,
           subscriptionId: billingSummary?.billingSummary ? billingSummary?.billingSummary?.subscription?.id : '',
-          paymentType: paymentType || undefined
+          paymentMethodId: paymentMethodId || undefined
         }
       }
     })
-    : updateSubscription({
-      variables: {
-        input: {
-          planId: id,
-          subscriptionId: billingSummary?.billingSummary ? billingSummary?.billingSummary?.currentPlan?.id : '',
-          paymentType: paymentType || undefined
+      : updateSubscription({
+        variables: {
+          input: {
+            planId: id,
+            subscriptionId: billingSummary?.billingSummary ? billingSummary?.billingSummary?.subscription?.id : '',
+            paymentMethodId: paymentMethodId || undefined
+          }
         }
-      }
-    })
-    
-    
+      })
   }
 
   const [deletePaymentMethod] = useMutation(DELETE_PAYMENT_METHOD, {
@@ -196,9 +188,6 @@ const billingsSubscription = () => {
       console.error("Error deleting payment method:", error);
     },
   });
-
-
-  
 
   return (
     <DashboardLayout>
@@ -323,13 +312,25 @@ const billingsSubscription = () => {
                 </ul>
                 <div className="flex justify-between mt-2">
                   <span></span>
-                  {plan?.name === 'FREE' ? 
+                  {plan?.name === 'FREE' ?
                     null
-                  : billingSummary?.billingSummary?.currentPlan?.id !== plan.id && (
-                    <button onClick={() => { setUpgrade(true); setNewPlanId(plan.id) }} className="text-sm text-primary">
-                      Upgrade Plan
-                    </button>
-                   )}
+                    : billingSummary?.billingSummary?.currentPlan?.id !== plan.id && (
+                      <button
+                        onClick={() => {
+                          const currentPrice = Number(billingSummary?.billingSummary?.currentPlan?.price ?? 0);
+                          const newPrice = Number(plan.price);
+                          const isDowngrading = newPrice < currentPrice;
+                          setIsDowngrade(isDowngrading);
+                          setUpgrade(true);
+                          setNewPlanId(plan.id);
+                        }}
+                        className="text-sm text-primary"
+                      >
+                        {Number(plan.price) > Number(billingSummary?.billingSummary?.currentPlan?.price ?? 0)
+                          ? 'Upgrade Plan'
+                          : 'Downgrade Plan'}
+                      </button>
+                    )}
                 </div>
               </div>
             ))
@@ -415,7 +416,9 @@ const billingsSubscription = () => {
                         currency: invoice.currency || 'NGN'
                       }).format(invoice.amountPaid)}
                     </td>
-                    <td className="px-4 py-3">{new Date(invoice.dueDate).toLocaleDateString()}</td>
+                    <td className="px-4 py-3">
+                      {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : '-'}
+                    </td>
                     <td className="px-4 py-3">
                       <span className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs ${invoice.status === 'paid' ? 'bg-green-500' :
                         invoice.status === 'pending' ? 'bg-yellow-500' :
@@ -450,8 +453,7 @@ const billingsSubscription = () => {
               </p>
             </div>
 
-            <form onSubmit={handleCardSubmit} className="space-y-4">
-
+            <div className="space-y-4">
               <div>
                 <label htmlFor="paymentMethod" className="block text-sm font-medium mb-2">
                   Payment Method *
@@ -459,7 +461,7 @@ const billingsSubscription = () => {
                 <select onChange={(e) => setPaymentMethod(e.target.value)} value={paymentMethod} className="w-full border border-[#E4E7EC] rounded-md p-3 text-sm"
                   name="paymentMethod" id="paymentMethod">
                   <option value="card">Credit/Debit Card</option>
-                  <option value="bank">Bank Transfer</option>
+                  {/* <option value="bank">Bank Transfer</option> */}    
                 </select>
               </div>
               <div>
@@ -468,43 +470,69 @@ const billingsSubscription = () => {
                 <Switch
                   checked={isDefault}
                   onChange={(checked: boolean) => setIsDefault(checked)}
-                  disabled={addingPaymentMethod}
                 />
               </div>
 
+              {paymentMethod === "card" && (
+                <AddPaymentMethodV4Form
+                  isDefault={isDefault}
+                  onSuccess={handlePaymentMethodSuccess}
+                  onClose={() => setOpen(false)}
+                  showHeader={false}
+                  showDefaultToggle={false}
+                />
+              )}
 
-              {/* Submit Buttons */}
-              <div className="flex justify-end gap-3 pt-4">
-                <button
-                  type="submit"
-                  className="px-6 w-full py-3 bg-primary text-white rounded-md text-sm hover:bg-primary/90 transition-colors"
-                >
-                  {addingPaymentMethod ? "Adding..." : "Add Card"}
-                </button>
-              </div>
-            </form>
+              {paymentMethod === "bank" && (
+                <AddBankAccountForm
+                  isDefault={isDefault}
+                  onSuccess={handlePaymentMethodSuccess}
+                  onClose={() => setOpen(false)}
+                  showHeader={false}
+                />
+              )}
+            </div>
           </DialogContent>
         </Dialog>
 
-        <Dialog open={upgrade || renewPlan} onOpenChange={() => {setUpgrade(false); setRenewPlan(false)}}>
+        <Dialog open={upgrade || renewPlan} onOpenChange={() => { setUpgrade(false); setRenewPlan(false); setIsDowngrade(false) }}>
           <DialogContent size="lg" className="">
             <div className="text-center mb-6">
               <p className="font-semibold text-lg text-center mb-2">
-                Select Payment Method
+                {renewPlan ? "Renew Plan" : isDowngrade ? "Downgrade Plan" : "Upgrade Plan"}
+              </p>
+              <p className="text-sm text-gray-600">
+                Select a payment method to continue
               </p>
             </div>
 
             <form className="space-y-4">
 
               <div>
-                <label htmlFor="paymentType" className="block text-sm font-medium mb-2">
-                  Payment Method *
+                <label htmlFor="paymentMethodId" className="block text-sm font-medium mb-2">
+                  Select Payment Method *
                 </label>
-                <select onChange={(e) => setPaymentType(e.target.value)} value={paymentType} className="w-full border border-[#E4E7EC] rounded-md p-3 text-sm"
-                  name="paymentType" id="paymentType">
-                  <option value="card">Credit/Debit Card</option>
-                  <option value="wallet">Wallet</option>
-                </select>
+                {paymentMethodsData?.myPaymentMethods?.length ? (
+                  <select
+                    onChange={(e) => setPaymentMethodId(e.target.value)}
+                    value={paymentMethodId}
+                    className="w-full border border-[#E4E7EC] rounded-md p-3 text-sm"
+                    name="paymentMethodId"
+                    id="paymentMethodId"
+                  >
+                    <option value="">Select a payment method</option>
+                    {paymentMethodsData.myPaymentMethods.map((pm: any) => (
+                      <option key={pm.id} value={pm.id}>
+                        {pm.type === 'card' ? `${pm.cardBrand} ****${pm.cardLast4}` : pm.displayName}
+                        {pm.isDefault && ' (Default)'}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="text-sm text-gray-500 p-3 bg-gray-50 rounded-md">
+                    No payment methods saved. Please add one first.
+                  </div>
+                )}
               </div>
 
 
@@ -514,9 +542,15 @@ const billingsSubscription = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    const planId = billingSummary?.billingSummary?.currentPlan?.id;
-                    if (typeof handleUpgradePlan === 'function' && planId) {
-                      handleUpgradePlan(newPlanId, paymentType);
+                    if (!paymentMethodId) {
+                      messageApi.open({
+                        type: 'error',
+                        content: 'Please select a payment method.',
+                      });
+                      return;
+                    }
+                    if (typeof handleUpgradePlan === 'function' && newPlanId) {
+                      handleUpgradePlan(newPlanId, paymentMethodId);
                     } else {
                       messageApi.open({
                         type: 'error',
@@ -526,8 +560,10 @@ const billingsSubscription = () => {
                   }}
                   className="px-6 w-full py-3 bg-primary text-white rounded-md text-sm hover:bg-primary/90 transition-colors"
                 >
-                  { renewPlan ? (
+                  {renewPlan ? (
                     renewingSubscription ? "Renewing..." : "Renew Plan"
+                  ) : isDowngrade ? (
+                    updatingSubscription ? "Downgrading..." : "Downgrade Plan"
                   ) : (
                     updatingSubscription ? "Upgrading..." : "Upgrade Plan"
                   )}

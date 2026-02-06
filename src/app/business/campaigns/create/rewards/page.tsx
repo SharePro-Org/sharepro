@@ -13,6 +13,7 @@ const RewardsContent = () => {
   const searchParams = useSearchParams();
   const campaignType = searchParams.get("type");
   const campaignId = searchParams.get("id");
+  const mode = searchParams.get("mode");
 
   return (
     <DashboardLayout>
@@ -28,11 +29,11 @@ const RewardsContent = () => {
         </button>
         {/* Render component based on campaignType */}
         {campaignType === "referral" ? (
-          <ReferralRewards id={campaignId} />
+          <ReferralRewards id={campaignId} mode={mode} />
         ) : campaignType === "loyalty" ? (
-          <LoyaltyRewards id={campaignId} />
+          <LoyaltyRewards id={campaignId} mode={mode} />
         ) : (
-          <ComboRewards id={campaignId} />
+          <ComboRewards id={campaignId} mode={mode} />
         )}
       </section>
     </DashboardLayout>

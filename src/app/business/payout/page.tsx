@@ -92,38 +92,46 @@ const Payout = () => {
                                         reward.campaign.name.toLowerCase().includes(searchTerm.toLowerCase())
                                     )
                                     .map((reward: any) => (
-                                        <tr className="border-b border-[#E2E8F0] py-2 last:border-0"
-                                            key={reward.id}>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">{reward.user.username}</div>
-                                                <div className="text-sm text-gray-500">{reward.user.email}</div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">{reward.campaign.name}</div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">
-                                                    {reward.amount} Points
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                                ${reward.status === 'APPROVED' ? 'bg-green-500 text-white' :
-                                                        reward.status === 'PENDING' ? 'bg-yellow-500 text-white' :
-                                                            'bg-red-500 text-white'}`}>
-                                                    {reward.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {new Date(reward.createdAt).toLocaleDateString()}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <Link href={`/business/campaigns/1/payouts/${reward.id}`}>
-                                                    <button className="px-4 py-2 text-sm font-medium text-primary">
-                                                        View
-                                                    </button>
-                                                </Link>
-                                            </td>                                        </tr>
+                                        <tr
+                                          key={reward.id}
+                                          className="border-b border-[#E2E8F0] py-2 last:border-0"
+                                        >
+                                          <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-gray-900">{reward.user.username}</div>
+                                            <div className="text-sm text-gray-500">{reward.user.email}</div>
+                                          </td>
+                                          <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-gray-900">{reward.campaign.name}</div>
+                                          </td>
+                                          <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm text-gray-900">
+                                              {reward.amount} Points
+                                            </div>
+                                          </td>
+                                          <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                              reward.status === 'PAID'
+                                                ? 'bg-blue-500 text-white'
+                                                : reward.status === 'APPROVED'
+                                                ? 'bg-green-500 text-white'
+                                                : reward.status === 'PENDING'
+                                                  ? 'bg-yellow-500 text-white'
+                                                  : 'bg-red-500 text-white'
+                                            }`}>
+                                              {reward.status}
+                                            </span>
+                                          </td>
+                                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {new Date(reward.createdAt).toLocaleDateString()}
+                                          </td>
+                                          <td className="px-6 py-4 whitespace-nowrap">
+                                            <Link href={`/business/campaigns/1/payouts/${reward.id}`}>
+                                              <button className="px-4 py-2 text-sm font-medium text-primary">
+                                                View
+                                              </button>
+                                            </Link>
+                                          </td>
+                                        </tr>
                                     ))}
                             </tbody>
                         </table>

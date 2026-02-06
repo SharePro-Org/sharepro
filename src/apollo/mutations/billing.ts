@@ -62,26 +62,16 @@ export const RENEW_SUBSCRIPTION = gql`
   }
 `;
 
-export const ADD_PAYMENT_METHOD = gql`
-  mutation AddPaymentMethod($input: PaystackPaymentMethodInput!) {
-    addPaymentMethod(input: $input) {
-      checkOutData {
-      checkoutUrl
-      reference
-    }
-    message
-    errors
-    success
-    }
-  }
-`;
-
 export const CREATE_DEDICATED_VIRTUAL_ACCOUNT = gql`
   mutation CreateDedicatedVirtualAccount($input: ValidateCustomerInput!) {
     createDedicatedVirtualAccount(input: $input) {
-    message
-    errors
-    success
+      success
+      message
+      errors
+      accountNumber
+      accountName
+      bankName
+      customerCode
     }
   }
 `;

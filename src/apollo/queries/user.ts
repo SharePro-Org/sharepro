@@ -32,6 +32,7 @@ export const USER_JOINED_CAMPAIGNS = gql`
         activeReferrals
         endDate
         maxParticipants
+        participantsCount
         campaignType
         name
         referralLink
@@ -41,6 +42,7 @@ export const USER_JOINED_CAMPAIGNS = gql`
         totalViews
         shareLinks
         websiteLink
+        id
         analyticsEvents {
           referrer
         }
@@ -185,6 +187,7 @@ export const TRACK_LOYALTY_ACTION = gql`
       success
       pointsAwarded
       message
+      rewardId
     }
   }
 `;
@@ -205,14 +208,21 @@ export const USER_INVITED_CAMPAIGNS = gql`
         id
         name
       }
-        userRewards { 
-         id
-         amount
-         status
-         rewardType
-         createdAt
-         }
-
+      loyaltyRewards {
+        id
+        earnRewardPoints
+        loyaltyName
+      }
+      referralRewards {
+        id
+        referralRewardAmount
+        referralRewardType
+      }
+      comboRewards {
+        id
+        loyaltyName
+        referralName
+      }
     }
   }
 `;

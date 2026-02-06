@@ -33,8 +33,8 @@ export const TRACK_CONVERSION = gql`
 `;
 
 export const LOGIN = gql`
-  mutation Login($email: String!, $password: String!) {
-    login(email: $email, password: $password) {
+  mutation Login($email: String!, $password: String!, $referralCode: String, $businessId: String) {
+    login(email: $email, password: $password, referralCode: $referralCode, businessId: $businessId) {
       message
       token
       refreshToken
@@ -59,8 +59,8 @@ export const LOGIN = gql`
 `;
 
 export const LOGIN_PHONE = gql`
-  mutation LoginPhone($phone: String!, $password: String!) {
-    loginPhone(phone: $phone, password: $password) {
+  mutation LoginPhone($phone: String!, $password: String!, $referralCode: String, $businessId: String) {
+    loginPhone(phone: $phone, password: $password, referralCode: $referralCode, businessId: $businessId) {
       success
       token
       refreshToken

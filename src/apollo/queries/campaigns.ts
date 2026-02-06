@@ -23,6 +23,7 @@ export const GET_BUSINESS_CAMPAIGNS = gql`
       totalRewardsGiven
       activeParticipants
       loyaltyRewards {
+        id
         earnRewardAmount
         earnRewardAction
         earnRewardPoints
@@ -87,6 +88,7 @@ export const GET_CAMPAIGN_ANALYTICS = gql`
           referrer
         }
         referralRewards {
+          id
           referreeValidityPeriod
           referreeRewardValue
           referreeRewardType
@@ -102,6 +104,7 @@ export const GET_CAMPAIGN_ANALYTICS = gql`
           loyaltyName
         }
         loyaltyRewards {
+          id
           redeemValidityPeriod
           redeemRewardValue
           redeemRewardPointRequired
@@ -113,8 +116,14 @@ export const GET_CAMPAIGN_ANALYTICS = gql`
           earnRewardPoints
           earnRewardAmount
           earnRewardAction
+          currency
         }
         comboRewards {
+          id
+          earnRewardAction
+          earnRewardAmount
+          earnRewardPoints
+          currency
           loyaltyName
           loyaltyPoints
           loyaltyTierBenefits
@@ -199,6 +208,7 @@ export const GET_CAMPAIGN = gql`
     updatedAt
     websiteLink
       referralRewards {
+          id
           referreeValidityPeriod
           referreeRewardValue
           referreeRewardType
@@ -214,6 +224,7 @@ export const GET_CAMPAIGN = gql`
           loyaltyName
         }
         loyaltyRewards {
+          id
           redeemValidityPeriod
           redeemRewardValue
           redeemRewardPointRequired
@@ -225,8 +236,14 @@ export const GET_CAMPAIGN = gql`
           earnRewardPoints
           earnRewardAmount
           earnRewardAction
+          currency
         }
         comboRewards {
+          id
+          earnRewardAction
+          earnRewardAmount
+          earnRewardPoints
+          currency
           loyaltyName
           loyaltyPoints
           loyaltyTierBenefits
@@ -262,10 +279,20 @@ export const GET_SINGLE_PAYOUT = gql`
     description
     status
     rewardType
+    deliveryType
     reviewNotes
     requiresProof
     proofFile
     proofDescription
+    proofSubmittedAt
+    reviewedAt
+    proofFiles {
+      id
+      fileUrl
+      originalFilename
+      fileSize
+      fileType
+    }
     processedAt
     points
     metadata
@@ -289,6 +316,26 @@ export const GET_SINGLE_PAYOUT = gql`
     }
   }
 }
+`
+
+export const GET_CAMPAIGN_BY_REFERRAL_CODE = gql`
+  query CampaignByReferralCode($referralCode: String!) {
+    campaignByReferralCode(referralCode: $referralCode) {
+      id
+      name
+      description
+      websiteLink
+      referralCode
+      referralLink
+      campaignType
+      status
+      isActive
+      business {
+        id
+        name
+      }
+    }
+  }
 `
 
 
