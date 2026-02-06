@@ -223,7 +223,8 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
                 <td className="px-4 py-3">
                   <span
                     className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs
-                      ${campaign.status === 'APPROVED' ? 'bg-green-500'
+                      ${campaign.status === 'PAID' ? 'bg-blue-500'
+                        : campaign.status === 'APPROVED' ? 'bg-green-500'
                         : campaign.status === 'PENDING' ? 'bg-yellow-500 text-black'
                           : 'bg-red-500'}
                     `}

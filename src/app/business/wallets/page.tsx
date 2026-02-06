@@ -5,7 +5,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { EyeIcon, SearchIcon } from "lucide-react";
 import { useMutation, useQuery } from "@apollo/client/react";
 import React, { useEffect, useState } from "react";
-import { GET_WALLET_BALANCE, WALLET_TRANSACTIONS, BANK_LIST, GET_WALLET_STATS } from "@/apollo/queries/wallet"
+import { GET_WALLET_BALANCE, WALLET_TRANSACTIONS, GET_WALLET_STATS } from "@/apollo/queries/wallet"
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
 import { message } from "antd";
@@ -50,41 +50,25 @@ const wallets = () => {
   const [user] = useAtom(userAtom);
 
   const [walletOpen, setWalletOpen] = useState(false);
-  const [bankSearch, setBankSearch] = useState("");
-  const [isBankDropdownOpen, setIsBankDropdownOpen] = useState(false);
   const [walletForm, setWalletForm] = useState({
     firstName: "",
     lastName: "",
     email: user?.email || "",
-    bankCode: "",
-    accountNumber: "",
     bvn: ""
   });
 
   useEffect(() => {
-    if (!balanceData?.businessWallet?.isVerified) {
+    // Only check wallet status after data is loaded
+    if (balanceData && !balanceData?.businessWallet?.isVerified) {
       setWalletOpen(true);
+    } else if (balanceData?.businessWallet?.isVerified) {
+      setWalletOpen(false);
     }
     setIsClient(true);
 
     setWalletForm(f => ({ ...f, email: user?.email || "" }));
-  }, [user]);
+  }, [user, balanceData]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.bank-dropdown-container')) {
-        setIsBankDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const { data: bankList } = useQuery<any>(BANK_LIST, {
-    variables: {}
-  })
 
   const [cash, setCash] = useState({
     series: [30, 70],
@@ -179,30 +163,21 @@ const wallets = () => {
     ?.filter(t => ['WITHDRAWAL', 'SUBSCRIPTION', 'FEE'].includes(t.transactionType) && t.status === 'COMPLETED')
     ?.reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0) || 0;
 
-  // Filter banks based on search
-  const filteredBanks = bankList?.bankList?.filter((bank: any) =>
-    bank.name.toLowerCase().includes(bankSearch.toLowerCase())
-  ) || [];
-
-  const getSelectedBankName = () => {
-    const bank = bankList?.bankList?.find((b: any) => b.code === walletForm.bankCode);
-    return bank?.name || "";
-  };
-
   const [createDVA] = useMutation(CREATE_DEDICATED_VIRTUAL_ACCOUNT, {
+    refetchQueries: [{ query: GET_WALLET_BALANCE }],
     onCompleted: (data: any) => {
       if (data?.createDedicatedVirtualAccount?.success) {
-        setWalletOpen(true)
+        setWalletOpen(false);
         message.success(data?.createDedicatedVirtualAccount?.message);
       } else {
         message.error(
-          data?.createDedicatedVirtualAccount?.message || "Failed to create campaign."
+          data?.createDedicatedVirtualAccount?.message || "Failed to create virtual account."
         );
-        setWalletOpen(false)
       }
     },
     onError: (error) => {
       console.error("Error creating dva:", error);
+      message.error("An error occurred while creating the virtual account.");
     },
   });
 
@@ -350,76 +325,16 @@ const wallets = () => {
                   <input type="text" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="e.g John" value={walletForm.firstName} onChange={e => setWalletForm(f => ({ ...f, firstName: e.target.value }))} required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Last Name*</label>
+                  <label className="block text-sm font-medium mb-1">Last Name *</label>
                   <input type="text" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="e.g James" value={walletForm.lastName} onChange={e => setWalletForm(f => ({ ...f, lastName: e.target.value }))} required />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Email Address</label>
                   <input disabled type="email" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="e.g business email address" value={walletForm.email} onChange={e => setWalletForm(f => ({ ...f, email: e.target.value }))} />
                 </div>
-                <div className="bank-dropdown-container">
-                  <label className="block text-sm font-medium mb-1">Select Bank</label>
-                  <div className="relative">
-                    <div
-                      className="border border-[#E4E7EC] rounded-md p-3 w-full bg-white text-gray-900 focus-within:ring-2 focus-within:ring-[#24348B] focus-within:border-[#24348B] outline-none cursor-pointer transition-all duration-200 hover:border-[#24348B] flex items-center justify-between"
-                      onClick={() => setIsBankDropdownOpen(!isBankDropdownOpen)}
-                    >
-                      <span className={walletForm.bankCode ? "text-gray-900" : "text-gray-400"}>
-                        {walletForm.bankCode ? getSelectedBankName() : "Select your bank"}
-                      </span>
-                      <svg className={`w-4 h-4 transition-transform ${isBankDropdownOpen ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-
-                    {isBankDropdownOpen && (
-                      <div className="absolute z-50 mt-1 w-full bg-white border border-[#E4E7EC] rounded-md shadow-lg max-h-64 overflow-hidden">
-                        <div className="p-2 border-b border-[#E4E7EC]">
-                          <div className="relative">
-                            <input
-                              type="text"
-                              className="w-full pl-8 pr-3 py-2 border border-[#E4E7EC] rounded-md focus:ring-2 focus:ring-[#24348B] focus:border-[#24348B] outline-none text-sm"
-                              placeholder="Search banks..."
-                              value={bankSearch}
-                              onChange={e => setBankSearch(e.target.value)}
-                              onClick={e => e.stopPropagation()}
-                            />
-                            <SearchIcon size={14} className="absolute top-2.5 left-2 text-gray-400" />
-                          </div>
-                        </div>
-                        <div className="max-h-48 overflow-y-auto">
-                          {filteredBanks.length > 0 ? (
-                            filteredBanks.map((bank: any) => (
-                              <div
-                                key={bank.code}
-                                className={`px-3 py-2 cursor-pointer hover:bg-[#EEF3FF] transition-colors ${walletForm.bankCode === bank.code ? 'bg-[#EEF3FF] text-[#24348B] font-medium' : 'text-gray-900'
-                                  }`}
-                                onClick={() => {
-                                  setWalletForm(f => ({ ...f, bankCode: bank.code }));
-                                  setBankSearch("");
-                                  setIsBankDropdownOpen(false);
-                                }}
-                              >
-                                {bank.name}
-                              </div>
-                            ))
-                          ) : (
-                            <div className="px-3 py-4 text-center text-gray-500 text-sm">
-                              No banks found matching "{bankSearch}"
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Account Number</label>
-                  <input type="text" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="02334456789" value={walletForm.accountNumber} onChange={e => setWalletForm(f => ({ ...f, accountNumber: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Bank Verification Number (BVN)</label>
-                  <input type="text" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="02334456709" value={walletForm.bvn} onChange={e => setWalletForm(f => ({ ...f, bvn: e.target.value }))} />
+                  <label className="block text-sm font-medium mb-1">Bank Verification Number (BVN) *</label>
+                  <input type="text" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="12345678901" value={walletForm.bvn} onChange={e => setWalletForm(f => ({ ...f, bvn: e.target.value }))} required />
                 </div>
                 <div className="pt-2 col-span-2">
                   <button type="submit" className="w-full py-4 rounded-xl bg-[#24348B] text-white text-lg font-medium" onClick={handleCreateDVA}>Proceed</button>

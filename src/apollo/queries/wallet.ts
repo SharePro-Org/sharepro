@@ -46,3 +46,15 @@ export const BANK_LIST = gql`
     }
   }
 `;
+
+export const RESOLVE_ACCOUNT_NAME = gql`
+  query resolveAccountName($accountNumber: String!, $bankCode: String!) {
+    resolveAccountName(accountNumber: $accountNumber, bankCode: $bankCode) {
+      success
+      message
+      accountName
+      accountNumber
+      bankCode
+    }
+  }
+`;

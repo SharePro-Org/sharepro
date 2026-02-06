@@ -212,15 +212,15 @@ const LoyaltyRewards = ({ id, mode }: { id: string | null; mode?: string | null 
     const campaignId = id;
     const loyaltyCampaignData = {
       earnRewardAction: businessType,
-      earnRewardAmount: triggerAmount,
-      earnRewardPoints: Number(pointsAwarded),
+      earnRewardAmount: triggerAmount || "0",
+      earnRewardPoints: Number(pointsAwarded) || 0,
       currency,
       redeemRewardAction: rewardType,
-      redeemRewardValue: rewardValue,
-      redeemRewardPointRequired: Number(pointsRequired),
+      redeemRewardValue: rewardValue || "0",
+      redeemRewardPointRequired: Number(pointsRequired) || 0,
       redeemRewardChannels: [redemptionChannel],
-      redeemValidityPeriod: Number(validityPeriod),
-      loyaltyPoints: Number(pointsAwarded),
+      redeemValidityPeriod: Number(validityPeriod) || 0,
+      loyaltyPoints: Number(pointsAwarded) || 0,
       loyaltyName: tiers[0]?.name || "Loyalty Tier",
       loyaltyTierBenefits: JSON.stringify(tiers),
     };

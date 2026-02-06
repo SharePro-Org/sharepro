@@ -110,7 +110,9 @@ const Payout = () => {
                                           </td>
                                           <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                              reward.status === 'APPROVED'
+                                              reward.status === 'PAID'
+                                                ? 'bg-blue-500 text-white'
+                                                : reward.status === 'APPROVED'
                                                 ? 'bg-green-500 text-white'
                                                 : reward.status === 'PENDING'
                                                   ? 'bg-yellow-500 text-white'

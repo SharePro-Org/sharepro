@@ -295,6 +295,31 @@ export const APPROVE_OR_REJECT_PROOF = gql`
   }
 `;
 
+export const SEND_REWARD = gql`
+  mutation SendReward(
+    $rewardId: UUID!
+    $voucherCode: String
+    $voucherNotes: String
+    $validUntil: Date
+  ) {
+    sendReward(
+      rewardId: $rewardId
+      voucherCode: $voucherCode
+      voucherNotes: $voucherNotes
+      validUntil: $validUntil
+    ) {
+      success
+      message
+      errors
+      reward {
+        id
+        status
+        processedAt
+      }
+    }
+  }
+`;
+
 export const SUBMIT_PROOF = gql`
   mutation SubmitProof($rewardId: UUID!, $files: [String]!, $fileNames: [String]!, $description: String) {
     submitProof(rewardId: $rewardId, files: $files, fileNames: $fileNames, description: $description) {

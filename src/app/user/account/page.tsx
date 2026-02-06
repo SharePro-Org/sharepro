@@ -2,11 +2,11 @@
 
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Camera, Edit, Plus, SearchIcon } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
-import { useQuery, useMutation } from "@apollo/client/react";
+import { useQuery, useMutation, useLazyQuery } from "@apollo/client/react";
 import {
   GET_USER,
   UPDATE_USER,
@@ -14,7 +14,7 @@ import {
   DEACTIVATE_USER_ACCOUNT,
   DELETE_USER_BANK_ACCOUNT
 } from "@/apollo/mutations/account";
-import { BANK_LIST } from "@/apollo/queries/wallet";
+import { BANK_LIST, RESOLVE_ACCOUNT_NAME } from "@/apollo/queries/wallet";
 
 type UserProfile = {
   firstName: string;
@@ -75,7 +75,23 @@ type CreateBankDetailsVariables = {
     accountNumber: string;
     phoneNumber: string;
     networkProvider: string;
+    bankCode: string;
   };
+};
+
+type ResolveAccountNameResponse = {
+  resolveAccountName: {
+    success: boolean;
+    message: string;
+    accountName: string;
+    accountNumber: string;
+    bankCode: string;
+  };
+};
+
+type ResolveAccountNameVariables = {
+  accountNumber: string;
+  bankCode: string;
 };
 
 const account = () => {
@@ -160,6 +176,52 @@ const account = () => {
     },
     refetchQueries: [{ query: GET_USER, variables: { id: user?.userId } }]
   });
+
+  const [accountLookupError, setAccountLookupError] = useState<string | null>(null);
+  const [isAccountNameReadOnly, setIsAccountNameReadOnly] = useState(false);
+
+  const [resolveAccountName, { loading: accountLookupLoading }] = useLazyQuery<
+    ResolveAccountNameResponse,
+    ResolveAccountNameVariables
+  >(RESOLVE_ACCOUNT_NAME);
+
+  // Function to handle account lookup
+  const handleAccountLookup = useCallback(async (accountNumber: string, bankCode: string) => {
+    if (!accountNumber || accountNumber.length !== 10 || !bankCode) {
+      return;
+    }
+
+    try {
+      const { data, error } = await resolveAccountName({
+        variables: { accountNumber, bankCode },
+      });
+
+      if (error) {
+        console.error("Account lookup error:", error);
+        setAccountLookupError("Error looking up account name");
+        setIsAccountNameReadOnly(false);
+        return;
+      }
+
+      if (data?.resolveAccountName?.success) {
+        setBankForm((prev) => ({
+          ...prev,
+          accountName: data.resolveAccountName.accountName,
+        }));
+        setIsAccountNameReadOnly(true);
+        setAccountLookupError(null);
+      } else {
+        setAccountLookupError(
+          data?.resolveAccountName?.message || "Could not resolve account name"
+        );
+        setIsAccountNameReadOnly(false);
+      }
+    } catch (err) {
+      console.error("Account lookup exception:", err);
+      setAccountLookupError("Error looking up account name");
+      setIsAccountNameReadOnly(false);
+    }
+  }, [resolveAccountName]);
   useEffect(() => {
     if (userData?.currentUser?.userProfile) {
       setEditForm({
@@ -184,6 +246,24 @@ const account = () => {
       }
     }
   }, [userData]);
+
+  // Auto-fetch account name when account number is 10 digits
+  useEffect(() => {
+    if (
+      bankForm.accountNumber.length === 10 &&
+      /^\d+$/.test(bankForm.accountNumber) &&
+      bankForm.bankCode
+    ) {
+      handleAccountLookup(bankForm.accountNumber, bankForm.bankCode);
+    } else {
+      // Reset account name if account number is invalid
+      if (isAccountNameReadOnly) {
+        setBankForm((prev) => ({ ...prev, accountName: "" }));
+        setIsAccountNameReadOnly(false);
+        setAccountLookupError(null);
+      }
+    }
+  }, [bankForm.accountNumber, bankForm.bankCode, handleAccountLookup, isAccountNameReadOnly]);
 
   const [openDeactivateModal, setOpenDeactivateModal] = useState(false);
   const [steps, setSteps] = useState(0);
@@ -278,7 +358,7 @@ const account = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {userData.currentUser.bankAccounts.map((account: BankAccount) => (
+                      {userData.currentUser.bankAccounts?.filter(Boolean).map((account: BankAccount) => (
                         <tr key={account.id} className="border-b border-[#E5E5EA]">
                           <td className="py-3 px-2 font-medium">{account.accountName}</td>
                           <td className="py-3 px-2">{account.bankName}</td>
@@ -517,7 +597,8 @@ const account = () => {
                         bankName: bankForm.bankName,
                         accountNumber: bankForm.accountNumber,
                         phoneNumber: bankForm.phoneNumber,
-                        networkProvider: bankForm.networkProvider
+                        networkProvider: bankForm.networkProvider,
+                        bankCode: bankForm.bankCode
                       }
                     }
                   });
@@ -527,18 +608,6 @@ const account = () => {
               }}
               className="space-y-4"
             >
-              <div>
-                <label htmlFor="accountName" className="mb-2 text-[#030229CC] text-sm">Account Holder Name</label>
-                <input
-                  type="text"
-                  id="accountName"
-                  value={bankForm.accountName}
-                  onChange={(e) => setBankForm({ ...bankForm, accountName: e.target.value })}
-                  placeholder="Enter account holder name"
-                  className="border border-[#E5E5EA] rounded-md p-2 w-full"
-                  required
-                />
-              </div>
               <div className="bank-dropdown-container">
                 <label className="block text-sm font-medium mb-1">Select Bank</label>
                 <div className="relative">
@@ -571,13 +640,13 @@ const account = () => {
                       </div>
                       <div className="max-h-48 overflow-y-auto">
                         {filteredBanks.length > 0 ? (
-                          filteredBanks.map((bank: any) => (
+                          filteredBanks.map((bank: any, index: number) => (
                             <div
-                              key={bank.code}
+                              key={bank.id ? bank.id : `${bank.code}-${index}`}
                               className={`px-3 py-2 cursor-pointer hover:bg-[#EEF3FF] transition-colors ${bankForm.bankCode === bank.code ? 'bg-[#EEF3FF] text-[#24348B] font-medium' : 'text-gray-900'
                                 }`}
                               onClick={() => {
-                                setBankForm(f => ({ ...f, bankCode: bank.code }));
+                                setBankForm(f => ({ ...f, bankCode: bank.code, bankName: bank.name }));
                                 setBankSearch("");
                                 setIsBankDropdownOpen(false);
                               }}
@@ -596,14 +665,60 @@ const account = () => {
                 </div>
               </div>
               <div>
-                <label htmlFor="accountNumber" className="mb-2 text-[#030229CC] text-sm">Account Number</label>
+                <label htmlFor="accountNumber" className="mb-2 text-[#030229CC] text-sm">
+                  Account Number
+                  {accountLookupLoading && (
+                    <span className="ml-2 text-xs text-blue-600">Verifying...</span>
+                  )}
+                </label>
                 <input
                   type="text"
                   id="accountNumber"
                   value={bankForm.accountNumber}
-                  onChange={(e) => setBankForm({ ...bankForm, accountNumber: e.target.value })}
-                  placeholder="Enter account number"
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ""); // Only allow digits
+                    if (value.length <= 10) {
+                      setBankForm({ ...bankForm, accountNumber: value });
+                    }
+                  }}
+                  placeholder="Enter 10-digit account number"
                   className="border border-[#E5E5EA] rounded-md p-2 w-full"
+                  maxLength={10}
+                  required
+                />
+                {accountLookupError && (
+                  <p className="text-red-500 text-xs mt-1">{accountLookupError}</p>
+                )}
+              </div>
+              <div>
+                <label htmlFor="accountName" className="mb-2 text-[#030229CC] text-sm">
+                  Account Holder Name
+                  {isAccountNameReadOnly && (
+                    <span className="ml-2 text-xs text-green-600">✓ Verified</span>
+                  )}
+                </label>
+                <input
+                  type="text"
+                  id="accountName"
+                  value={bankForm.accountName}
+                  onChange={(e) => {
+                    if (!isAccountNameReadOnly) {
+                      setBankForm({ ...bankForm, accountName: e.target.value });
+                    }
+                  }}
+                  placeholder={
+                    accountLookupLoading
+                      ? "Looking up account name..."
+                      : isAccountNameReadOnly
+                      ? "Auto-filled from bank"
+                      : "Will be auto-filled after entering account number"
+                  }
+                  className={`border border-[#E5E5EA] rounded-md p-2 w-full ${
+                    isAccountNameReadOnly
+                      ? "bg-gray-50 cursor-not-allowed text-gray-700"
+                      : ""
+                  }`}
+                  readOnly={isAccountNameReadOnly}
                   required
                 />
               </div>

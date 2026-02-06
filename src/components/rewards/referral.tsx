@@ -22,7 +22,7 @@ import { useAtom } from "jotai";
 const emptyTier = { name: "", pointsRequired: "", benefits: "" };
 
 const ReferralRewards = ({ id, mode }: { id: string | null; mode?: string | null }) => {
-  const isEditMode = mode === "edit";
+  const [isEditMode, setIsEditMode] = useState(mode === "edit");
   const [rewardId, setRewardId] = useState<string | null>(null);
   const currencyOptions = Country.getAllCountries();
   const [tiers, setTiers] = useState([{ ...emptyTier }]);
@@ -141,16 +141,21 @@ const ReferralRewards = ({ id, mode }: { id: string | null; mode?: string | null
     };
   };
 
-  // Fetch campaign data for edit mode
+  // Fetch campaign data - always fetch if ID exists to check for existing rewards
   const { data: campaignDataQuery, loading: loadingCampaign } = useQuery<CampaignQueryResponse>(GET_CAMPAIGN, {
     variables: { id, businessId },
-    skip: !isEditMode || !id || !businessId,
+    skip: !id || !businessId,
   });
 
-  // Pre-populate form fields in edit mode
+  // Pre-populate form fields if rewards exist (auto-detect edit mode)
   useEffect(() => {
-    if (isEditMode && campaignDataQuery?.campaign?.referralRewards?.[0]) {
+    if (campaignDataQuery?.campaign?.referralRewards?.[0]) {
       const reward = campaignDataQuery.campaign.referralRewards[0];
+
+      // Automatically switch to edit mode if rewards exist
+      if (!isEditMode) {
+        setIsEditMode(true);
+      }
       setRewardId(reward.id);
       setReferrerAction(reward.referralRewardAction || "");
       setReferrerRewardType(reward.referralRewardType || "");
@@ -188,7 +193,7 @@ const ReferralRewards = ({ id, mode }: { id: string | null; mode?: string | null
         }
       }
     }
-  }, [isEditMode, campaignDataQuery]);
+  }, [campaignDataQuery]);
 
   interface UpdateReferralRewardResponse {
     updateReferralReward?: {
@@ -222,15 +227,15 @@ const ReferralRewards = ({ id, mode }: { id: string | null; mode?: string | null
   const handleSubmit = async () => {
     const referralCampaignData = {
       referralRewardAction: referrerAction,
-      referralRewardAmount: referrerRewardValue,
-      referralRewardLimit: Number(referralRewardLimit),
+      referralRewardAmount: referrerRewardValue || "0",
+      referralRewardLimit: Number(referralRewardLimit) || 0,
       referralRewardType: referrerRewardType,
       referralRewardLimitType: referralRewardLimitType,
       referreeRewardAction: refereeAction,
-      referreeRewardValue: refereeRewardValue,
+      referreeRewardValue: refereeRewardValue || "0",
       referreeRewardType: refereeRewardType,
       referreeRewardChannels: refereeRewardChannels,
-      referreeValidityPeriod: Number(refereeValidityPeriod),
+      referreeValidityPeriod: Number(refereeValidityPeriod) || 0,
       loyaltyPoints: 0, // Default value
       loyaltyName: tiers[0]?.name || "",
       loyaltyTierBenefits: JSON.stringify({

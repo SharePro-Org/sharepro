@@ -8,7 +8,9 @@ import { IoWarning } from "react-icons/io5";
 import { useMutation, useQuery } from "@apollo/client/react";
 import { GET_SINGLE_PAYOUT } from "@/apollo/queries/campaigns";
 import { useParams, useRouter } from "next/navigation";
-import { APPROVE_OR_REJECT_PROOF } from "@/apollo/mutations/campaigns";
+import { APPROVE_OR_REJECT_PROOF, SEND_REWARD } from "@/apollo/mutations/campaigns";
+import { message } from "antd";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const PayoutDetails = () => {
     const router = useRouter();
@@ -17,6 +19,7 @@ const PayoutDetails = () => {
     const [modalOpen, setModalOpen] = useState(false);
     const [modalImage, setModalImage] = useState<string | null>(null);
     // New modals for payout actions
+    const [confirmOpen, setConfirmOpen] = useState(false);
     const [airtimeOpen, setAirtimeOpen] = useState(false);
     const [cashbackOpen, setCashbackOpen] = useState(false);
     const [voucherOpen, setVoucherOpen] = useState(false);
@@ -36,8 +39,83 @@ const PayoutDetails = () => {
         skip: !id,
     });
 
-    const [handleToggleRewardStatus, { loading: setLoading }] = useMutation(APPROVE_OR_REJECT_PROOF)
-    console.log(data?.reward?.user?.bankAccounts?.accountNumber)
+    const [handleToggleRewardStatus, { loading: setLoading }] = useMutation(APPROVE_OR_REJECT_PROOF, {
+        refetchQueries: [{ query: GET_SINGLE_PAYOUT, variables: { id } }],
+    })
+
+    const [sendReward, { loading: sendingReward }] = useMutation<any>(SEND_REWARD, {
+        refetchQueries: [{ query: GET_SINGLE_PAYOUT, variables: { id } }],
+    });
+
+    const handleSendRewardConfirm = async () => {
+        setConfirmOpen(false);
+        const deliveryType = data?.reward?.deliveryType;
+
+        if (deliveryType === 'cashback') {
+            try {
+                const result = await sendReward({ variables: { rewardId: id } });
+                if (result.data?.sendReward?.success) {
+                    message.success("Cashback sent to wallet successfully!");
+                } else {
+                    message.error(result.data?.sendReward?.message || "Failed to send reward");
+                }
+            } catch (error: any) {
+                message.error(error.message || "An error occurred");
+            }
+        } else if (['voucher', 'discount'].includes(deliveryType || '')) {
+            setVoucherOpen(true);
+        } else if (deliveryType === 'airtime') {
+            setAirtimeOpen(true);
+        } else {
+            message.warning("Unknown reward type. Please contact support.");
+        }
+    };
+
+    const handleAirtimeConfirm = async () => {
+        try {
+            const result = await sendReward({ variables: { rewardId: id } });
+            if (result.data?.sendReward?.success) {
+                message.success("Airtime reward marked as sent!");
+                setAirtimeOpen(false);
+            } else {
+                message.error(result.data?.sendReward?.message || "Failed to process airtime");
+            }
+        } catch (error: any) {
+            message.error(error.message || "An error occurred");
+        }
+    };
+
+    const handleVoucherSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!voucherCode.trim()) {
+            message.error("Voucher code is required");
+            return;
+        }
+
+        try {
+            const result = await sendReward({
+                variables: {
+                    rewardId: id,
+                    voucherCode: voucherCode,
+                    voucherNotes: voucherNotes,
+                    validUntil: voucherValidUntil || null,
+                }
+            });
+
+            if (result.data?.sendReward?.success) {
+                message.success("Voucher sent successfully!");
+                setVoucherOpen(false);
+                setVoucherCode('');
+                setVoucherNotes('');
+                setVoucherValidUntil('');
+            } else {
+                message.error(result.data?.sendReward?.message || "Failed to send voucher");
+            }
+        } catch (error: any) {
+            message.error(error.message || "An error occurred");
+        }
+    };
 
     return (
         <DashboardLayout>
@@ -55,17 +133,16 @@ const PayoutDetails = () => {
                             </span>
                         </button>
                         <button className={`flex gap-2 text-white text-sm px-4 py-1.5 rounded-full font-medium
-                                    ${data?.reward?.status === 'APPROVED' ? 'bg-green-500'
+                                    ${data?.reward?.status === 'PAID' ? 'bg-blue-500'
+                                : data?.reward?.status === 'APPROVED' ? 'bg-green-500'
                                 : data?.reward?.status === 'PENDING' ? 'bg-yellow-500 text-black'
-                                    : 'bg-red-500'}
+                                : data?.reward?.status === 'REJECTED' ? 'bg-red-500'
+                                    : 'bg-gray-500'}
                                      `}>
                             <IoWarning className="my-auto" />
-                            <span
-
-                            >
+                            <span>
                                 {data?.reward?.status}
                             </span>
-                            {/* <span className="my-auto">{}</span> */}
                         </button>
                     </div>
 
@@ -184,34 +261,47 @@ const PayoutDetails = () => {
 
                     {/* Actions */}
                     <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
-                        <button onClick={() => handleToggleRewardStatus({
-                            variables: {
-                                rewardId: id,
-                                action: 'reject',
-                            }
-                        })} className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-md border border-red-500 text-red-600 font-medium hover:bg-red-50 transition">
-                            <XCircle className="w-5 h-5" />
-                            {setLoading ? 'loading...' : 'Reject Payout'}
-
-                        </button>
-                        {data?.reward?.status === 'APPROVED' ? (
-                            <button className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-md bg-[#0A1B88] text-white font-medium hover:bg-[#0A1B88]/90 transition">
+                        {data?.reward?.status && data.reward.status !== 'APPROVED' && data.reward.status !== 'PAID' && (
+                            <button onClick={() => handleToggleRewardStatus({
+                                variables: {
+                                    rewardId: id,
+                                    action: 'reject',
+                                }
+                            })} className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-md border border-red-500 text-red-600 font-medium hover:bg-red-50 transition">
+                                <XCircle className="w-5 h-5" />
+                                {setLoading ? 'loading...' : 'Reject Payout'}
+                            </button>
+                        )}
+                        {data?.reward?.status === 'APPROVED' && (
+                            <button
+                                onClick={() => setConfirmOpen(true)}
+                                disabled={sendingReward}
+                                className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-md bg-[#0A1B88] text-white font-medium hover:bg-[#0A1B88]/90 transition disabled:opacity-50"
+                            >
                                 <CheckCircle className="w-5 h-5" />
-                                {setLoading ? 'loading...' : 'Send Reward'}
-
-                            </button>)
-                            : (
-                                <button onClick={() => handleToggleRewardStatus({
-                                    variables: {
-                                        rewardId: id,
-                                        action: 'approve',
-                                    }
-                                })} className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-md bg-[#0A1B88] text-white font-medium hover:bg-[#0A1B88]/90 transition">
-                                    <CheckCircle className="w-5 h-5" />
-
-                                    {setLoading ? 'loading...' : 'Approve Payout'}
-
-                                </button>)}
+                                {sendingReward ? 'Sending...' : 'Send Reward'}
+                            </button>
+                        )}
+                        {data?.reward?.status === 'PAID' && (
+                            <button
+                                disabled
+                                className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-md bg-green-500 text-white font-medium cursor-not-allowed"
+                            >
+                                <CheckCircle className="w-5 h-5" />
+                                Reward Sent
+                            </button>
+                        )}
+                        {data?.reward?.status && data.reward.status !== 'APPROVED' && data.reward.status !== 'PAID' && data.reward.status !== 'REJECTED' && (
+                            <button onClick={() => handleToggleRewardStatus({
+                                variables: {
+                                    rewardId: id,
+                                    action: 'approve',
+                                }
+                            })} className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-md bg-[#0A1B88] text-white font-medium hover:bg-[#0A1B88]/90 transition">
+                                <CheckCircle className="w-5 h-5" />
+                                {setLoading ? 'loading...' : 'Approve Payout'}
+                            </button>
+                        )}
 
                     </div>
                 </div>
@@ -233,137 +323,176 @@ const PayoutDetails = () => {
                     </div>
                 )}
 
-                {/* Airtime Details Modal */}
-                {airtimeOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-                        <div className="bg-white rounded-md p-6 w-full max-w-md mx-4 relative">
-                            {/* <button className="absolute left-6 top-6 text-gray-600" onClick={() => setAirtimeOpen(false)}>←</button> */}
-                            <button className="absolute right-6 top-6 text-gray-600" onClick={() => setAirtimeOpen(false)}>✕</button>
-                            <h3 className="text-center text-xl font-semibold mb-4">Airtime Details</h3>
-                            <div className="border border-[#E4E7EC] rounded-lg p-4 mb-4">
-                                <div className="grid grid-cols-2 gap-4 items-center">
-                                    <div>
-                                        <p className="text-sm text-gray-500">Network</p>
-                                        <p className="font-medium">{data?.reward?.user?.bankAccounts?.[0]?.networkProvider || data?.reward?.user?.network || 'MTN'}</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-sm text-gray-500">Phone Number</p>
-                                        <div className="flex items-center justify-end gap-2">
-                                            <p className="font-medium">{data?.reward?.user?.bankAccounts?.[0]?.phoneNumber || data?.reward?.user?.phone || 'N/A'}</p>
-                                            <button
-                                                className="p-2 bg-gray-100 rounded-md"
-                                                onClick={() => {
-                                                    const val = data?.reward?.user?.bankAccounts?.[0]?.phoneNumber || data?.reward?.user?.phone || '';
-                                                    if (val && navigator.clipboard) navigator.clipboard.writeText(val).then(() => alert('Copied'));
-                                                }}
-                                            >
-                                                <CopyIcon size={10} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                    {/* duplicate row for convenience matching screenshot */}
-                                    <div>
-                                        <p className="text-sm text-gray-500">Network</p>
-                                        <p className="font-medium">{data?.reward?.user?.bankAccounts?.[0]?.networkProvider || data?.reward?.user?.network || 'MTN'}</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-sm text-gray-500">Phone Number</p>
-                                        <div className="flex items-center justify-end gap-2">
-                                            <p className="font-medium">{data?.reward?.user?.bankAccounts?.[0]?.phoneNumber || data?.reward?.user?.phone || 'N/A'}</p>
-                                            <button
-                                                className="p-2 bg-gray-100 rounded-md"
-                                                onClick={() => {
-                                                    const val = data?.reward?.user?.bankAccounts?.[0]?.phoneNumber || data?.reward?.user?.phone || '';
-                                                    if (val && navigator.clipboard) navigator.clipboard.writeText(val).then(() => alert('Copied'));
-                                                }}
-                                            >
-                                                <CopyIcon size={10} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <p className="text-sm italic text-gray-600 mb-6">Airtime rewards are to be done manually. Ensure to make payment to maintain trust and uphold business name.</p>
-                            <div className="text-center">
-                                <button onClick={() => { setAirtimeOpen(false); alert('Marked as paid (UI only)'); }} className="px-6 py-3 bg-[#24348B] text-white rounded-full">I Have Paid</button>
+                {/* Send Reward Confirmation Modal */}
+                <Dialog open={confirmOpen} onOpenChange={() => setConfirmOpen(false)}>
+                    <DialogContent>
+                        <h2 className="text-center font-medium">Confirm Send Reward</h2>
+                        <p className="text-sm text-[#030229CC]">
+                            You are about to send a reward to this customer. Please review the details below before confirming.
+                        </p>
+                        <div className="border border-[#E4E7EC] rounded-lg p-4">
+                            <div className="grid grid-cols-2 gap-y-3 text-sm">
+                                <p className="text-gray-500">Customer</p>
+                                <p className="font-medium text-gray-800">{data?.reward?.user?.firstName} {data?.reward?.user?.lastName}</p>
+                                <p className="text-gray-500">Amount</p>
+                                <p className="font-medium text-gray-800">{data?.reward?.amount}</p>
+                                <p className="text-gray-500">Reward Type</p>
+                                <p className="font-medium text-gray-800 capitalize">{data?.reward?.deliveryType || data?.reward?.rewardType}</p>
+                                <p className="text-gray-500">Campaign</p>
+                                <p className="font-medium text-gray-800">{data?.reward?.campaign?.name}</p>
                             </div>
                         </div>
-                    </div>
-                )}
+                        <p className="text-sm text-[#030229CC]">
+                            Are you sure you want to send this reward? This action cannot be undone.
+                        </p>
+                        <div className="flex justify-center gap-4">
+                            <button
+                                onClick={() => setConfirmOpen(false)}
+                                className="bg-gray-500 text-white px-6 py-2 rounded-md"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSendRewardConfirm}
+                                disabled={sendingReward}
+                                className="bg-primary text-white px-6 py-2 rounded-md disabled:opacity-50"
+                            >
+                                {sendingReward ? 'Processing...' : 'Confirm'}
+                            </button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Airtime Confirmation Modal */}
+                <Dialog open={airtimeOpen} onOpenChange={() => setAirtimeOpen(false)}>
+                    <DialogContent>
+                        <h2 className="text-center font-medium">Confirm Airtime Reward</h2>
+                        <div className="border border-[#E4E7EC] rounded-lg p-4">
+                            <div className="grid grid-cols-2 gap-y-3 text-sm">
+                                <p className="text-gray-500">Customer</p>
+                                <p className="font-medium text-gray-800">{data?.reward?.user?.firstName} {data?.reward?.user?.lastName}</p>
+                                <p className="text-gray-500">Amount</p>
+                                <p className="font-medium text-gray-800">{data?.reward?.amount}</p>
+                                <p className="text-gray-500">Phone Number</p>
+                                <p className="font-medium text-gray-800">{data?.reward?.user?.phone || 'N/A'}</p>
+                            </div>
+                        </div>
+                        <p className="text-sm text-[#030229CC]">
+                            By clicking confirm, you acknowledge that the airtime has been credited to the customer&apos;s phone number.
+                            An email notification will be sent to the customer.
+                        </p>
+                        <div className="flex justify-center gap-4">
+                            <button
+                                onClick={() => setAirtimeOpen(false)}
+                                className="bg-gray-500 text-white px-6 py-2 rounded-md"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleAirtimeConfirm}
+                                disabled={sendingReward}
+                                className="bg-primary text-white px-6 py-2 rounded-md disabled:opacity-50"
+                            >
+                                {sendingReward ? 'Processing...' : 'Confirm Airtime Sent'}
+                            </button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
 
                 {/* Cashback Details Modal */}
-                {cashbackOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-                        <div className="bg-white rounded-md p-6 w-full max-w-md mx-4 relative">
-                            {/* <button className="absolute left-6 top-6 text-gray-600" onClick={() => setCashbackOpen(false)}>←</button> */}
-                            <button className="absolute right-6 top-6 text-gray-600" onClick={() => setCashbackOpen(false)}>✕</button>
-                            <h3 className="text-center text-xl font-semibold mb-4">Cashback Details</h3>
-                            <div className="border border-[#E4E7EC] rounded-lg p-4 mb-4">
-                                <div className="grid grid-cols-2 gap-y-4">
-                                    <div>
-                                        <p className="text-sm text-gray-500">Bank Name</p>
-                                        <p className="font-medium">{data?.reward?.user?.bankAccounts?.[0]?.bankName || 'Opay'}</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-sm text-gray-500">Account Number</p>
-                                        <div className="flex items-center justify-end gap-2">
-                                            <p className="font-medium">{data?.reward?.user?.bankAccounts?.[0]?.accountNumber || '0123456789'}</p>
-                                            <button className="p-2 bg-gray-100 rounded-md" onClick={() => { const v = data?.reward?.user?.bankAccounts?.[0]?.accountNumber || ''; if (v && navigator.clipboard) navigator.clipboard.writeText(v).then(() => alert('Copied')); }}><CopyIcon size={10} /></button>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <p className="text-sm text-gray-500">Bank Holder’s Name</p>
-                                        <p className="font-medium">{data?.reward?.user?.bankAccounts?.[0]?.accountName || `${data?.reward?.user?.firstName} ${data?.reward?.user?.lastName}`}</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-sm text-gray-500">Amount to Send</p>
-                                        <div className="flex items-center justify-end gap-2">
-                                            <p className="font-medium">{data?.reward?.amount || 'N 20,250'}</p>
-                                            <button className="p-2 bg-gray-100 rounded-md" onClick={() => { const v = data?.reward?.amount || ''; if (v && navigator.clipboard) navigator.clipboard.writeText(String(v)).then(() => alert('Copied')); }}><CopyIcon size={10} /></button>
-                                        </div>
-                                        <p className="text-sm text-green-600 mt-1">A processing fee of N250 is required</p>
+                <Dialog open={cashbackOpen} onOpenChange={() => setCashbackOpen(false)}>
+                    <DialogContent>
+                        <h2 className="text-center font-medium">Cashback Details</h2>
+                        <div className="border border-[#E4E7EC] rounded-lg p-4">
+                            <div className="grid grid-cols-2 gap-y-4">
+                                <div>
+                                    <p className="text-sm text-gray-500">Bank Name</p>
+                                    <p className="font-medium">{data?.reward?.user?.bankAccounts?.[0]?.bankName || 'Opay'}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-sm text-gray-500">Account Number</p>
+                                    <div className="flex items-center justify-end gap-2">
+                                        <p className="font-medium">{data?.reward?.user?.bankAccounts?.[0]?.accountNumber || '0123456789'}</p>
+                                        <button className="p-2 bg-gray-100 rounded-md" onClick={() => { const v = data?.reward?.user?.bankAccounts?.[0]?.accountNumber || ''; if (v && navigator.clipboard) navigator.clipboard.writeText(v).then(() => message.success('Copied')); }}><CopyIcon size={10} /></button>
                                     </div>
                                 </div>
-                            </div>
-                            <div className="text-center">
-                                <button onClick={() => { setCashbackOpen(false); alert('Proceed to Paystack (UI only)'); }} className="px-6 py-3 bg-[#24348B] text-white rounded-full">Proceed to Paystack</button>
+                                <div>
+                                    <p className="text-sm text-gray-500">Bank Holder&apos;s Name</p>
+                                    <p className="font-medium">{data?.reward?.user?.bankAccounts?.[0]?.accountName || `${data?.reward?.user?.firstName} ${data?.reward?.user?.lastName}`}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-sm text-gray-500">Amount to Send</p>
+                                    <div className="flex items-center justify-end gap-2">
+                                        <p className="font-medium">{data?.reward?.amount || 'N 20,250'}</p>
+                                        <button className="p-2 bg-gray-100 rounded-md" onClick={() => { const v = data?.reward?.amount || ''; if (v && navigator.clipboard) navigator.clipboard.writeText(String(v)).then(() => message.success('Copied')); }}><CopyIcon size={10} /></button>
+                                    </div>
+                                    <p className="text-sm text-green-600 mt-1">A processing fee of N250 is required</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
+                        <div className="flex justify-center gap-4">
+                            <button onClick={() => setCashbackOpen(false)} className="bg-gray-500 text-white px-6 py-2 rounded-md">Cancel</button>
+                            <button onClick={() => { setCashbackOpen(false); }} className="bg-primary text-white px-6 py-2 rounded-md">Proceed to Paystack</button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
 
                 {/* Voucher Details Modal */}
-                {voucherOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-                        <div className="bg-white rounded-md p-6 w-full max-w-md mx-4 relative">
-                            {/* <button className="absolute left-6 top-6 text-gray-600" onClick={() => setVoucherOpen(false)}>←</button> */}
-                            <button className="absolute right-6 top-6 text-gray-600" onClick={() => setVoucherOpen(false)}>✕</button>
-                            <h3 className="text-center text-xl font-semibold mb-4">Voucher Details</h3>
-                            <form onSubmit={(e) => { e.preventDefault(); alert(`Voucher sent: ${voucherCode} (${voucherDiscount})`); setVoucherCode(''); setVoucherDiscount(''); setVoucherValidUntil(''); setVoucherNotes(''); setVoucherOpen(false); }} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm mb-1">Enter Voucher Code*</label>
-                                    <input value={voucherCode} onChange={(e) => setVoucherCode(e.target.value)} className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="e.g DSC2000" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm mb-1">Discount Amount *</label>
-                                    <input value={voucherDiscount} onChange={(e) => setVoucherDiscount(e.target.value)} className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="e.g 20%" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm mb-1">Valid Until *</label>
-                                    <input value={voucherValidUntil} onChange={(e) => setVoucherValidUntil(e.target.value)} type="date" className="border border-[#E4E7EC] rounded-md p-3 w-full" placeholder="YYYY-MM-DD" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm mb-1">Additional Notes</label>
-                                    <textarea value={voucherNotes} onChange={(e) => setVoucherNotes(e.target.value)} className="border border-[#E4E7EC] rounded-md p-3 w-full" />
-                                </div>
-                                <div className="text-center">
-                                    <button type="submit" className="px-6 py-3 bg-[#24348B] text-white rounded-full">Send Voucher</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
+                <Dialog open={voucherOpen} onOpenChange={() => setVoucherOpen(false)}>
+                    <DialogContent>
+                        <h2 className="text-center font-medium">Send Voucher Reward</h2>
+                        <p className="text-sm text-[#030229CC]">
+                            Enter the voucher details to send to {data?.reward?.user?.firstName} {data?.reward?.user?.lastName}
+                        </p>
+                        <form onSubmit={handleVoucherSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm mb-1">Voucher Code *</label>
+                                <input
+                                    value={voucherCode}
+                                    onChange={(e) => setVoucherCode(e.target.value)}
+                                    className="border border-[#E4E7EC] rounded-md p-3 w-full"
+                                    placeholder="e.g. REWARD2026"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm mb-1">Redemption Instructions</label>
+                                <textarea
+                                    value={voucherNotes}
+                                    onChange={(e) => setVoucherNotes(e.target.value)}
+                                    className="border border-[#E4E7EC] rounded-md p-3 w-full"
+                                    placeholder="Where and how to use this voucher..."
+                                    rows={3}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm mb-1">Valid Until (Optional)</label>
+                                <input
+                                    value={voucherValidUntil}
+                                    onChange={(e) => setVoucherValidUntil(e.target.value)}
+                                    type="date"
+                                    className="border border-[#E4E7EC] rounded-md p-3 w-full"
+                                />
+                            </div>
+                            <div className="flex justify-center gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setVoucherOpen(false)}
+                                    className="bg-gray-500 text-white px-6 py-2 rounded-md"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={sendingReward}
+                                    className="bg-primary text-white px-6 py-2 rounded-md disabled:opacity-50"
+                                >
+                                    {sendingReward ? 'Sending...' : 'Send Voucher'}
+                                </button>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
 
                 
             </>

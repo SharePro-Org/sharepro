@@ -120,6 +120,10 @@ export const GET_CAMPAIGN_ANALYTICS = gql`
         }
         comboRewards {
           id
+          earnRewardAction
+          earnRewardAmount
+          earnRewardPoints
+          currency
           loyaltyName
           loyaltyPoints
           loyaltyTierBenefits
@@ -236,6 +240,10 @@ export const GET_CAMPAIGN = gql`
         }
         comboRewards {
           id
+          earnRewardAction
+          earnRewardAmount
+          earnRewardPoints
+          currency
           loyaltyName
           loyaltyPoints
           loyaltyTierBenefits
@@ -271,6 +279,7 @@ export const GET_SINGLE_PAYOUT = gql`
     description
     status
     rewardType
+    deliveryType
     reviewNotes
     requiresProof
     proofFile

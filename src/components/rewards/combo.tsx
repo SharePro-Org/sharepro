@@ -21,7 +21,7 @@ import { useAtom } from "jotai";
 const emptyTier = { name: "", pointsRequired: "", benefits: "" };
 
 const ComboRewards = ({ id, mode }: { id: string | null; mode?: string | null }) => {
-  const isEditMode = mode === "edit";
+  const [isEditMode, setIsEditMode] = useState(mode === "edit");
   const [rewardId, setRewardId] = useState<string | null>(null);
   const [tiers, setTiers] = useState([{ ...emptyTier }]);
   const [success, setSuccess] = useState(false);
@@ -151,16 +151,22 @@ const ComboRewards = ({ id, mode }: { id: string | null; mode?: string | null })
     };
   };
 
-  // Fetch campaign data for edit mode
+  // Fetch campaign data - always fetch if ID exists to check for existing rewards
   const { data: campaignDataQuery, loading: loadingCampaign } = useQuery<CampaignQueryResponse>(GET_CAMPAIGN, {
     variables: { id, businessId },
-    skip: !isEditMode || !id || !businessId,
+    skip: !id || !businessId,
   });
 
-  // Pre-populate form fields in edit mode
+  // Pre-populate form fields if rewards exist (auto-detect edit mode)
   useEffect(() => {
-    if (isEditMode && campaignDataQuery?.campaign?.comboRewards?.[0]) {
+    if (campaignDataQuery?.campaign?.comboRewards?.[0]) {
       const reward = campaignDataQuery.campaign.comboRewards[0];
+
+      // Automatically switch to edit mode if rewards exist
+      if (!isEditMode) {
+        setIsEditMode(true);
+      }
+
       setRewardId(reward.id);
 
       // Loyalty fields
@@ -195,6 +201,8 @@ const ComboRewards = ({ id, mode }: { id: string | null; mode?: string | null })
       setRefereeRewardType(reward.referreeRewardType || "");
       setRefereeRewardValue(reward.referreeRewardValue || "");
 
+      setRefereeValidityPeriod(reward.referreeValidityPeriod?.toString() || "");
+
       // Parse referreeRewardChannels from JSON string to array
       try {
         const channels = typeof reward.referreeRewardChannels === 'string'
@@ -220,7 +228,7 @@ const ComboRewards = ({ id, mode }: { id: string | null; mode?: string | null })
         }
       }
     }
-  }, [isEditMode, campaignDataQuery]);
+  }, [campaignDataQuery]);
 
   const [createComboReward, { loading }] = useMutation(CREATE_COMBO_REWARD, {
     onError: (error) => {
@@ -267,33 +275,33 @@ const ComboRewards = ({ id, mode }: { id: string | null; mode?: string | null })
     const comboCampaignData = {
       // Referral component
       referralRewardAction: referrerAction || "",
-      referralRewardAmount: referrerRewardValue,
-      referralRewardLimit: parseInt(referralRewardLimit, 10),
+      referralRewardAmount: referrerRewardValue || "0",
+      referralRewardLimit: parseInt(referralRewardLimit, 10) || 0,
       referralRewardType: referrerRewardType || "",
       referralRewardLimitType: referralRewardLimitType || "",
       referreeRewardAction: refereeAction || "",
-      referreeRewardValue: refereeRewardValue,
+      referreeRewardValue: refereeRewardValue || "0",
       referreeRewardType: refereeRewardType || "",
       referreeRewardChannels: refereeRewardChannels
         ? refereeRewardChannels.split(",").map((ch) => ch.trim())
         : [],
-      referreeValidityPeriod: parseInt(refereeValidityPeriod, 10),
+      referreeValidityPeriod: parseInt(refereeValidityPeriod, 10) || 0,
       referralPoints: 50,
       referralName: "Combo Referrer",
       referralTierBenefits: JSON.stringify({ bonus_multiplier: 1.5 }),
 
       // Loyalty component
       earnRewardAction: businessType || "",
-      earnRewardAmount: triggerAmount,
-      earnRewardPoints: parseInt(pointsAwarded, 10),
+      earnRewardAmount: triggerAmount || "0",
+      earnRewardPoints: parseInt(pointsAwarded, 10) || 0,
       currency: currency || "NGN",
       redeemRewardAction: rewardType || "",
-      redeemRewardValue: rewardValue,
-      redeemRewardPointRequired: parseInt(pointsRequired, 10),
+      redeemRewardValue: rewardValue || "0",
+      redeemRewardPointRequired: parseInt(pointsRequired, 10) || 0,
       redeemRewardChannels: redemptionChannel
         ? redemptionChannel.split(",").map((ch) => ch.trim())
         : [],
-      redeemValidityPeriod: parseInt(validityPeriod, 10),
+      redeemValidityPeriod: parseInt(validityPeriod, 10) || 0,
       loyaltyPoints: 75,
       loyaltyName: tier.name || "Platinum Combo",
       loyaltyTierBenefits: JSON.stringify({ benefits: tier.benefits }),
