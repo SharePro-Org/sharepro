@@ -211,29 +211,33 @@ const billingsSubscription = () => {
               <div className="h-4 bg-gray-200 rounded w-2/3 mb-2"></div>
               <div className="h-4 bg-gray-200 rounded w-1/2"></div>
             </div>
-          ) : billingSummary?.billingSummary ? (
+          ) : billingSummary?.billingSummary?.currentPlan ? (
             <div className="bg-[#ECF3FF] w-[65%] rounded-md p-3">
               <div className="flex justify-between">
                 <div className="flex gap-3">
-                  <p className="font-semibold">{billingSummary?.billingSummary?.currentPlan?.name}</p>
-                  <span className="my-auto text-sm">
-                    Renews on {new Date(billingSummary?.billingSummary?.nextBillingDate).toLocaleDateString('en-US', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric'
-                    })}
-                  </span>
+                  <p className="font-semibold">{billingSummary.billingSummary.currentPlan.name}</p>
+                  {billingSummary.billingSummary.nextBillingDate && (
+                    <span className="my-auto text-sm">
+                      Renews on {new Date(billingSummary.billingSummary.nextBillingDate).toLocaleDateString('en-US', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                      })}
+                    </span>
+                  )}
                 </div>
-                <button className={`text-sm text-white rounded-sm p-1 px-4 ${billingSummary?.billingSummary?.subscriptionStatus === 'active' ? 'bg-[#27AE60]' :
-                  billingSummary?.billingSummary?.subscriptionStatus === 'trial' ? 'bg-blue-500' :
-                    'bg-yellow-500'
-                  }`}>
-                  {billingSummary?.billingSummary?.subscriptionStatus?.charAt(0).toUpperCase() +
-                    billingSummary?.billingSummary?.subscriptionStatus?.slice(1)}
-                </button>
+                {billingSummary.billingSummary.subscriptionStatus && (
+                  <button className={`text-sm text-white rounded-sm p-1 px-4 ${billingSummary.billingSummary.subscriptionStatus === 'active' ? 'bg-[#27AE60]' :
+                    billingSummary.billingSummary.subscriptionStatus === 'trial' ? 'bg-blue-500' :
+                      'bg-yellow-500'
+                    }`}>
+                    {billingSummary.billingSummary.subscriptionStatus.charAt(0).toUpperCase() +
+                      billingSummary.billingSummary.subscriptionStatus.slice(1)}
+                  </button>
+                )}
               </div>
               <p className="text-sm my-2">
-                {billingSummary?.billingSummary?.currentPlan?.description ||
+                {billingSummary.billingSummary.currentPlan.description ||
                   'Access to premium features based on your current plan.'}
               </p>
               <div className="flex gap-2">
@@ -241,14 +245,29 @@ const billingsSubscription = () => {
                   {new Intl.NumberFormat('en-NG', {
                     style: 'currency',
                     currency: 'NGN'
-                  }).format(billingSummary?.billingSummary?.currentPlan?.price)}
+                  }).format(billingSummary.billingSummary.currentPlan.price)}
                 </p>
-                <span className="text-sm">/{billingSummary?.billingSummary?.currentPlan?.billablePeriods}</span>
+                <span className="text-sm">/{billingSummary.billingSummary.currentPlan.billablePeriods}</span>
               </div>
             </div>
           ) : (
             <div className="bg-[#ECF3FF] w-[65%] rounded-md p-3">
-              <p className="text-center text-sm text-gray-500">No active subscription found</p>
+              <div className="flex justify-between">
+                <p className="font-semibold">FREE</p>
+                <span className="text-sm text-white rounded-sm p-1 px-4 bg-[#27AE60]">Active</span>
+              </div>
+              <p className="text-sm my-2">
+                You are currently on the Free plan.
+              </p>
+              <div className="flex gap-2">
+                <p className="font-semibold">
+                  {new Intl.NumberFormat('en-NG', {
+                    style: 'currency',
+                    currency: 'NGN'
+                  }).format(0)}
+                </p>
+                <span className="text-sm">/Monthly</span>
+              </div>
             </div>
           )}
         </section>
