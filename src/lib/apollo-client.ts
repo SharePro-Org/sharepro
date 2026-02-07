@@ -87,33 +87,21 @@ const authLink = setContext((operation, prevContext) => {
 });
 
 // Refresh Token Handling
-interface RefreshTokenResponse {
-  data?: {
-    refreshToken?: {
-      token: string;
-      refreshToken: string;
-    };
-  };
-}
+let isRefreshing = false;
+let pendingRefreshPromise: Promise<string> | null = null;
 
-const handleTokenRefresh = async (
-  operation: any,
-  forward: any
-): Promise<Observable<any>> => {
+const performTokenRefresh = async (): Promise<string> => {
   const userData = getUserData();
   const refreshToken = userData?.refreshToken;
   if (!refreshToken) {
     throw new Error("Authentication required");
   }
 
-  const apiURL = API_BASE_URL;
-
-  try {
-    const response = await fetch(apiURL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        query: `
+  const response = await fetch(API_BASE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      query: `
         mutation refreshToken($refreshToken: String!) {
           refreshToken(refreshToken: $refreshToken) {
             token
@@ -121,38 +109,56 @@ const handleTokenRefresh = async (
           }
         }
         `,
-        variables: { refreshToken },
-        operationName: "refreshToken",
-      }),
+      variables: { refreshToken },
+      operationName: "refreshToken",
+    }),
+  });
+
+  const result = await response.json();
+  const newAccessToken = result?.data?.refreshToken?.token;
+  const newRefreshToken = result?.data?.refreshToken?.refreshToken;
+
+  if (newAccessToken && newRefreshToken) {
+    const userData = getUserData() || {};
+    userData.accessToken = newAccessToken;
+    userData.refreshToken = newRefreshToken;
+    localStorage.setItem("userData", JSON.stringify(userData));
+    return newAccessToken;
+  }
+
+  throw new Error("Failed to refresh token");
+};
+
+const handleTokenRefresh = async (
+  operation: any,
+  forward: any
+): Promise<Observable<any>> => {
+  try {
+    // Deduplicate concurrent refresh attempts
+    if (!isRefreshing) {
+      isRefreshing = true;
+      pendingRefreshPromise = performTokenRefresh().finally(() => {
+        isRefreshing = false;
+        pendingRefreshPromise = null;
+      });
+    }
+
+    const newAccessToken = await pendingRefreshPromise!;
+
+    operation.setContext({
+      headers: {
+        ...operation.getContext().headers,
+        authorization: `JWT ${newAccessToken}`,
+      },
     });
 
-    const result = await response.json();
-    const res: any = result?.data;
-    const newAccessToken = res?.refreshToken?.token;
-    const newRefreshToken = res?.refreshToken?.refreshToken;
-
-    if (newRefreshToken && newAccessToken) {
-      const userData = getUserData() || {};
-      userData.accessToken = newAccessToken;
-      userData.refreshToken = newRefreshToken;
-      localStorage.setItem("userData", JSON.stringify(userData));
-    }
-
-    if (newAccessToken) {
-      setToken(newAccessToken);
-      operation.setContext({
-        headers: {
-          ...operation.getContext().headers,
-          authorization: `JWT ${newAccessToken}`,
-        },
-      });
-
-      return forward(operation);
-    } else {
-      throw new Error("Failed to refresh token");
-    }
+    return forward(operation);
   } catch (error) {
-    console.error("Token refresh failed:", error);
+    console.error("Token refresh failed, redirecting to login:", error);
+    clearAuth();
+    if (typeof window !== "undefined") {
+      window.location.href = "/auth/sign-in";
+    }
     throw error;
   }
 };
