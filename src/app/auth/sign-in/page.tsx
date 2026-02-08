@@ -13,10 +13,9 @@ import {
   MdOutlineVisibility,
   MdOutlineVisibilityOff,
 } from "react-icons/md";
-import { FcGoogle } from "react-icons/fc";
 import { cn } from "@/lib/utils";
 import { useMutation } from "@apollo/client/react";
-import { useGoogleLogin } from "@react-oauth/google";
+import GoogleLoginButton from "@/components/GoogleLoginButton";
 
 import { LOGIN, LOGIN_PHONE, GOOGLE_AUTH } from "@/apollo/mutations/auth";
 import { useSetAtom } from "jotai";
@@ -125,30 +124,25 @@ export default function SignIn() {
     }
   };
 
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setGeneralError("");
-      try {
-        const { data } = await googleAuth({
-          variables: { accessToken: tokenResponse.access_token, isSignup: false },
-        }) as { data: GoogleAuthResponse };
-        if (data?.googleAuth?.success) {
-          handleAuthSuccess(
-            data.googleAuth.user,
-            data.googleAuth.token,
-            data.googleAuth.refreshToken
-          );
-        } else {
-          setGeneralError(data?.googleAuth?.message || "Google sign-in failed");
-        }
-      } catch (err: any) {
-        setGeneralError(err.message || "Google sign-in failed");
+  const handleGoogleSuccess = async (tokenResponse: { access_token: string }) => {
+    setGeneralError("");
+    try {
+      const { data } = await googleAuth({
+        variables: { accessToken: tokenResponse.access_token, isSignup: false },
+      }) as { data: GoogleAuthResponse };
+      if (data?.googleAuth?.success) {
+        handleAuthSuccess(
+          data.googleAuth.user,
+          data.googleAuth.token,
+          data.googleAuth.refreshToken
+        );
+      } else {
+        setGeneralError(data?.googleAuth?.message || "Google sign-in failed");
       }
-    },
-    onError: () => {
-      setGeneralError("Google sign-in was cancelled");
-    },
-  });
+    } catch (err: any) {
+      setGeneralError(err.message || "Google sign-in failed");
+    }
+  };
 
   const isValidEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -368,15 +362,13 @@ export default function SignIn() {
           >
             {loadingEmail || loadingPhone ? "Signing in..." : "Continue"}
           </Button>
-          <Button
-            variant="outline"
-            className="flex w-full items-center justify-center gap-2"
-            type="button"
-            onClick={() => googleLogin()}
-            disabled={loadingGoogle}
-          >
-            <FcGoogle /> {loadingGoogle ? "Signing in..." : "Sign in with Google"}
-          </Button>
+          <GoogleLoginButton
+            onSuccess={handleGoogleSuccess}
+            onError={() => setGeneralError("Google sign-in was cancelled")}
+            loading={loadingGoogle}
+            label="Sign in with Google"
+            loadingLabel="Signing in..."
+          />
         </form>
 
         {/* Footer Links */}

@@ -14,10 +14,9 @@ import {
   MdOutlineVisibility,
   MdOutlineVisibilityOff,
 } from "react-icons/md";
-import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { useMutation } from "@apollo/client/react";
-import { useGoogleLogin } from "@react-oauth/google";
+import GoogleLoginButton from "@/components/GoogleLoginButton";
 import { useSetAtom } from "jotai";
 import { userAtom } from "@/store/User";
 
@@ -55,52 +54,47 @@ export default function BusinessSignUp() {
   const setUser = useSetAtom(userAtom);
   const [generalError, setGeneralError] = useState("");
 
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setGeneralError("");
-      try {
-        const { data } = await googleAuth({
-          variables: { accessToken: tokenResponse.access_token, isSignup: true },
-        }) as { data: GoogleAuthResponse };
-        if (data?.googleAuth?.success) {
-          const user = data.googleAuth.user;
-          const onBoardingComplete = user?.business?.onBoardingComplete;
-          const userData = {
-            accessToken: data.googleAuth.token,
-            refreshToken: data.googleAuth.refreshToken,
-            userId: user?.id,
-            email: user?.email,
-            businessName: user?.businessName,
-            businessId: user?.business?.id,
-            phone: user?.phone,
-            userType: user?.profile?.userType,
-            onBoardingComplete,
-            firstName: user?.firstName,
-            lastName: user?.lastName,
-          };
-          localStorage.setItem("userData", JSON.stringify(userData));
-          setUser(userData);
+  const handleGoogleSuccess = async (tokenResponse: { access_token: string }) => {
+    setGeneralError("");
+    try {
+      const { data } = await googleAuth({
+        variables: { accessToken: tokenResponse.access_token, isSignup: true },
+      }) as { data: GoogleAuthResponse };
+      if (data?.googleAuth?.success) {
+        const user = data.googleAuth.user;
+        const onBoardingComplete = user?.business?.onBoardingComplete;
+        const userData = {
+          accessToken: data.googleAuth.token,
+          refreshToken: data.googleAuth.refreshToken,
+          userId: user?.id,
+          email: user?.email,
+          businessName: user?.businessName,
+          businessId: user?.business?.id,
+          phone: user?.phone,
+          userType: user?.profile?.userType,
+          onBoardingComplete,
+          firstName: user?.firstName,
+          lastName: user?.lastName,
+        };
+        localStorage.setItem("userData", JSON.stringify(userData));
+        setUser(userData);
 
-          if (data.googleAuth.isNewUser) {
-            router.push("/onboarding");
-          } else if (userData.userType === "ADMIN") {
-            router.push("/admin/dashboard");
-          } else if (userData.userType === "VIEWER") {
-            router.push("/user/dashboard");
-          } else {
-            router.push(onBoardingComplete ? "/business/dashboard" : "/onboarding");
-          }
+        if (data.googleAuth.isNewUser) {
+          router.push("/onboarding");
+        } else if (userData.userType === "ADMIN") {
+          router.push("/admin/dashboard");
+        } else if (userData.userType === "VIEWER") {
+          router.push("/user/dashboard");
         } else {
-          setGeneralError(data?.googleAuth?.message || "Google sign-up failed");
+          router.push(onBoardingComplete ? "/business/dashboard" : "/onboarding");
         }
-      } catch (err: any) {
-        setGeneralError(err.message || "Google sign-up failed");
+      } else {
+        setGeneralError(data?.googleAuth?.message || "Google sign-up failed");
       }
-    },
-    onError: () => {
-      setGeneralError("Google sign-up was cancelled");
-    },
-  });
+    } catch (err: any) {
+      setGeneralError(err.message || "Google sign-up failed");
+    }
+  };
 
  
 
@@ -358,15 +352,13 @@ export default function BusinessSignUp() {
           <Button disabled={!isFormValid || loading}>
             {loading ? "Signing up..." : "Continue"}
           </Button>
-          <Button
-            variant="outline"
-            className="flex w-full items-center justify-center gap-2"
-            type="button"
-            onClick={() => googleLogin()}
-            disabled={loadingGoogle}
-          >
-            <FcGoogle /> {loadingGoogle ? "Signing up..." : "Sign up with Google"}
-          </Button>
+          <GoogleLoginButton
+            onSuccess={handleGoogleSuccess}
+            onError={() => setGeneralError("Google sign-up was cancelled")}
+            loading={loadingGoogle}
+            label="Sign up with Google"
+            loadingLabel="Signing up..."
+          />
           <div className="w-fit flex text-body md:text-sm pt-4 text-xs py-2 mt-2">
             Already have an account?
             <Link

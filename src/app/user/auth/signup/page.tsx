@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useState, useEffect, Suspense } from "react";
-import { FcGoogle } from "react-icons/fc";
 import { FiPhone } from "react-icons/fi";
 import { HiOutlineMail } from "react-icons/hi";
 import { MdOutlineVisibilityOff, MdOutlineVisibility } from "react-icons/md";
@@ -16,7 +15,7 @@ import Image from "next/image";
 import { useMutation, useQuery } from "@apollo/client/react";
 
 import { REGISTER_USER, TRACK_CONVERSION, GOOGLE_AUTH } from "@/apollo/mutations/auth";
-import { useGoogleLogin } from "@react-oauth/google";
+import GoogleLoginButton from "@/components/GoogleLoginButton";
 import { useSetAtom } from "jotai";
 import { userAtom } from "@/store/User";
 
@@ -155,80 +154,75 @@ const SignupComp = () => {
     };
   };
 
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setGeneralError("");
-      try {
-        const { data } = await googleAuthMutation({
-          variables: {
-            accessToken: tokenResponse.access_token,
-            isSignup: true,
-            referralCode: referralData.referralCode,
-            businessId: referralData.businessId,
-            userRefCode: searchParams.get("userRef"),
-          },
-        }) as { data: GoogleAuthResponse };
+  const handleGoogleSuccess = async (tokenResponse: { access_token: string }) => {
+    setGeneralError("");
+    try {
+      const { data } = await googleAuthMutation({
+        variables: {
+          accessToken: tokenResponse.access_token,
+          isSignup: true,
+          referralCode: referralData.referralCode,
+          businessId: referralData.businessId,
+          userRefCode: searchParams.get("userRef"),
+        },
+      }) as { data: GoogleAuthResponse };
 
-        if (data?.googleAuth?.success) {
-          const user = data.googleAuth.user;
-          const userData = {
-            accessToken: data.googleAuth.token,
-            refreshToken: data.googleAuth.refreshToken,
-            userId: user?.id,
-            email: user?.email,
-            phone: user?.phone,
-            businessName: user?.businessName,
-            firstName: user?.firstName,
-            lastName: user?.lastName,
-            businessId: user?.business?.id,
-            userType: user?.profile?.userType,
-          };
-          localStorage.setItem("userData", JSON.stringify(userData));
-          setUser(userData);
+      if (data?.googleAuth?.success) {
+        const user = data.googleAuth.user;
+        const userData = {
+          accessToken: data.googleAuth.token,
+          refreshToken: data.googleAuth.refreshToken,
+          userId: user?.id,
+          email: user?.email,
+          phone: user?.phone,
+          businessName: user?.businessName,
+          firstName: user?.firstName,
+          lastName: user?.lastName,
+          businessId: user?.business?.id,
+          userType: user?.profile?.userType,
+        };
+        localStorage.setItem("userData", JSON.stringify(userData));
+        setUser(userData);
 
-          // Track conversion if referral data exists
-          if (referralData.campaignId && referralData.referralCode) {
-            try {
-              await trackConversion({
-                variables: {
-                  campaignId: referralData.campaignId,
-                  referralCode: referralData.referralCode,
-                  properties: JSON.stringify({
-                    eventType: "registration_conversion",
-                    conversionType: "google_oauth_registration",
-                    userEmail: user?.email,
-                    userId: user?.id,
-                    timestamp: new Date().toISOString(),
-                    source: referralData.source,
-                  }),
-                },
-              });
-            } catch (conversionError) {
-              console.error("Conversion tracking failed:", conversionError);
-            }
+        // Track conversion if referral data exists
+        if (referralData.campaignId && referralData.referralCode) {
+          try {
+            await trackConversion({
+              variables: {
+                campaignId: referralData.campaignId,
+                referralCode: referralData.referralCode,
+                properties: JSON.stringify({
+                  eventType: "registration_conversion",
+                  conversionType: "google_oauth_registration",
+                  userEmail: user?.email,
+                  userId: user?.id,
+                  timestamp: new Date().toISOString(),
+                  source: referralData.source,
+                }),
+              },
+            });
+          } catch (conversionError) {
+            console.error("Conversion tracking failed:", conversionError);
           }
-
-          const redirect = searchParams.get("redirect");
-          if (redirect) {
-            window.location.href = redirect;
-          } else if (userData.userType === "ADMIN") {
-            router.push("/admin/dashboard");
-          } else if (userData.userType === "VIEWER") {
-            router.push("/user/dashboard");
-          } else {
-            router.push("/business/dashboard");
-          }
-        } else {
-          setGeneralError(data?.googleAuth?.message || "Google sign-up failed");
         }
-      } catch (err: any) {
-        setGeneralError(err.message || "Google sign-up failed");
+
+        const redirect = searchParams.get("redirect");
+        if (redirect) {
+          window.location.href = redirect;
+        } else if (userData.userType === "ADMIN") {
+          router.push("/admin/dashboard");
+        } else if (userData.userType === "VIEWER") {
+          router.push("/user/dashboard");
+        } else {
+          router.push("/business/dashboard");
+        }
+      } else {
+        setGeneralError(data?.googleAuth?.message || "Google sign-up failed");
       }
-    },
-    onError: () => {
-      setGeneralError("Google sign-up was cancelled or failed");
-    },
-  });
+    } catch (err: any) {
+      setGeneralError(err.message || "Google sign-up failed");
+    }
+  };
 
   const isValidEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -676,15 +670,13 @@ const SignupComp = () => {
           >
             {loading ? "Signing up..." : "Create Account and Claim Reward"}
           </Button>
-          <Button
-            variant="outline"
-            className="flex w-full items-center justify-center gap-2"
-            type="button"
-            onClick={() => googleLogin()}
-            disabled={loadingGoogle}
-          >
-            <FcGoogle /> {loadingGoogle ? "Signing up..." : "Sign up with Google"}
-          </Button>
+          <GoogleLoginButton
+            onSuccess={handleGoogleSuccess}
+            onError={() => setGeneralError("Google sign-up was cancelled or failed")}
+            loading={loadingGoogle}
+            label="Sign up with Google"
+            loadingLabel="Signing up..."
+          />
         </form>
 
         {/* Footer Links */}
