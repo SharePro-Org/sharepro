@@ -28,7 +28,6 @@ const userCampaigns = () => {
     }
   }, [hasRewardInInvited, activeTab]);
 
-
   return (
     <DashboardLayout user={true}>
       <section className="mt-4">
