@@ -373,7 +373,7 @@ const InvitedCampaign = ({
           {joining?.campaignType === "COMBO" && (
             <div>
               <h3 className="text-lg font-medium text-center mb-3">
-                {joining.campaignName}
+                {joining.name}
               </h3>
               <div className="grid md:grid-cols-4 grid-cols-1">
                 <div className="flex gap-2">
@@ -382,7 +382,7 @@ const InvitedCampaign = ({
                   </button>
                   <div>
                     <p className="text-sm"> Campaign Name</p>
-                    <p> {joining.campaignName}</p>
+                    <p> {joining.name}</p>
                   </div>
                 </div>
                 <div>
@@ -408,7 +408,7 @@ const InvitedCampaign = ({
           {joining?.campaignType === "REFERRAL" && (
             <div>
               <h3 className="text-lg font-medium text-center mb-3">
-                {joining.campaignName}
+                {joining.name}
               </h3>
               <div className="grid md:grid-cols-4 grid-cols-1">
                 <div className="flex gap-2">
@@ -417,7 +417,7 @@ const InvitedCampaign = ({
                   </button>
                   <div>
                     <p className="text-sm"> Campaign Name</p>
-                    <p> {joining.campaignName}</p>
+                    <p> {joining.name}</p>
                   </div>
                 </div>
                 <div>

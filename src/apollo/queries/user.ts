@@ -204,6 +204,8 @@ export const USER_INVITED_CAMPAIGNS = gql`
       endDate
       referralLink
       websiteLink
+      participantsCount
+      maxParticipants
       business {
         id
         name

@@ -18,7 +18,8 @@ import { FcGoogle } from "react-icons/fc";
 import { cn } from "@/lib/utils";
 import { useMutation } from "@apollo/client/react";
 
-import { LOGIN, LOGIN_PHONE } from "@/apollo/mutations/auth";
+import { LOGIN, LOGIN_PHONE, GOOGLE_AUTH } from "@/apollo/mutations/auth";
+import { useGoogleLogin } from "@react-oauth/google";
 import { useSetAtom } from "jotai";
 import { userAtom } from "@/store/User";
 
@@ -59,7 +60,81 @@ export default function SignInContent() {
   const [generalError, setGeneralError] = useState("");
   const [login, { loading: loadingEmail }] = useMutation(LOGIN);
   const [loginPhone, { loading: loadingPhone }] = useMutation(LOGIN_PHONE);
+  const [googleAuthMutation, { loading: loadingGoogle }] = useMutation(GOOGLE_AUTH);
   const setUser = useSetAtom(userAtom);
+
+  type GoogleAuthResponse = {
+    googleAuth?: {
+      success: boolean;
+      token: string;
+      refreshToken: string;
+      message?: string;
+      isNewUser?: boolean;
+      user?: {
+        id: string;
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+        phone?: string;
+        businessName?: string;
+        business?: { id: string; onBoardingComplete?: boolean };
+        profile?: { userType?: string };
+      };
+    };
+  };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setGeneralError("");
+      try {
+        const { data } = await googleAuthMutation({
+          variables: {
+            accessToken: tokenResponse.access_token,
+            isSignup: false,
+            referralCode: referralCode,
+            businessId: businessId,
+            userRefCode: searchParams.get("userRef"),
+          },
+        }) as { data: GoogleAuthResponse };
+
+        if (data?.googleAuth?.success) {
+          const user = data.googleAuth.user;
+          const userData = {
+            accessToken: data.googleAuth.token,
+            refreshToken: data.googleAuth.refreshToken,
+            userId: user?.id,
+            email: user?.email,
+            phone: user?.phone,
+            businessName: user?.businessName,
+            firstName: user?.firstName,
+            lastName: user?.lastName,
+            businessId: user?.business?.id,
+            userType: user?.profile?.userType,
+          };
+          localStorage.setItem("userData", JSON.stringify(userData));
+          setUser(userData);
+
+          const redirect = searchParams.get("redirect");
+          if (redirect) {
+            window.location.href = redirect;
+          } else if (userData.userType === "ADMIN") {
+            router.push("/admin/dashboard");
+          } else if (userData.userType === "VIEWER") {
+            router.push("/user/dashboard");
+          } else {
+            router.push("/business/dashboard");
+          }
+        } else {
+          setGeneralError(data?.googleAuth?.message || "Google sign-in failed");
+        }
+      } catch (err: any) {
+        setGeneralError(err.message || "Google sign-in failed");
+      }
+    },
+    onError: () => {
+      setGeneralError("Google sign-in was cancelled or failed");
+    },
+  });
 
   const isValidEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -155,7 +230,8 @@ export default function SignInContent() {
             email,
             password,
             referralCode,
-            businessId
+            businessId,
+            userRefCode: searchParams.get("userRef"),
           }
         }) as { data: LoginResponse };
         if (data?.login?.success) {
@@ -177,15 +253,16 @@ export default function SignInContent() {
 
           localStorage.setItem("userData", JSON.stringify(userData));
           setUser(userData);
-          // router.push("/user/dashboard");
-          if (userData.userType === "ADMIN") {
+
+          const redirect = searchParams.get("redirect");
+          if (redirect) {
+            window.location.href = redirect;
+          } else if (userData.userType === "ADMIN") {
             router.push("/admin/dashboard");
           } else if (userData.userType === "VIEWER") {
             router.push("/user/dashboard");
           } else {
-            router.push(
-              "/business/dashboard"
-            );
+            router.push("/business/dashboard");
           }
         } else {
           setGeneralError(data?.login?.message || "Invalid credentials");
@@ -196,7 +273,8 @@ export default function SignInContent() {
             phone,
             password,
             referralCode,
-            businessId
+            businessId,
+            userRefCode: searchParams.get("userRef"),
           }
         }) as { data: LoginPhoneResponse };
         if (data?.loginPhone?.success) {
@@ -217,14 +295,15 @@ export default function SignInContent() {
           localStorage.setItem("userData", JSON.stringify(userData));
           setUser(userData);
 
-          if (userData.userType === "ADMIN") {
+          const redirect = searchParams.get("redirect");
+          if (redirect) {
+            window.location.href = redirect;
+          } else if (userData.userType === "ADMIN") {
             router.push("/admin/dashboard");
           } else if (userData.userType === "VIEWER") {
             router.push("/user/dashboard");
           } else {
-            router.push(
-              "/business/dashboard"
-            );
+            router.push("/business/dashboard");
           }
         } else {
           setGeneralError(data?.loginPhone?.message || "Invalid credentials");
@@ -389,7 +468,7 @@ export default function SignInContent() {
           <Button
             className="w-full"
             type="submit"
-            disabled={!canContinue || loadingEmail || loadingPhone}
+            disabled={!canContinue || loadingEmail || loadingPhone || loadingGoogle}
           >
             {loadingEmail || loadingPhone ? "Signing in..." : "Continue"}
           </Button>
@@ -397,8 +476,10 @@ export default function SignInContent() {
             variant="outline"
             className="flex w-full items-center justify-center gap-2"
             type="button"
+            onClick={() => googleLogin()}
+            disabled={loadingGoogle}
           >
-            <FcGoogle /> Sign in with Google
+            <FcGoogle /> {loadingGoogle ? "Signing in..." : "Sign in with Google"}
           </Button>
         </form>
 

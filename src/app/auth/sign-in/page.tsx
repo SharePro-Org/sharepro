@@ -16,10 +16,62 @@ import {
 import { FcGoogle } from "react-icons/fc";
 import { cn } from "@/lib/utils";
 import { useMutation } from "@apollo/client/react";
+import { useGoogleLogin } from "@react-oauth/google";
 
-import { LOGIN, LOGIN_PHONE } from "@/apollo/mutations/auth";
+import { LOGIN, LOGIN_PHONE, GOOGLE_AUTH } from "@/apollo/mutations/auth";
 import { useSetAtom } from "jotai";
 import { userAtom } from "@/store/User";
+
+type AuthUser = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  businessName: string;
+  profile: { userType: string };
+  business: { id: string; onBoardingComplete: boolean };
+};
+
+type LoginResponse = {
+  login?: {
+    success: boolean;
+    token: string;
+    refreshToken: string;
+    user: AuthUser;
+    message: string;
+  };
+};
+
+type LoginPhoneResponse = {
+  loginPhone?: {
+    success: boolean;
+    token: string;
+    refreshToken: string;
+    user: AuthUser;
+    message: string;
+  };
+};
+
+type GoogleAuthResponse = {
+  googleAuth?: {
+    success: boolean;
+    token: string;
+    refreshToken: string;
+    isNewUser: boolean;
+    user: {
+      id: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      phone: string;
+      businessName: string;
+      profile: { userType: string };
+      business: { id: string; onBoardingComplete: boolean };
+    };
+    message: string;
+  };
+};
 
 export default function SignIn() {
   useEffect(() => {
@@ -43,7 +95,60 @@ export default function SignIn() {
   const [generalError, setGeneralError] = useState("");
   const [login, { loading: loadingEmail }] = useMutation(LOGIN);
   const [loginPhone, { loading: loadingPhone }] = useMutation(LOGIN_PHONE);
+  const [googleAuth, { loading: loadingGoogle }] = useMutation(GOOGLE_AUTH);
   const setUser = useSetAtom(userAtom);
+
+  const handleAuthSuccess = (user: any, token: string, refreshToken: string) => {
+    const onBoardingComplete = user?.business?.onBoardingComplete;
+    const userData = {
+      accessToken: token,
+      refreshToken,
+      userId: user?.id,
+      email: user?.email,
+      businessName: user?.businessName,
+      businessId: user?.business?.id,
+      phone: user?.phone,
+      userType: user?.profile?.userType,
+      onBoardingComplete,
+      firstName: user?.firstName,
+      lastName: user?.lastName,
+    };
+    localStorage.setItem("userData", JSON.stringify(userData));
+    setUser(userData);
+
+    if (userData.userType === "ADMIN") {
+      router.push("/admin/dashboard");
+    } else if (userData.userType === "VIEWER") {
+      router.push("/user/dashboard");
+    } else {
+      router.push(onBoardingComplete ? "/business/dashboard" : "/onboarding");
+    }
+  };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setGeneralError("");
+      try {
+        const { data } = await googleAuth({
+          variables: { accessToken: tokenResponse.access_token, isSignup: false },
+        }) as { data: GoogleAuthResponse };
+        if (data?.googleAuth?.success) {
+          handleAuthSuccess(
+            data.googleAuth.user,
+            data.googleAuth.token,
+            data.googleAuth.refreshToken
+          );
+        } else {
+          setGeneralError(data?.googleAuth?.message || "Google sign-in failed");
+        }
+      } catch (err: any) {
+        setGeneralError(err.message || "Google sign-in failed");
+      }
+    },
+    onError: () => {
+      setGeneralError("Google sign-in was cancelled");
+    },
+  });
 
   const isValidEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -96,119 +201,18 @@ export default function SignIn() {
     if (hasError || !canContinue) return;
     try {
       if (tab === "email") {
-        type LoginResponse = {
-          login?: {
-            success: boolean;
-            token: string;
-            refreshToken: string;
-            user: {
-              id?: string;
-              email?: string;
-              businessName?: string;
-              business: {
-                id: string;
-                onBoardingComplete?: boolean;
-              };
-              firstName?: string;
-              lastName?: string;
-              phone?: string;
-              profile: {
-                userType: string;
-              };
-            };
-            message?: string;
-          };
-        };
-        const { data } = await login({ variables: { email, password } });
-        const loginData = data as LoginResponse;
-        if (loginData?.login?.success) {
-          const user = loginData.login.user;
-          const onBoardingComplete = user?.business?.onBoardingComplete;
-          const userData = {
-            accessToken: loginData.login.token,
-            refreshToken: loginData.login.refreshToken,
-            userId: user?.id,
-            email: user?.email || email,
-            businessName: user?.businessName,
-            businessId: user?.business?.id,
-            phone: user?.phone || phone,
-            userType: user?.profile.userType,
-            onBoardingComplete,
-            firstName: user?.firstName,
-            lastName: user?.lastName,
-          };
-
-          localStorage.setItem("userData", JSON.stringify(userData));
-          setUser(userData);
-          if (userData.userType === "ADMIN") {
-            router.push("/admin/dashboard");
-          } else if (userData.userType === "VIEWER") {
-            router.push("/user/dashboard");
-          } else {
-            router.push(
-              onBoardingComplete ? "/business/dashboard" : "/onboarding"
-            );
-          }
+        const { data } = await login({ variables: { email, password } }) as { data: LoginResponse };
+        if (data?.login?.success) {
+          handleAuthSuccess(data.login.user, data.login.token, data.login.refreshToken);
         } else {
-          setGeneralError(loginData?.login?.message || "Invalid credentials");
+          setGeneralError(data?.login?.message || "Invalid credentials");
         }
       } else {
-        type LoginPhoneResponse = {
-          loginPhone?: {
-            success: boolean;
-            token: string;
-            refreshToken: string;
-            user: {
-              id: string;
-              email?: string;
-              businessName?: string;
-              business: {
-                id: string;
-                onBoardingComplete?: boolean;
-              };
-              firstName?: string;
-              lastName?: string;
-              phone?: string;
-              profile: {
-                userType: string;
-              };
-            };
-            message?: string;
-          };
-        };
-        const { data } = await loginPhone({ variables: { phone, password } });
-        const loginPhoneData = data as LoginPhoneResponse;
-        if (loginPhoneData?.loginPhone?.success) {
-          const user = loginPhoneData.loginPhone.user;
-          const onBoardingComplete = user?.business?.onBoardingComplete;
-
-          const userData = {
-            accessToken: loginPhoneData.loginPhone.token,
-            refreshToken: loginPhoneData.loginPhone.refreshToken,
-            userId: user?.id,
-            email: user?.email,
-            businessName: user?.businessName,
-            businessId: user.business.id,
-            phone: user?.phone || phone,
-            userType: user?.profile.userType,
-            onBoardingComplete,
-            firstName: user?.firstName,
-            lastName: user?.lastName,
-          };
-          localStorage.setItem("userData", JSON.stringify(userData));
-          setUser(userData);
-
-          if (userData.userType === "ADMIN") {
-            router.push("/admin/dashboard");
-          } else if (userData.userType === "VIEWER") {
-            router.push("/user/dashboard");
-          } else {
-            router.push(
-              onBoardingComplete ? "/business/dashboard" : "/onboarding"
-            );
-          }
+        const { data } = await loginPhone({ variables: { phone, password } }) as { data: LoginPhoneResponse };
+        if (data?.loginPhone?.success) {
+          handleAuthSuccess(data.loginPhone.user, data.loginPhone.token, data.loginPhone.refreshToken);
         } else {
-          setGeneralError(loginPhoneData?.loginPhone?.message || "Invalid credentials");
+          setGeneralError(data?.loginPhone?.message || "Invalid credentials");
         }
       }
     } catch (err: any) {
@@ -368,8 +372,10 @@ export default function SignIn() {
             variant="outline"
             className="flex w-full items-center justify-center gap-2"
             type="button"
+            onClick={() => googleLogin()}
+            disabled={loadingGoogle}
           >
-            <FcGoogle /> Sign in with Google
+            <FcGoogle /> {loadingGoogle ? "Signing in..." : "Sign in with Google"}
           </Button>
         </form>
 

@@ -17,18 +17,90 @@ import {
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
 import { useMutation } from "@apollo/client/react";
+import { useGoogleLogin } from "@react-oauth/google";
+import { useSetAtom } from "jotai";
+import { userAtom } from "@/store/User";
 
-import { REGISTER } from "@/apollo/mutations/auth";
+import { REGISTER, GOOGLE_AUTH } from "@/apollo/mutations/auth";
 
 const isValidEmail = (email: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const isValidPhone = (phone: string) => /^[0-9]{8,15}$/.test(phone);
 const isValidPassword = (password: string) => password.length >= 6;
 
+type GoogleAuthResponse = {
+  googleAuth?: {
+    success: boolean;
+    token: string;
+    refreshToken: string;
+    isNewUser: boolean;
+    user: {
+      id: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      phone: string;
+      businessName: string;
+      profile: { userType: string };
+      business: { id: string; onBoardingComplete: boolean };
+    };
+    message: string;
+  };
+};
+
 export default function BusinessSignUp() {
   const router = useRouter();
   const [register, { loading }] = useMutation(REGISTER);
+  const [googleAuth, { loading: loadingGoogle }] = useMutation(GOOGLE_AUTH);
+  const setUser = useSetAtom(userAtom);
   const [generalError, setGeneralError] = useState("");
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setGeneralError("");
+      try {
+        const { data } = await googleAuth({
+          variables: { accessToken: tokenResponse.access_token, isSignup: true },
+        }) as { data: GoogleAuthResponse };
+        if (data?.googleAuth?.success) {
+          const user = data.googleAuth.user;
+          const onBoardingComplete = user?.business?.onBoardingComplete;
+          const userData = {
+            accessToken: data.googleAuth.token,
+            refreshToken: data.googleAuth.refreshToken,
+            userId: user?.id,
+            email: user?.email,
+            businessName: user?.businessName,
+            businessId: user?.business?.id,
+            phone: user?.phone,
+            userType: user?.profile?.userType,
+            onBoardingComplete,
+            firstName: user?.firstName,
+            lastName: user?.lastName,
+          };
+          localStorage.setItem("userData", JSON.stringify(userData));
+          setUser(userData);
+
+          if (data.googleAuth.isNewUser) {
+            router.push("/onboarding");
+          } else if (userData.userType === "ADMIN") {
+            router.push("/admin/dashboard");
+          } else if (userData.userType === "VIEWER") {
+            router.push("/user/dashboard");
+          } else {
+            router.push(onBoardingComplete ? "/business/dashboard" : "/onboarding");
+          }
+        } else {
+          setGeneralError(data?.googleAuth?.message || "Google sign-up failed");
+        }
+      } catch (err: any) {
+        setGeneralError(err.message || "Google sign-up failed");
+      }
+    },
+    onError: () => {
+      setGeneralError("Google sign-up was cancelled");
+    },
+  });
 
  
 
@@ -290,8 +362,10 @@ export default function BusinessSignUp() {
             variant="outline"
             className="flex w-full items-center justify-center gap-2"
             type="button"
+            onClick={() => googleLogin()}
+            disabled={loadingGoogle}
           >
-            <FcGoogle /> Sign in with Google
+            <FcGoogle /> {loadingGoogle ? "Signing up..." : "Sign up with Google"}
           </Button>
           <div className="w-fit flex text-body md:text-sm pt-4 text-xs py-2 mt-2">
             Already have an account?

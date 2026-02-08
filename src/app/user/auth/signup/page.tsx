@@ -15,7 +15,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { useMutation, useQuery } from "@apollo/client/react";
 
-import { REGISTER_USER, TRACK_CONVERSION } from "@/apollo/mutations/auth";
+import { REGISTER_USER, TRACK_CONVERSION, GOOGLE_AUTH } from "@/apollo/mutations/auth";
+import { useGoogleLogin } from "@react-oauth/google";
+import { useSetAtom } from "jotai";
+import { userAtom } from "@/store/User";
 
 import TopRightLeftSection from "../../../../../public/assets/auth/top-right-left-section.svg";
 import BottomLeftLeftSection from "../../../../../public/assets/auth/bottom-left-left-section.svg";
@@ -26,6 +29,8 @@ const SignupComp = () => {
   const searchParams = useSearchParams();
   const [registerUser, { loading }] = useMutation(REGISTER_USER);
   const [trackConversion] = useMutation(TRACK_CONVERSION);
+  const [googleAuthMutation, { loading: loadingGoogle }] = useMutation(GOOGLE_AUTH);
+  const setUser = useSetAtom(userAtom);
 
 
   // Form state
@@ -129,6 +134,101 @@ const SignupComp = () => {
     password: false,
   });
   const [generalError, setGeneralError] = useState("");
+
+  type GoogleAuthResponse = {
+    googleAuth?: {
+      success: boolean;
+      token: string;
+      refreshToken: string;
+      message?: string;
+      isNewUser?: boolean;
+      user?: {
+        id: string;
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+        phone?: string;
+        businessName?: string;
+        business?: { id: string; onBoardingComplete?: boolean };
+        profile?: { userType?: string };
+      };
+    };
+  };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setGeneralError("");
+      try {
+        const { data } = await googleAuthMutation({
+          variables: {
+            accessToken: tokenResponse.access_token,
+            isSignup: true,
+            referralCode: referralData.referralCode,
+            businessId: referralData.businessId,
+            userRefCode: searchParams.get("userRef"),
+          },
+        }) as { data: GoogleAuthResponse };
+
+        if (data?.googleAuth?.success) {
+          const user = data.googleAuth.user;
+          const userData = {
+            accessToken: data.googleAuth.token,
+            refreshToken: data.googleAuth.refreshToken,
+            userId: user?.id,
+            email: user?.email,
+            phone: user?.phone,
+            businessName: user?.businessName,
+            firstName: user?.firstName,
+            lastName: user?.lastName,
+            businessId: user?.business?.id,
+            userType: user?.profile?.userType,
+          };
+          localStorage.setItem("userData", JSON.stringify(userData));
+          setUser(userData);
+
+          // Track conversion if referral data exists
+          if (referralData.campaignId && referralData.referralCode) {
+            try {
+              await trackConversion({
+                variables: {
+                  campaignId: referralData.campaignId,
+                  referralCode: referralData.referralCode,
+                  properties: JSON.stringify({
+                    eventType: "registration_conversion",
+                    conversionType: "google_oauth_registration",
+                    userEmail: user?.email,
+                    userId: user?.id,
+                    timestamp: new Date().toISOString(),
+                    source: referralData.source,
+                  }),
+                },
+              });
+            } catch (conversionError) {
+              console.error("Conversion tracking failed:", conversionError);
+            }
+          }
+
+          const redirect = searchParams.get("redirect");
+          if (redirect) {
+            window.location.href = redirect;
+          } else if (userData.userType === "ADMIN") {
+            router.push("/admin/dashboard");
+          } else if (userData.userType === "VIEWER") {
+            router.push("/user/dashboard");
+          } else {
+            router.push("/business/dashboard");
+          }
+        } else {
+          setGeneralError(data?.googleAuth?.message || "Google sign-up failed");
+        }
+      } catch (err: any) {
+        setGeneralError(err.message || "Google sign-up failed");
+      }
+    },
+    onError: () => {
+      setGeneralError("Google sign-up was cancelled or failed");
+    },
+  });
 
   const isValidEmail = (email: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -242,6 +342,7 @@ const SignupComp = () => {
             phoneNumber: phone,
             password,
             referralCode: referralData.referralCode,
+            userReferralCode: searchParams.get("userRef"),
           },
         },
       }) as {
@@ -317,8 +418,10 @@ const SignupComp = () => {
           // alert("Registration successful!");
         }
 
-        // Redirect to login or dashboard
-        router.push(`/user/auth/verify-email?email=${encodeURIComponent(email)}`);
+        // Redirect to verify email page (pass redirect param if present)
+        const redirect = searchParams.get("redirect");
+        const verifyUrl = `/user/auth/verify-email?email=${encodeURIComponent(email)}${redirect ? `&redirect=${encodeURIComponent(redirect)}` : ""}`;
+        router.push(verifyUrl);
         // router.push("/user/auth/login");
       } else {
         // Track registration failure analytics
@@ -569,7 +672,7 @@ const SignupComp = () => {
           <Button
             className="w-full"
             type="submit"
-            disabled={!isFormValid || loading}
+            disabled={!isFormValid || loading || loadingGoogle}
           >
             {loading ? "Signing up..." : "Create Account and Claim Reward"}
           </Button>
@@ -577,8 +680,10 @@ const SignupComp = () => {
             variant="outline"
             className="flex w-full items-center justify-center gap-2"
             type="button"
+            onClick={() => googleLogin()}
+            disabled={loadingGoogle}
           >
-            <FcGoogle /> Sign up with Google
+            <FcGoogle /> {loadingGoogle ? "Signing up..." : "Sign up with Google"}
           </Button>
         </form>
 

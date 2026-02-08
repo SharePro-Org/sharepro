@@ -1,7 +1,7 @@
 "use client";
 
-import React, { Suspense, useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import React, { Suspense, useEffect, useRef } from "react";
+import { useParams } from "next/navigation";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { GET_CAMPAIGN_BY_REFERRAL_CODE } from "@/apollo/queries/campaigns";
 import { TRACK_REFERRAL_CLICK } from "@/apollo/mutations/campaigns";
@@ -38,7 +38,6 @@ interface TrackReferralClickData {
 
 const ReferralPageComp = () => {
   const params = useParams();
-  const router = useRouter();
 
   // Handle both 2 and 3 segment URLs
   const referralPathArray = Array.isArray(params.referralPath)
@@ -48,11 +47,8 @@ const ReferralPageComp = () => {
   const businessId = params.businessId as string;
   const campaignReferralCode = referralPathArray[0] as string;
   const userReferralCode = referralPathArray[1] as string | undefined;
-
-  // Determine if this is a 2-segment (microsite) or 3-segment (redirect) URL
-  const shouldRedirect = referralPathArray.length >= 2 && userReferralCode;
-
-  const [redirecting, setRedirecting] = useState(shouldRedirect);
+  const hasUserReferralCode = !!userReferralCode;
+  const hasTrackedClick = useRef(false);
 
   // Fetch campaign details
   const { data, loading, error } = useQuery<CampaignByReferralCodeData>(
@@ -66,136 +62,64 @@ const ReferralPageComp = () => {
   // Track referral click mutation
   const [trackReferralClick] = useMutation<TrackReferralClickData>(TRACK_REFERRAL_CLICK);
 
-  // Handle redirect for 3-segment URLs
+  // Track click for 3-segment URLs (user-specific referral links)
   useEffect(() => {
-    if (shouldRedirect && !loading && data?.campaignByReferralCode) {
-      const campaign = data.campaignByReferralCode;
-
-      if (campaign.websiteLink) {
-        // Store referral info in sessionStorage
-        sessionStorage.setItem('referralCode', userReferralCode);
-        sessionStorage.setItem('campaignId', campaign.id);
-        sessionStorage.setItem('businessId', campaign.business.id);
-
-        // Track the click with user's referral code
-        trackReferralClick({
-          variables: {
-            referralCode: userReferralCode,
-            userAgent: navigator.userAgent,
-            referrerUrl: document.referrer || window.location.href,
-          },
-        }).catch((err) => {
-          console.error('Failed to track referral click:', err);
-        });
-
-        // Redirect to campaign website
-        setTimeout(() => {
-          window.location.href = campaign.websiteLink;
-        }, 300);
-      } else {
-        setRedirecting(false);
-      }
-    } else if (shouldRedirect && error) {
-      setRedirecting(false);
+    if (hasUserReferralCode && !loading && data?.campaignByReferralCode && !hasTrackedClick.current) {
+      hasTrackedClick.current = true;
+      trackReferralClick({
+        variables: {
+          referralCode: userReferralCode,
+          userAgent: navigator.userAgent,
+          referrerUrl: document.referrer || window.location.href,
+        },
+      }).catch(console.error);
     }
-  }, [shouldRedirect, data, loading, error, userReferralCode, trackReferralClick]);
+  }, [hasUserReferralCode, data, loading, userReferralCode, trackReferralClick]);
 
-  // Show loading state for redirect
-  if (shouldRedirect && (loading || (redirecting && data?.campaignByReferralCode?.websiteLink))) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
-          <h2 className="text-2xl font-semibold text-gray-700 mb-2">
-            Redirecting to Campaign...
-          </h2>
-          <p className="text-gray-500">Please wait while we redirect you to the business website</p>
+          <p className="text-gray-500">Loading campaign...</p>
         </div>
       </div>
     );
   }
 
-  // Show error for redirect URLs
-  if (shouldRedirect && (error || !data?.campaignByReferralCode)) {
+  if (error || !data?.campaignByReferralCode) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="text-center max-w-md">
-          <div className="mb-4">
-            <svg
-              className="mx-auto h-16 w-16 text-red-500"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-          </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Campaign Not Found</h2>
           <p className="text-gray-600 mb-4">
             The referral link you clicked is invalid or the campaign may have expired.
           </p>
-          <button
-            onClick={() => router.push("/")}
-            className="bg-primary text-white px-6 py-3 rounded-sm font-medium hover:bg-primary/90 transition-colors"
+          <a
+            href="/"
+            className="bg-primary text-white px-6 py-3 rounded-sm font-medium hover:bg-primary/90 transition-colors inline-block"
           >
             Go to Homepage
-          </button>
+          </a>
         </div>
       </div>
     );
   }
 
-  // Show error for no website link
-  if (shouldRedirect && data?.campaignByReferralCode && !data.campaignByReferralCode.websiteLink) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="text-center max-w-md">
-          <div className="mb-4">
-            <svg
-              className="mx-auto h-16 w-16 text-yellow-500"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">No Website Configured</h2>
-          <p className="text-gray-600 mb-2">
-            The campaign <strong>{data.campaignByReferralCode.name}</strong> doesn't have a website
-            link configured yet.
-          </p>
-          <p className="text-gray-500 text-sm mb-4">
-            Please contact the business owner to set up the campaign website.
-          </p>
-          <button
-            onClick={() => router.push("/")}
-            className="bg-primary text-white px-6 py-3 rounded-sm font-medium hover:bg-primary/90 transition-colors"
-          >
-            Go to Homepage
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // For 2-segment URLs, show the microsite landing page
+  // Always show microsite for both 2-segment and 3-segment URLs
   const referralCode = campaignReferralCode;
+  const websiteLink = data.campaignByReferralCode.websiteLink;
 
   const getSignupUrl = () => {
     const queryParams = new URLSearchParams();
     queryParams.append("ref", referralCode);
     queryParams.append("businessId", businessId);
+    if (hasUserReferralCode) {
+      queryParams.append("userRef", userReferralCode!);
+      if (websiteLink) {
+        queryParams.append("redirect", websiteLink);
+      }
+    }
     return `/user/auth/signup?${queryParams.toString()}`;
   };
 
@@ -203,6 +127,12 @@ const ReferralPageComp = () => {
     const queryParams = new URLSearchParams();
     queryParams.append("ref", referralCode);
     queryParams.append("businessId", businessId);
+    if (hasUserReferralCode) {
+      queryParams.append("userRef", userReferralCode!);
+      if (websiteLink) {
+        queryParams.append("redirect", websiteLink);
+      }
+    }
     return `/user/auth/login?${queryParams.toString()}`;
   };
 

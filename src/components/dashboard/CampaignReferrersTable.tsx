@@ -46,6 +46,11 @@ const CampaignReferrersTable: React.FC<CampaignReferrersTableProps> = ({ campaig
 
     referrals.forEach(referral => {
       const referrerId = referral.referrer.id;
+
+      // Skip "join" records (no referee) — these represent the user joining the campaign,
+      // not an actual referral. Only count records with a referee.
+      const isJoinRecord = !referral.referee;
+
       if (!referrerMap.has(referrerId)) {
         referrerMap.set(referrerId, {
           referrer: referral.referrer,
@@ -58,10 +63,12 @@ const CampaignReferrersTable: React.FC<CampaignReferrersTableProps> = ({ campaig
       }
 
       const stats = referrerMap.get(referrerId)!;
-      stats.totalReferrals += 1;
-      if (referral.status === 'converted') stats.conversions += 1;
-      stats.totalCommission += referral.commissionAmount || 0;
-      stats.referrals.push(referral);
+      if (!isJoinRecord) {
+        stats.totalReferrals += 1;
+        if (referral.status === 'converted') stats.conversions += 1;
+        stats.totalCommission += Number(referral.commissionAmount) || 0;
+        stats.referrals.push(referral);
+      }
 
       // Update first referral date if earlier
       if (new Date(referral.createdAt) < new Date(stats.firstReferralDate)) {

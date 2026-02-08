@@ -11,6 +11,8 @@ import React, {
   Suspense,
 } from "react";
 import { useRouter } from "next/navigation";
+import { useSetAtom } from "jotai";
+import { userAtom } from "@/store/User";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -187,6 +189,7 @@ const plans: Record<"monthly" | "yearly", Plan[]> = {
 
 const Onboarding: React.FC = () => {
   const router = useRouter();
+  const setUser = useSetAtom(userAtom);
   const [step, setStep] = useState(0);
 
   // State for all steps
@@ -207,6 +210,7 @@ const Onboarding: React.FC = () => {
     onboardingBusiness?: {
       success: boolean;
       message?: string;
+      business?: { id: string };
     };
   }
 
@@ -218,8 +222,7 @@ const Onboarding: React.FC = () => {
       const selectedCountry = Country.getAllCountries().find(c => c.isoCode === country);
       const fullCountryName = selectedCountry ? selectedCountry.name : country;
 
-      const input = {
-        businessId,
+      const input: Record<string, any> = {
         businessName,
         businessCategory: category,
         businessType,
@@ -231,8 +234,21 @@ const Onboarding: React.FC = () => {
         selectedPlan: 'FREE',
         website,
       };
+      // Only include businessId if it exists (Google OAuth users may not have one yet)
+      if (businessId) {
+        input.businessId = businessId;
+      }
       const { data } = await onboardingBusiness({ variables: { input } });
       if (data?.onboardingBusiness?.success) {
+        // Update stored user data with the new business ID
+        const newBusinessId = data.onboardingBusiness.business?.id;
+        if (newBusinessId) {
+          const stored = JSON.parse(localStorage.getItem("userData") || "{}");
+          stored.businessId = newBusinessId;
+          stored.onBoardingComplete = true;
+          localStorage.setItem("userData", JSON.stringify(stored));
+          setUser(stored);
+        }
         setShowModal(true);
       } else {
         console.error(
@@ -249,11 +265,18 @@ const Onboarding: React.FC = () => {
 
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem("userData") || "{}");
+
+    // If user has already completed onboarding, redirect to dashboard
+    if (userData.onBoardingComplete) {
+      router.push("/business/dashboard");
+      return;
+    }
+
     setBusinessName(userData.businessName || "");
     setEmail(userData.email || "");
     setPhone(userData.phone || "");
     setBusinessId(userData.businessId || "");
-  }, []);
+  }, [router]);
 
   const steps = [
     <BusinessInfoStep
@@ -388,7 +411,6 @@ const BusinessInfoStep: React.FC<BusinessInfoStepProps> = ({
               value={businessName}
               onChange={(e) => setBusinessName(e.target.value)}
               className="w-full"
-              disabled
             />
           </div>
           <div>
@@ -513,7 +535,6 @@ const ContactLocationStep: React.FC<ContactLocationStepProps> = ({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               className="w-full"
-              disabled
             />
           </div>
           <div>

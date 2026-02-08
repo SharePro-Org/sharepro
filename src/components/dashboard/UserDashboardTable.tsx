@@ -388,7 +388,10 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
   const handleDropdownAction = (action: string, campaign: Campaign) => {
     if (action === "copy") {
       if (campaign.campaignReferralLink) {
-        navigator.clipboard.writeText(campaign.campaignReferralLink);
+        const userRefLink = campaign.referralCode
+          ? `${campaign.campaignReferralLink}/${campaign.referralCode}`
+          : campaign.campaignReferralLink;
+        navigator.clipboard.writeText(userRefLink);
         messageApi.open({
           type: 'success',
           content: 'Referral link copied to clipboard!',

@@ -33,8 +33,8 @@ export const TRACK_CONVERSION = gql`
 `;
 
 export const LOGIN = gql`
-  mutation Login($email: String!, $password: String!, $referralCode: String, $businessId: String) {
-    login(email: $email, password: $password, referralCode: $referralCode, businessId: $businessId) {
+  mutation Login($email: String!, $password: String!, $referralCode: String, $businessId: String, $userRefCode: String) {
+    login(email: $email, password: $password, referralCode: $referralCode, businessId: $businessId, userRefCode: $userRefCode) {
       message
       token
       refreshToken
@@ -59,8 +59,8 @@ export const LOGIN = gql`
 `;
 
 export const LOGIN_PHONE = gql`
-  mutation LoginPhone($phone: String!, $password: String!, $referralCode: String, $businessId: String) {
-    loginPhone(phone: $phone, password: $password, referralCode: $referralCode, businessId: $businessId) {
+  mutation LoginPhone($phone: String!, $password: String!, $referralCode: String, $businessId: String, $userRefCode: String) {
+    loginPhone(phone: $phone, password: $password, referralCode: $referralCode, businessId: $businessId, userRefCode: $userRefCode) {
       success
       token
       refreshToken
@@ -128,12 +128,42 @@ export const RESET_PASSWORD = gql`
   }
 `;
 
+export const GOOGLE_AUTH = gql`
+  mutation GoogleAuth($accessToken: String!, $isSignup: Boolean, $referralCode: String, $businessId: String, $userRefCode: String) {
+    googleAuth(accessToken: $accessToken, isSignup: $isSignup, referralCode: $referralCode, businessId: $businessId, userRefCode: $userRefCode) {
+      success
+      message
+      token
+      refreshToken
+      isNewUser
+      user {
+        id
+        firstName
+        lastName
+        email
+        phone
+        businessName
+        profile {
+          userType
+        }
+        business {
+          id
+          onBoardingComplete
+        }
+      }
+    }
+  }
+`;
+
 export const ONBOARDING_BUSINESS = gql`
   mutation OnboardingBusiness($input: OnboardingInput!) {
     onboardingBusiness(input: $input) {
       message
       success
       errors
+      business {
+        id
+      }
     }
   }
 `;
