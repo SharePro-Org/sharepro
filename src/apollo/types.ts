@@ -33,6 +33,7 @@ export interface Campaign {
 
 export interface Reward {
   amount: number;
+  points: number;
   campaignName: string;
   createdAt: string;
   currency: string;

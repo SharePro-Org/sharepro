@@ -161,7 +161,14 @@ const PayoutDetails = () => {
                                 <p className="font-medium text-gray-800">{data?.reward?.rewardType}</p>
 
                                 <p className="text-gray-500">Amount</p>
-                                <p className="font-medium text-gray-800">{data?.reward?.amount}</p>
+                                <p className="font-medium text-gray-800">
+                                    {data?.reward?.currency} {Number(data?.reward?.amount).toFixed(2)}
+                                    {data?.reward?.points > 0 && (
+                                        <span className="text-gray-500 ml-2 text-xs">
+                                            ({data?.reward?.points} pts)
+                                        </span>
+                                    )}
+                                </p>
 
                                 {/* <p className="text-gray-500">Reward</p>
                                 <p className="font-medium text-gray-800">Cashback</p> */}
@@ -335,7 +342,7 @@ const PayoutDetails = () => {
                                 <p className="text-gray-500">Customer</p>
                                 <p className="font-medium text-gray-800">{data?.reward?.user?.firstName} {data?.reward?.user?.lastName}</p>
                                 <p className="text-gray-500">Amount</p>
-                                <p className="font-medium text-gray-800">{data?.reward?.amount}</p>
+                                <p className="font-medium text-gray-800">{data?.reward?.currency} {Number(data?.reward?.amount).toFixed(2)}</p>
                                 <p className="text-gray-500">Reward Type</p>
                                 <p className="font-medium text-gray-800 capitalize">{data?.reward?.deliveryType || data?.reward?.rewardType}</p>
                                 <p className="text-gray-500">Campaign</p>
@@ -372,7 +379,7 @@ const PayoutDetails = () => {
                                 <p className="text-gray-500">Customer</p>
                                 <p className="font-medium text-gray-800">{data?.reward?.user?.firstName} {data?.reward?.user?.lastName}</p>
                                 <p className="text-gray-500">Amount</p>
-                                <p className="font-medium text-gray-800">{data?.reward?.amount}</p>
+                                <p className="font-medium text-gray-800">{data?.reward?.currency} {Number(data?.reward?.amount).toFixed(2)}</p>
                                 <p className="text-gray-500">Phone Number</p>
                                 <p className="font-medium text-gray-800">{data?.reward?.user?.phone || 'N/A'}</p>
                             </div>
@@ -423,10 +430,10 @@ const PayoutDetails = () => {
                                 <div className="text-right">
                                     <p className="text-sm text-gray-500">Amount to Send</p>
                                     <div className="flex items-center justify-end gap-2">
-                                        <p className="font-medium">{data?.reward?.amount || 'N 20,250'}</p>
+                                        <p className="font-medium">{data?.reward?.currency} {Number(data?.reward?.amount).toFixed(2)}</p>
                                         <button className="p-2 bg-gray-100 rounded-md" onClick={() => { const v = data?.reward?.amount || ''; if (v && navigator.clipboard) navigator.clipboard.writeText(String(v)).then(() => message.success('Copied')); }}><CopyIcon size={10} /></button>
                                     </div>
-                                    <p className="text-sm text-green-600 mt-1">A processing fee of N250 is required</p>
+                                    <p className="text-sm text-green-600 mt-1">A processing fee of {data?.reward?.currency} 250 is required</p>
                                 </div>
                             </div>
                         </div>

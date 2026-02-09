@@ -26,7 +26,9 @@ const Payout = () => {
         user: { username: string; email: string };
         campaign: { name: string };
         amount: number;
+        points: number;
         currency: string;
+        rewardType: string;
         status: 'COMPLETED' | 'PENDING' | string;
         createdAt: string;
     };
@@ -105,7 +107,12 @@ const Payout = () => {
                                           </td>
                                           <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm text-gray-900">
-                                              {reward.amount} Points
+                                              {reward.currency} {Number(reward.amount).toFixed(2)}
+                                              {reward.points > 0 && (
+                                                <span className="text-gray-500 ml-2">
+                                                  ({reward.points} pts)
+                                                </span>
+                                              )}
                                             </div>
                                           </td>
                                           <td className="px-6 py-4 whitespace-nowrap">

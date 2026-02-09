@@ -106,6 +106,7 @@ export const USER_REWARD_HISTORY = gql`
   query UserRewardHistory($userId: UUID!) {
     userRewardHistory(userId: $userId) {
       amount
+      points
       campaignName
       createdAt
       currency

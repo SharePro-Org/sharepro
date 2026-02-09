@@ -591,8 +591,12 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                       <td className="px-4 py-3">{reward.campaignName}</td>
                       <td className="px-4 py-3">{reward.rewardType}</td>
                       <td className="px-4 py-3">
-                        {/* {formatCurrency(reward.amount, reward.currency)} */}
-                        {reward.amount} Points
+                        {reward.currency} {Number(reward.amount).toFixed(2)}
+                        {reward.points > 0 && (
+                          <span className="text-gray-500 ml-2 text-xs">
+                            ({reward.points} pts)
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <span
