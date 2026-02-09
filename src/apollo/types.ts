@@ -16,6 +16,19 @@ export interface Campaign {
   maxParticipants: number;
   description: string;
   id?: string;
+  campaign?: {
+    id: string;
+    name: string;
+    campaignType: string;
+    status: string;
+    endDate: string;
+    maxParticipants: number;
+    participantsCount: number;
+    referralLink: string;
+    websiteLink: string;
+    totalReferrals: number;
+    totalRewardsGiven: number;
+  };
 }
 
 export interface Reward {
@@ -76,6 +89,24 @@ export interface ReferralUser {
   phone?: string;
 }
 
+export interface ProofFile {
+  id: string;
+  file: string;
+  fileUrl?: string;
+  originalFilename: string;
+  fileType: string;
+  fileSize: number;
+  createdAt: string;
+}
+
+export interface ReferralReward {
+  id: string;
+  status: string;
+  proofSubmittedAt?: string;
+  proofDescription?: string;
+  proofFiles: ProofFile[];
+}
+
 export interface CampaignReferral {
   id: string;
   referralCode: string;
@@ -92,6 +123,7 @@ export interface CampaignReferral {
   refereeEmail?: string;
   refereeName?: string;
   refereePhone?: string;
+  rewards?: ReferralReward[];
 }
 
 export interface CampaignReferralsResponse {

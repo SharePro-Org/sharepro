@@ -6,7 +6,7 @@ import { MoreOutlined } from "@ant-design/icons";
 import { useQuery } from "@apollo/client/react";
 import { GET_CAMPAIGN_REFERRALS } from "@/apollo/queries/referrals";
 import { CampaignReferralsResponse, AggregatedReferrer, CampaignReferral, ReferralUser } from "@/apollo/types";
-import { SearchIcon, Download } from "lucide-react";
+import { SearchIcon, Download, FileCheck } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const { RangePicker } = DatePicker;
@@ -401,10 +401,15 @@ const CampaignReferrersTable: React.FC<CampaignReferrersTableProps> = ({ campaig
                 <div className="max-h-64 overflow-y-auto space-y-2">
                   {selectedReferrer.referrals.slice(0, 10).map(referral => (
                     <div key={referral.id} className="border p-3 rounded text-sm">
-                      <div className="flex justify-between">
-                        <span className="font-medium">
-                          {referral.referee ? getDisplayName(referral.referee) : referral.refereeName || referral.refereeEmail}
-                        </span>
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="font-medium">
+                            {referral.referee ? getDisplayName(referral.referee) : referral.refereeName || referral.refereeEmail}
+                          </div>
+                          <div className="text-gray-600 text-xs mt-1">
+                            {referral.referee?.email || referral.refereeEmail || 'No email'}
+                          </div>
+                        </div>
                         <span className={`px-2 py-1 rounded text-xs ${
                           referral.status === 'converted' ? 'bg-green-300 text-green-800' :
                           referral.status === 'registered' ? 'bg-yellow-300 text-yellow-800' :
@@ -414,10 +419,40 @@ const CampaignReferrersTable: React.FC<CampaignReferrersTableProps> = ({ campaig
                           {referral.status}
                         </span>
                       </div>
-                      <div className="text-gray-600 mt-1">
+                      <div className="text-gray-600 mt-2 text-xs">
                         {formatDate(referral.createdAt)}
                         {referral.commissionAmount && <span className="ml-2">• ${Number(referral.commissionAmount).toFixed(2)}</span>}
                       </div>
+                      {referral.rewards && referral.rewards.length > 0 && referral.rewards.some((r: any) => r.proofFiles && r.proofFiles.length > 0) && (
+                        <div className="mt-2 pt-2 border-t">
+                          <p className="text-xs text-gray-600 font-medium mb-1">Proof Submitted:</p>
+                          <div className="space-y-1">
+                            {referral.rewards
+                              .filter((r: any) => r.proofFiles && r.proofFiles.length > 0)
+                              .map((reward: any) => (
+                                <div key={reward.id} className="space-y-1">
+                                  {reward.proofFiles.map((proofFile: any) => (
+                                    <a
+                                      key={proofFile.id}
+                                      href={proofFile.fileUrl || proofFile.file}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-1 text-primary hover:underline text-xs"
+                                    >
+                                      <FileCheck size={12} />
+                                      <span>{proofFile.originalFilename}</span>
+                                    </a>
+                                  ))}
+                                  {reward.proofDescription && (
+                                    <p className="text-xs text-gray-500 italic pl-4">
+                                      {reward.proofDescription}
+                                    </p>
+                                  )}
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

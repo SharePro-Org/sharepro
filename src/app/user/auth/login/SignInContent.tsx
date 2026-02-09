@@ -114,7 +114,8 @@ export default function SignInContent() {
 
         const redirect = searchParams.get("redirect");
         if (redirect) {
-          window.location.href = redirect;
+          // Navigate to dashboard with redirect param to auto-open external site
+          router.push(`/user/dashboard?redirect=${encodeURIComponent(redirect)}`);
         } else if (userData.userType === "ADMIN") {
           router.push("/admin/dashboard");
         } else if (userData.userType === "VIEWER") {
@@ -479,7 +480,7 @@ export default function SignInContent() {
         <div className="flex w-full max-w-xl mx-auto justify-start text-sm mt-4">
           <span>Don&apos;t have an account?&nbsp;</span>
           <Link
-            href="/user/auth/signup"
+            href={`/user/auth/signup${searchParams.toString() ? `?${searchParams.toString()}` : ''}`}
             className="text-primary font-semibold hover:underline"
           >
             Sign up

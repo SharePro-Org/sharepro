@@ -30,6 +30,21 @@ export const GET_CAMPAIGN_REFERRALS = gql`
       refereeEmail
       refereeName
       refereePhone
+      rewards {
+        id
+        status
+        proofSubmittedAt
+        proofDescription
+        proofFiles {
+          id
+          file
+          fileUrl
+          originalFilename
+          fileType
+          fileSize
+          createdAt
+        }
+      }
     }
   }
 `;

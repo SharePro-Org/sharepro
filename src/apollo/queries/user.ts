@@ -219,11 +219,22 @@ export const USER_INVITED_CAMPAIGNS = gql`
         id
         referralRewardAmount
         referralRewardType
+        referreeRewardAction
+        referreeRewardValue
       }
       comboRewards {
         id
         loyaltyName
         referralName
+      }
+      userRewards {
+        id
+        amount
+        status
+        rewardType
+        description
+        createdAt
+        proofSubmittedAt
       }
     }
   }

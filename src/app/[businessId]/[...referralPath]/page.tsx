@@ -266,7 +266,7 @@ const ReferralPageComp = () => {
                   Sign Up
                 </button>
               </Link>
-              <Link href="/user/auth/login">
+              <Link href={getLoginUrl()}>
                 <button className="border-2 w-52 border-white text-white py-3 rounded-sm font-medium text-lg hover:bg-white hover:text-purple-600 transition-colors">
                   Explore Campaigns
                 </button>

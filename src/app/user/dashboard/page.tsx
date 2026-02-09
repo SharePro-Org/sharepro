@@ -9,13 +9,17 @@ import { REQUEST_PAYOUT, GET_USER } from "@/apollo/mutations/account";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { message } from "antd"
 import { Calendar, Users, XIcon, Wallet } from "lucide-react";
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef, Suspense } from "react";
 import { userAtom } from "@/store/User";
 import { useAtom } from "jotai";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 
 const userDashboard = () => {
   const [user] = useAtom(userAtom);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const hasOpenedRedirect = useRef(false);
   const [openPayoutModal, setOpenPayoutModal] = useState(false);
   const [payoutForm, setPayoutForm] = useState({
     amount: "",
@@ -29,16 +33,6 @@ const userDashboard = () => {
     variables: { id: user?.userId },
     skip: !user?.userId,
   });
-
-  // Check if any invited campaign has a non-null reward object (accepts `reward` or `rewards` keys)
-  const hasRewardInInvited = useMemo(() => {
-    const campaigns = invitedData?.userInvitedCampaigns;
-    if (!campaigns || campaigns.length === 0) return false;
-    return campaigns.some((c: any) => {
-      const rewardVal = c?.userRewards ?? c?.userRewards;
-      return rewardVal !== null && rewardVal !== undefined && (Array.isArray(rewardVal) ? rewardVal.length > 0 : true);
-    });
-  }, [invitedData]);
 
   const [summary, setSummary] = useState({
     totalRewardsEarned: "₦0.00",
@@ -81,6 +75,11 @@ const userDashboard = () => {
     skip: !user?.userId,
   });
 
+  // Check if user has earned any rewards (same logic as campaigns page)
+  const hasRewards = useMemo(() => {
+    return (data?.userDashboardSummary?.totalRewardsEarned ?? 0) > 0;
+  }, [data]);
+
 
   const [requestPayout, { loading: payoutLoading }] = useMutation(REQUEST_PAYOUT, {
     onCompleted: (data:any) => {
@@ -122,6 +121,20 @@ const userDashboard = () => {
       });
     }
   }, [data]);
+
+  // Auto-open external redirect link in new tab (from referral signup/login)
+  useEffect(() => {
+    const redirect = searchParams.get("redirect");
+    if (redirect && !hasOpenedRedirect.current) {
+      hasOpenedRedirect.current = true;
+      // Open the external site in a new tab
+      window.open(redirect, '_blank');
+      // Clean up the URL by removing the redirect param
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete("redirect");
+      router.replace(newUrl.pathname + newUrl.search);
+    }
+  }, [searchParams, router]);
 
   // Format currency to display as naira
   const formatCurrency = (amount: number): string => {
@@ -264,8 +277,8 @@ const userDashboard = () => {
             </div>
           </div>
 
-          <div className={`grid ${hasRewardInInvited ? 'md:grid-cols-3' : 'grid-cols-1'} grid-cols-1 gap-6`}>
-            <div className={`${hasRewardInInvited ? 'col-span-2' : 'col-span-1'} p-4 bg-white rounded-md`}>
+          <div className={`grid ${hasRewards ? 'md:grid-cols-3' : 'grid-cols-1'} grid-cols-1 gap-6`}>
+            <div className={`${hasRewards ? 'col-span-2' : 'col-span-1'} p-4 bg-white rounded-md`}>
               <div className="flex justify-between">
                 <div>
                   <p className="font-medium">Joined Campaigns</p>
@@ -279,12 +292,12 @@ const userDashboard = () => {
               </div>
               <UserDashboardTable type="campaigns" max={6} />
             </div>
-            {hasRewardInInvited && (
+            {hasRewards && (
               <div className="row-span-2 p-4 bg-white rounded-md">
                 <DiscoverCampaign />
               </div>
             )}
-            <div className={`${hasRewardInInvited ? 'col-span-2' : 'col-span-1'} p-4 bg-white rounded-md`}>
+            <div className={`${hasRewards ? 'col-span-2' : 'col-span-1'} p-4 bg-white rounded-md`}>
               <div className="flex justify-between">
                 <div>
                   <p className="font-medium">Rewards</p>
@@ -402,4 +415,10 @@ const userDashboard = () => {
   );
 };
 
-export default userDashboard;
+export default function UserDashboardPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      {React.createElement(userDashboard)}
+    </Suspense>
+  );
+}

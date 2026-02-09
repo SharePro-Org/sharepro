@@ -5,6 +5,7 @@ import {
   USER_JOINED_CAMPAIGNS,
   USER_REWARD_HISTORY,
 } from "@/apollo/queries/user";
+import { GET_CAMPAIGN_REFERRALS } from "@/apollo/queries/referrals";
 import { CLAIM_REWARD, SUBMIT_PROOF } from "@/apollo/mutations/campaigns";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
@@ -35,6 +36,8 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [showCampaign, setShowCampaign] = useState(false)
   const [joining, setJoining] = useState<any>(null);
+  const [showReferralsModal, setShowReferralsModal] = useState(false);
+  const [selectedCampaignForReferrals, setSelectedCampaignForReferrals] = useState<Campaign | null>(null);
 
 
   // Mutations
@@ -55,6 +58,15 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
     {
       variables: { userId: user?.userId },
       skip: !user?.userId || type !== "rewards",
+    }
+  );
+
+  // Fetch campaign referrals when modal is open
+  const { data: referralsData, loading: referralsLoading } = useQuery<{ campaignReferrals: any[] }>(
+    GET_CAMPAIGN_REFERRALS,
+    {
+      variables: { campaignId: selectedCampaignForReferrals?.campaign?.id },
+      skip: !selectedCampaignForReferrals || !showReferralsModal,
     }
   );
 
@@ -414,6 +426,10 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
       //   message.error("Reward not claimable or missing reward ID.");
       // }
     }
+    else if (action === "referrals") {
+      setSelectedCampaignForReferrals(campaign);
+      setShowReferralsModal(true);
+    }
   };
 
   const filteredCampaigns = useMemo(() => {
@@ -514,6 +530,7 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
                           items: [
                             { key: "copy", label: "Copy Referral Link" },
                             { key: "campaign", label: "Campaign Details" },
+                            { key: "referrals", label: "View Referrals" },
                             { key: "reward", label: "Claim Reward" },
                           ],
                           onClick: ({ key }) => handleDropdownAction(key, campaign),
@@ -1106,6 +1123,150 @@ const UserDashboardTable = ({ type, max }: { type: string; max?: number }) => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Referrals Modal */}
+      <Dialog open={showReferralsModal} onOpenChange={setShowReferralsModal}>
+        <DialogContent size="3xl" className="w-full max-h-[80vh] overflow-y-auto">
+          <div className="flex flex-col gap-4">
+            <h3 className="text-lg font-medium">
+              Referrals for {selectedCampaignForReferrals?.campaignName}
+            </h3>
+
+            {referralsLoading ? (
+              <div className="text-center py-8">Loading referrals...</div>
+            ) : (referralsData?.campaignReferrals?.length ?? 0) > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-[#D1DAF4] text-black">
+                      <th className="px-4 py-3 font-medium text-left">Name</th>
+                      <th className="px-4 py-3 font-medium text-left">Email</th>
+                      <th className="px-4 py-3 font-medium text-left">Phone</th>
+                      <th className="px-4 py-3 font-medium text-left">Status</th>
+                      <th className="px-4 py-3 font-medium text-left">Date Joined</th>
+                      <th className="px-4 py-3 font-medium text-left">Proof</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {referralsData?.campaignReferrals
+                      ?.filter((ref: any) => ref.referrer?.id === user?.userId && ref.referee !== null)
+                      .map((referral: any) => (
+                        <tr key={referral.id} className="border-b border-gray-200">
+                          <td className="px-4 py-3">
+                            {referral.referee?.firstName && referral.referee?.lastName
+                              ? `${referral.referee.firstName} ${referral.referee.lastName}`
+                              : referral.refereeName || "N/A"}
+                          </td>
+                          <td className="px-4 py-3">
+                            {referral.referee?.email || referral.refereeEmail || "N/A"}
+                          </td>
+                          <td className="px-4 py-3">
+                            {referral.referee?.phone || referral.refereePhone || "N/A"}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs ${
+                                referral.status === "CONVERTED"
+                                  ? "bg-green-300 text-green-800"
+                                  : referral.status === "REGISTERED"
+                                  ? "bg-blue-300 text-blue-800"
+                                  : referral.status === "CLICKED"
+                                  ? "bg-yellow-300 text-yellow-800"
+                                  : "bg-gray-300 text-gray-800"
+                              }`}
+                            >
+                              {referral.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            {referral.registeredAt
+                              ? formatDate(referral.registeredAt)
+                              : referral.clickedAt
+                              ? formatDate(referral.clickedAt)
+                              : formatDate(referral.createdAt)}
+                          </td>
+                          <td className="px-4 py-3">
+                            {referral.rewards && referral.rewards.length > 0 && referral.rewards.some((r: any) => r.proofFiles && r.proofFiles.length > 0) ? (
+                              <div className="space-y-1">
+                                {referral.rewards
+                                  .filter((r: any) => r.proofFiles && r.proofFiles.length > 0)
+                                  .map((reward: any) => (
+                                    <div key={reward.id} className="space-y-1">
+                                      {reward.proofFiles.map((proofFile: any) => (
+                                        <a
+                                          key={proofFile.id}
+                                          href={proofFile.fileUrl || proofFile.file}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="flex items-center gap-1 text-primary hover:underline text-xs"
+                                        >
+                                          <FileCheck size={14} />
+                                          <span>{proofFile.originalFilename}</span>
+                                        </a>
+                                      ))}
+                                      {reward.proofDescription && (
+                                        <p className="text-xs text-gray-600 italic mt-1">
+                                          {reward.proofDescription}
+                                        </p>
+                                      )}
+                                    </div>
+                                  ))}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 text-xs">No proof</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+
+                {/* Summary Stats */}
+                <div className="mt-6 grid grid-cols-4 gap-4 bg-gray-50 p-4 rounded-md">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-primary">
+                      {referralsData?.campaignReferrals?.filter((r: any) => r.referrer?.id === user?.userId && r.referee !== null).length ?? 0}
+                    </p>
+                    <p className="text-sm text-gray-600">Total Referrals</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-blue-600">
+                      {referralsData?.campaignReferrals?.filter((r: any) => r.referrer?.id === user?.userId && r.referee !== null && r.status === "REGISTERED").length ?? 0}
+                    </p>
+                    <p className="text-sm text-gray-600">Registered</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-green-600">
+                      {referralsData?.campaignReferrals?.filter((r: any) => r.referrer?.id === user?.userId && r.referee !== null && r.status === "CONVERTED").length ?? 0}
+                    </p>
+                    <p className="text-sm text-gray-600">Converted</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-yellow-600">
+                      {referralsData?.campaignReferrals?.filter((r: any) => r.referrer?.id === user?.userId && r.referee !== null && r.status === "CLICKED").length ?? 0}
+                    </p>
+                    <p className="text-sm text-gray-600">Clicked Only</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>No referrals yet for this campaign.</p>
+                <p className="text-sm mt-2">Share your referral link to start earning!</p>
+              </div>
+            )}
+
+            <div className="flex justify-end mt-4">
+              <button
+                onClick={() => setShowReferralsModal(false)}
+                className="px-6 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 

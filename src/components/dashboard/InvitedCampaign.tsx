@@ -1,17 +1,18 @@
 "use client";
 
-import { Calendar, Copy, Check } from "lucide-react";
+import { Calendar, Copy, Check, Upload, FileCheck, X } from "lucide-react";
 import React, { useState, useCallback, useEffect } from "react";
 import { GiPriceTag } from "react-icons/gi";
 import { MdCampaign } from "react-icons/md";
 import { useQuery, useMutation } from "@apollo/client/react";
+import { message } from "antd";
 
 import { AVAILABLE_CAMPAIGNS } from "@/apollo/queries/user";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
 import { Campaign } from "@/apollo/types";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { JOIN_CAMPAIGN } from "@/apollo/mutations/campaigns";
+import { JOIN_CAMPAIGN, SUBMIT_PROOF } from "@/apollo/mutations/campaigns";
 import { TRACK_CONVERSION } from "@/apollo/mutations/auth";
 
 import Image from "next/image";
@@ -44,6 +45,22 @@ const InvitedCampaign = ({
   const [businessId, setBusinessId] = useState<string>("");
   const [trackConversion] = useMutation(TRACK_CONVERSION);
   const [joinCampaign] = useMutation(JOIN_CAMPAIGN);
+
+  // Proof submission state
+  const [showProofModal, setShowProofModal] = useState(false);
+  const [selectedCampaignForProof, setSelectedCampaignForProof] = useState<any>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [proofDescription, setProofDescription] = useState("");
+  const [submittingProof, setSubmittingProof] = useState(false);
+  const [submitProof] = useMutation(SUBMIT_PROOF, {
+    refetchQueries: ['UserInvitedCampaigns'],
+  });
+
+  // File validation constants
+  const MAX_FILES = 5;
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const MAX_IMAGE_WIDTH = 2000;
+  const MAX_IMAGE_HEIGHT = 2000;
 
 
   // Format date function
@@ -256,6 +273,140 @@ const InvitedCampaign = ({
     }
   };
 
+  // File validation for proof submission
+  const validateImageDimensions = (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith('image/')) {
+        resolve(true);
+        return;
+      }
+      const img = new window.Image();
+      img.onload = () => {
+        URL.revokeObjectURL(img.src);
+        if (img.width > MAX_IMAGE_WIDTH || img.height > MAX_IMAGE_HEIGHT) {
+          message.error(`Image "${file.name}" is ${img.width}x${img.height}px. Maximum allowed is ${MAX_IMAGE_WIDTH}x${MAX_IMAGE_HEIGHT}px.`);
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(img.src);
+        resolve(true);
+      };
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    if (!selectedFiles.length) return;
+
+    for (const f of selectedFiles) {
+      if (f.size > MAX_FILE_SIZE) {
+        const sizeMB = (f.size / (1024 * 1024)).toFixed(1);
+        message.error(`File "${f.name}" is too large (${sizeMB}MB). Maximum size is 5MB.`);
+        e.target.value = '';
+        return;
+      }
+    }
+
+    for (const f of selectedFiles) {
+      const valid = await validateImageDimensions(f);
+      if (!valid) {
+        e.target.value = '';
+        return;
+      }
+    }
+
+    const combined = [...files, ...selectedFiles];
+    if (combined.length > MAX_FILES) {
+      message.error(`You can upload a maximum of ${MAX_FILES} files.`);
+      e.target.value = '';
+      return;
+    }
+
+    setFiles(combined);
+    e.target.value = '';
+  };
+
+  const removeFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  function fileToBase64(file: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  }
+
+  // Open proof submission modal
+  const handleOpenProofModal = (campaign: any) => {
+    setSelectedCampaignForProof(campaign);
+    setShowProofModal(true);
+    setFiles([]);
+    setProofDescription("");
+  };
+
+  // Handle proof submission
+  const handleProofSubmission = async () => {
+    if (!files || files.length === 0) {
+      message.error("Please select at least one file");
+      return;
+    }
+
+    if (!selectedCampaignForProof) {
+      message.error("No campaign selected");
+      return;
+    }
+
+    // Find the reward that needs proof
+    const rewardNeedingProof = selectedCampaignForProof.userRewards?.find(
+      (r: any) => r.status === 'PROOF_REQUIRED'
+    );
+
+    if (!rewardNeedingProof) {
+      message.error("No reward found that requires proof");
+      return;
+    }
+
+    setSubmittingProof(true);
+
+    try {
+      const filePromises = files.map(fileToBase64);
+      const base64Files = await Promise.all(filePromises);
+      const fileNames = files.map(f => f.name);
+
+      const { data } = await submitProof({
+        variables: {
+          rewardId: rewardNeedingProof.id,
+          files: base64Files,
+          fileNames,
+          description: proofDescription
+        }
+      }) as { data?: { submitProof?: { success: boolean; message?: string } } };
+
+      if (data?.submitProof?.success) {
+        message.success("Proof submitted successfully! Your submission is under review.");
+        setShowProofModal(false);
+        setFiles([]);
+        setProofDescription("");
+        setSelectedCampaignForProof(null);
+        // Optionally refetch campaigns to update UI
+      } else {
+        message.error(data?.submitProof?.message || "Failed to submit proof");
+      }
+    } catch (error: any) {
+      console.error("Error submitting proof:", error);
+      message.error(error?.message || "Error submitting proof");
+    } finally {
+      setSubmittingProof(false);
+    }
+  };
+
   return (
     <div>
       <div className={` ${grid ? "grid md:grid-cols-2 grid-cols-1" : "flex flex-col"} gap-3`}>
@@ -270,7 +421,16 @@ const InvitedCampaign = ({
                   <button className="bg-[#ECF3FF] rounded-sm p-3">
                     <MdCampaign color="#A16AD4" />
                   </button>
-                  <p className="my-auto">{campaign.name}</p>
+                  <div className="flex flex-col">
+                    <p className="my-auto">{campaign.name}</p>
+                    {/* Show proof submitted indicator if proof has been submitted */}
+                    {(campaign as any).userRewards?.some((r: any) => r.proofSubmittedAt || r.status === 'Proof Submitted') && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <FileCheck size={14} className="text-blue-600" />
+                        <span className="text-xs text-blue-600 font-medium">Proof Submitted</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <button className="px-2 py-1 text-sm bg-gray-100 rounded-full my-auto">
@@ -292,29 +452,40 @@ const InvitedCampaign = ({
               </div>
 
               <div className="p-2 flex justify-between">
-                {/* <p>
+                <p>
                   {campaign.participantsCount}{" "}
                   {campaign.participantsCount === 1 ? "user" : "users"} joined
                   {campaign.maxParticipants > 0 &&
                     ` (max: ${campaign.maxParticipants})`}
-                </p> */}
-                <button
-                  onClick={() =>
-                    handleJoinCampaign(campaign)
-                  }
-                  disabled={
-                    joining === campaign.campaignId
-                  }
-                  className={`rounded-md px-4 py-2 ${joining === campaign.campaignId
-                    ? "bg-[#ECF3FF] text-primary opacity-70"
-                    : "bg-[#ECF3FF] text-primary hover:bg-[#d9e8ff]"
+                </p>
+
+                {/* Check if this is a purchase-based referral campaign with proof required */}
+                {(campaign as any).referralRewards?.[0]?.referreeRewardAction === 'purchase' &&
+                (campaign as any).userRewards?.some((r: any) => r.status === 'PROOF_REQUIRED' && !r.proofSubmittedAt) ? (
+                  <button
+                    onClick={() => handleOpenProofModal(campaign)}
+                    className="rounded-md px-4 py-2 bg-[#ECF3FF] text-primary hover:bg-[#d9e8ff]"
+                  >
+                    Submit Proof of Purchase
+                  </button>
+                ) : (campaign as any).referralRewards?.[0]?.referreeRewardAction === 'purchase' &&
+                  (campaign as any).userRewards?.some((r: any) => r.status === 'PROOF_REQUIRED' && r.proofSubmittedAt) ? (
+                  <div className="rounded-md px-4 py-2 bg-gray-100 text-gray-600 text-sm">
+                    Proof Submitted - Under Review
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => handleJoinCampaign(campaign)}
+                    disabled={joining === campaign.campaignId}
+                    className={`rounded-md px-4 py-2 ${
+                      joining === campaign.campaignId
+                        ? "bg-[#ECF3FF] text-primary opacity-70"
+                        : "bg-[#ECF3FF] text-primary hover:bg-[#d9e8ff]"
                     }`}
-                >
-                  {joining === campaign.campaignId
-                    ? "Joining..." :
-                    "Join Campaign"
-                  }
-                </button>
+                  >
+                    {joining === campaign.campaignId ? "Joining..." : "Join Campaign"}
+                  </button>
+                )}
               </div>
             </div>
           ))
@@ -776,6 +947,107 @@ const InvitedCampaign = ({
               </>
             )}
           </>
+        </DialogContent>
+      </Dialog>
+
+      {/* Proof Submission Modal */}
+      <Dialog open={showProofModal} onOpenChange={setShowProofModal}>
+        <DialogContent size="3xl" className="w-full flex flex-col gap-6 py-6">
+          <h3 className="text-lg font-medium text-center">
+            Submit Proof of Purchase
+          </h3>
+
+          {/* Campaign Info */}
+          {selectedCampaignForProof && (
+            <div className="bg-gray-50 p-4 rounded-md">
+              <p className="font-medium">{selectedCampaignForProof.name}</p>
+              <p className="text-sm text-gray-600 mt-2">
+                You signed up for this campaign via a referral link. To receive your reward and enable the referrer to get their reward, please submit proof of your purchase from {(selectedCampaignForProof as any).business?.name}.
+              </p>
+            </div>
+          )}
+
+          {/* Instructions */}
+          <div className="border-l-4 border-blue-500 bg-blue-50 p-4">
+            <p className="font-medium text-blue-900 mb-2">What to submit:</p>
+            <ul className="text-sm text-blue-800 list-disc list-inside space-y-1">
+              <li>Receipt or order confirmation from the business website</li>
+              <li>Screenshot showing purchase details</li>
+              <li>Invoice or payment confirmation</li>
+            </ul>
+            <p className="text-xs text-blue-700 mt-3">
+              Maximum 5 files, 5MB each. Accepted formats: images, PDF
+            </p>
+          </div>
+
+          {/* File Upload */}
+          <div className="space-y-4">
+            <label className="block">
+              <span className="text-sm font-medium">Upload Proof Files</span>
+              <div className="mt-2 border-2 border-dashed border-gray-300 rounded-md p-6 text-center cursor-pointer hover:border-primary">
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*,.pdf"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="proof-upload"
+                />
+                <label htmlFor="proof-upload" className="cursor-pointer">
+                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                  <p className="mt-2 text-sm text-gray-600">
+                    Click to upload or drag and drop
+                  </p>
+                </label>
+              </div>
+            </label>
+
+            {/* File Preview */}
+            {files.length > 0 && (
+              <div className="space-y-2">
+                {files.map((file, index) => (
+                  <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                    <div className="flex items-center gap-2">
+                      <FileCheck size={20} className="text-green-600" />
+                      <span className="text-sm">{file.name}</span>
+                      <span className="text-xs text-gray-500">
+                        ({(file.size / 1024).toFixed(2)} KB)
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => removeFile(index)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Description */}
+            <label className="block">
+              <span className="text-sm font-medium">Description (Optional)</span>
+              <textarea
+                value={proofDescription}
+                onChange={(e) => setProofDescription(e.target.value)}
+                className="mt-1 w-full border border-gray-300 rounded-md p-2"
+                rows={3}
+                placeholder="Add any additional details about your purchase..."
+              />
+            </label>
+          </div>
+
+          {/* Submit Button */}
+          <div className="text-center">
+            <button
+              onClick={handleProofSubmission}
+              disabled={submittingProof || files.length === 0}
+              className="bg-primary p-3 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {submittingProof ? "Submitting..." : "Submit Proof"}
+            </button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

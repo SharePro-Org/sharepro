@@ -208,7 +208,8 @@ const SignupComp = () => {
 
         const redirect = searchParams.get("redirect");
         if (redirect) {
-          window.location.href = redirect;
+          // Navigate to dashboard with redirect param to auto-open external site
+          router.push(`/user/dashboard?redirect=${encodeURIComponent(redirect)}`);
         } else if (userData.userType === "ADMIN") {
           router.push("/admin/dashboard");
         } else if (userData.userType === "VIEWER") {
@@ -683,7 +684,7 @@ const SignupComp = () => {
         <div className="flex w-full max-w-xl mx-auto justify-start text-sm mt-4">
           <span>Already have an account?&nbsp;</span>
           <Link
-            href="/user/auth/login"
+            href={`/user/auth/login${searchParams.toString() ? `?${searchParams.toString()}` : ''}`}
             className="text-primary font-semibold hover:underline"
           >
             Sign in

@@ -1,6 +1,6 @@
 'use client'
 
-import { USER_INVITED_CAMPAIGNS } from "@/apollo/queries/user";
+import { USER_INVITED_CAMPAIGNS, USER_DASHBOARD_SUMMARY } from "@/apollo/queries/user";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import DiscoverCampaign from "@/components/dashboard/DiscoverCampaign";
 import InvitedCampaign from "@/components/dashboard/InvitedCampaign";
@@ -8,25 +8,32 @@ import UserDashboardTable from "@/components/dashboard/UserDashboardTable";
 import { useQuery } from "@apollo/client/react";
 import { RefreshCwIcon, SearchIcon } from "lucide-react";
 import React, { useEffect, useMemo, useState } from "react";
+import { useAtom } from "jotai";
+import { userAtom } from "@/store/User";
 
 const userCampaigns = () => {
+  const [user] = useAtom(userAtom);
   type InvitedCampaignsData = { userInvitedCampaigns: any[] | null };
+  type SummaryData = { userDashboardSummary: { totalRewardsEarned: number } };
   const [activeTab, setActiveTab] = useState<'my' | 'discover' | 'invite'>('my');
   const { data: invitedData, loading: invitedLoading, error: invitedError } = useQuery<InvitedCampaignsData>(USER_INVITED_CAMPAIGNS);
 
-  // Check if any invited campaign has a non-null reward object
-  const hasRewardInInvited = useMemo(() => {
-    const campaigns = invitedData?.userInvitedCampaigns;
-    if (!campaigns || campaigns.length === 0) return false;
-    return campaigns.some((c: any) => c?.userRewards !== null && c?.userRewards !== undefined && c?.userRewards.length > 0);
-  }, [invitedData]);
+  // Check if user has any rewards from any campaigns
+  const { data: summaryData } = useQuery<SummaryData>(USER_DASHBOARD_SUMMARY, {
+    variables: { userId: user?.userId },
+    skip: !user?.userId,
+  });
+
+  const hasRewards = useMemo(() => {
+    return (summaryData?.userDashboardSummary?.totalRewardsEarned ?? 0) > 0;
+  }, [summaryData]);
 
   // If Discover tab should be hidden and it's currently active, fall back to 'my'
   useEffect(() => {
-    if (!hasRewardInInvited && activeTab === 'discover') {
+    if (!hasRewards && activeTab === 'discover') {
       setActiveTab('my');
     }
-  }, [hasRewardInInvited, activeTab]);
+  }, [hasRewards, activeTab]);
 
   return (
     <DashboardLayout user={true}>
@@ -42,7 +49,7 @@ const userCampaigns = () => {
             >
               My Campaigns
             </button>
-            {hasRewardInInvited && (
+            {hasRewards && (
               <button
                 className={`px-6 py-2 font-medium text-base border-b-2 transition-colors ${activeTab === 'discover'
                   ? 'border-primary text-primary'
