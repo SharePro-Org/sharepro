@@ -10,7 +10,7 @@ import { message } from "antd";
 
 import Image from "next/image";
 import userCheck from "../../../../public/assets/Check.svg";
-import { CREATE_SUBSCRIPTION, UPDATE_SUBSCRIPTION, RENEW_SUBSCRIPTION } from "@/apollo/mutations/billing";
+import { UPDATE_SUBSCRIPTION, RENEW_SUBSCRIPTION } from "@/apollo/mutations/billing";
 import { AddPaymentMethodV4Form } from "@/components/payment/AddPaymentMethodV4Form";
 import { AddBankAccountForm } from "@/components/payment/AddBankAccountForm";
 interface Invoice {
@@ -86,22 +86,6 @@ const billingsSubscription = () => {
 
   const invoices = data?.myInvoices;
 
-  const [createSubscription, { loading: creatingSubscription }] = useMutation(CREATE_SUBSCRIPTION, {
-    onCompleted: (data: any) => {
-      if (data?.createSubscription?.success) {
-        setUpgrade(false);
-        refetch()
-      } else {
-        messageApi.open({
-          type: 'error',
-          content: data?.createSubscription?.message,
-        });
-      }
-    },
-    onError: (error) => {
-      console.error("Error creating subscription:", error);
-    },
-  });
   const [updateSubscription, { loading: updatingSubscription }] = useMutation(UPDATE_SUBSCRIPTION, {
     onCompleted: (data: any) => {
       if (data?.updateSubscription?.success) {
@@ -182,9 +166,9 @@ const billingsSubscription = () => {
       renewSubscription({
         variables: {
           input: {
-            subscription_id: billingSummary?.billingSummary?.subscription?.id,
-            plan_id: id,
-            payment_method_id: paymentMethodId || undefined
+            subscriptionId: billingSummary?.billingSummary?.subscription?.id,
+            planId: id,
+            paymentMethodId: paymentMethodId || undefined
           }
         }
       })
@@ -193,19 +177,19 @@ const billingsSubscription = () => {
       updateSubscription({
         variables: {
           input: {
-            subscription_id: billingSummary?.billingSummary?.subscription?.id,
-            plan_id: id,
-            payment_method_id: paymentMethodId || undefined
+            subscriptionId: billingSummary?.billingSummary?.subscription?.id,
+            planId: id,
+            paymentMethodId: paymentMethodId || undefined
           }
         }
       })
     } else {
-      // Create new subscription (no existing subscription)
-      createSubscription({
+      // Create new subscription (no existing subscription) - uses updateSubscription
+      updateSubscription({
         variables: {
           input: {
-            plan_id: id,
-            payment_method_id: paymentMethodId || undefined
+            planId: id,
+            paymentMethodId: paymentMethodId || undefined
           }
         }
       })
@@ -621,7 +605,7 @@ const billingsSubscription = () => {
                       updatingSubscription ? "Upgrading..." : "Upgrade Plan"
                     )
                   ) : (
-                    creatingSubscription ? "Creating Subscription..." : "Subscribe to Plan"
+                    updatingSubscription ? "Creating Subscription..." : "Subscribe to Plan"
                   )}
                 </button>
               </div>
