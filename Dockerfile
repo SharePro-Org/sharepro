@@ -22,6 +22,18 @@ RUN \
 FROM base AS builder
 WORKDIR /app
 
+# Declare build arguments for NEXT_PUBLIC_ env vars (passed from Dokku config)
+ARG NEXT_PUBLIC_GOOGLE_CLIENT_ID
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_WS_URL
+ARG NEXT_PUBLIC_SITE_URL
+
+# Make them available as environment variables during build
+ENV NEXT_PUBLIC_GOOGLE_CLIENT_ID=$NEXT_PUBLIC_GOOGLE_CLIENT_ID
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+
 # Copy dependencies and source code
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .

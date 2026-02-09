@@ -33,3 +33,4 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+// Force rebuild for env vars
