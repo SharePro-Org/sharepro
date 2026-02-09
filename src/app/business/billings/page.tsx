@@ -10,7 +10,7 @@ import { message } from "antd";
 
 import Image from "next/image";
 import userCheck from "../../../../public/assets/Check.svg";
-import { UPDATE_SUBSCRIPTION, RENEW_SUBSCRIPTION } from "@/apollo/mutations/billing";
+import { CREATE_SUBSCRIPTION, UPDATE_SUBSCRIPTION, RENEW_SUBSCRIPTION } from "@/apollo/mutations/billing";
 import { AddPaymentMethodV4Form } from "@/components/payment/AddPaymentMethodV4Form";
 import { AddBankAccountForm } from "@/components/payment/AddBankAccountForm";
 interface Invoice {
@@ -86,6 +86,22 @@ const billingsSubscription = () => {
 
   const invoices = data?.myInvoices;
 
+  const [createSubscription, { loading: creatingSubscription }] = useMutation(CREATE_SUBSCRIPTION, {
+    onCompleted: (data: any) => {
+      if (data?.createSubscription?.success) {
+        setUpgrade(false);
+        refetch()
+      } else {
+        messageApi.open({
+          type: 'error',
+          content: data?.createSubscription?.message,
+        });
+      }
+    },
+    onError: (error) => {
+      console.error("Error creating subscription:", error);
+    },
+  });
   const [updateSubscription, { loading: updatingSubscription }] = useMutation(UPDATE_SUBSCRIPTION, {
     onCompleted: (data: any) => {
       if (data?.updateSubscription?.success) {
@@ -99,7 +115,7 @@ const billingsSubscription = () => {
       }
     },
     onError: (error) => {
-      console.error("Error adding payment method:", error);
+      console.error("Error updating subscription:", error);
     },
   });
   const [renewSubscription, { loading: renewingSubscription }] = useMutation(RENEW_SUBSCRIPTION, {
@@ -115,7 +131,7 @@ const billingsSubscription = () => {
       }
     },
     onError: (error) => {
-      console.error("Error adding payment method:", error);
+      console.error("Error renewing subscription:", error);
     },
   });
 
@@ -159,24 +175,41 @@ const billingsSubscription = () => {
   const { data: paymentMethodsData } = useQuery<PaymentMethodsData>(GET_PAYMENT_METHODS);
 
   function handleUpgradePlan(id: string, paymentMethodId?: string): void {
-    renewPlan ? renewSubscription({
-      variables: {
-        input: {
-          planId: id,
-          subscriptionId: billingSummary?.billingSummary ? billingSummary?.billingSummary?.subscription?.id : '',
-          paymentMethodId: paymentMethodId || undefined
-        }
-      }
-    })
-      : updateSubscription({
+    const hasSubscription = billingSummary?.billingSummary?.subscription?.id;
+
+    if (renewPlan) {
+      // Renew existing subscription
+      renewSubscription({
         variables: {
           input: {
-            planId: id,
-            subscriptionId: billingSummary?.billingSummary ? billingSummary?.billingSummary?.subscription?.id : '',
-            paymentMethodId: paymentMethodId || undefined
+            subscription_id: billingSummary?.billingSummary?.subscription?.id,
+            plan_id: id,
+            payment_method_id: paymentMethodId || undefined
           }
         }
       })
+    } else if (hasSubscription) {
+      // Update existing subscription
+      updateSubscription({
+        variables: {
+          input: {
+            subscription_id: billingSummary?.billingSummary?.subscription?.id,
+            plan_id: id,
+            payment_method_id: paymentMethodId || undefined
+          }
+        }
+      })
+    } else {
+      // Create new subscription (no existing subscription)
+      createSubscription({
+        variables: {
+          input: {
+            plan_id: id,
+            payment_method_id: paymentMethodId || undefined
+          }
+        }
+      })
+    }
   }
 
   const [deletePaymentMethod] = useMutation(DELETE_PAYMENT_METHOD, {
@@ -581,10 +614,14 @@ const billingsSubscription = () => {
                 >
                   {renewPlan ? (
                     renewingSubscription ? "Renewing..." : "Renew Plan"
-                  ) : isDowngrade ? (
-                    updatingSubscription ? "Downgrading..." : "Downgrade Plan"
+                  ) : billingSummary?.billingSummary?.subscription ? (
+                    isDowngrade ? (
+                      updatingSubscription ? "Downgrading..." : "Downgrade Plan"
+                    ) : (
+                      updatingSubscription ? "Upgrading..." : "Upgrade Plan"
+                    )
                   ) : (
-                    updatingSubscription ? "Upgrading..." : "Upgrade Plan"
+                    creatingSubscription ? "Creating Subscription..." : "Subscribe to Plan"
                   )}
                 </button>
               </div>
