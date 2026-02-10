@@ -97,7 +97,7 @@ export function validateCVV(cvv: string): boolean {
 /**
  * Generate a random 12-character nonce for AES-256-GCM encryption.
  */
-function generateNonce(): string {
+export function generateNonce(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const array = new Uint8Array(12);
   crypto.getRandomValues(array);
@@ -112,7 +112,7 @@ function generateNonce(): string {
  * @param nonce - 12-character nonce string
  * @returns Base64-encoded ciphertext (includes GCM auth tag)
  */
-async function encryptAES256GCM(
+export async function encryptAES256GCM(
   plaintext: string,
   encryptionKey: string,
   nonce: string

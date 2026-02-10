@@ -13,6 +13,7 @@ import userCheck from "../../../../public/assets/Check.svg";
 import { UPDATE_SUBSCRIPTION, RENEW_SUBSCRIPTION } from "@/apollo/mutations/billing";
 import { AddPaymentMethodV4Form } from "@/components/payment/AddPaymentMethodV4Form";
 import { AddBankAccountForm } from "@/components/payment/AddBankAccountForm";
+import { GET_WALLET_BALANCE } from "@/apollo/queries/wallet";
 interface Invoice {
   id: string;
   status: string;
@@ -74,8 +75,10 @@ const billingsSubscription = () => {
   const [renewPlan, setRenewPlan] = useState(false);
   const [newPlanId, setNewPlanId] = useState("")
   const [isDowngrade, setIsDowngrade] = useState(false)
+  const [subscriptionPaymentType, setSubscriptionPaymentType] = useState<'card' | 'wallet'>('card');
 
   const { data: billingSummary, refetch, loading: summaryLoading } = useQuery<BillingSummaryData>(GET_BILLING_SUMMARY);
+  const { data: walletData } = useQuery<{ businessWallet: { balance: number; currency: string } }>(GET_WALLET_BALANCE);
 
   const { data, loading, error } = useQuery<InvoicesData>(GET_INVOICES, {
     variables: {
@@ -158,38 +161,35 @@ const billingsSubscription = () => {
 
   const { data: paymentMethodsData } = useQuery<PaymentMethodsData>(GET_PAYMENT_METHODS);
 
-  function handleUpgradePlan(id: string, paymentMethodId?: string): void {
-    const hasSubscription = billingSummary?.billingSummary?.subscription?.id;
+  function handleWalletSubscription(): void {
+    const subId = billingSummary?.billingSummary?.subscription?.id;
 
     if (renewPlan) {
-      // Renew existing subscription
       renewSubscription({
         variables: {
           input: {
-            subscriptionId: billingSummary?.billingSummary?.subscription?.id,
-            planId: id,
-            paymentMethodId: paymentMethodId || undefined
+            subscriptionId: subId,
+            planId: newPlanId,
+            paymentType: 'wallet',
           }
         }
       })
-    } else if (hasSubscription) {
-      // Update existing subscription
+    } else if (subId) {
       updateSubscription({
         variables: {
           input: {
-            subscriptionId: billingSummary?.billingSummary?.subscription?.id,
-            planId: id,
-            paymentMethodId: paymentMethodId || undefined
+            subscriptionId: subId,
+            planId: newPlanId,
+            paymentType: 'wallet',
           }
         }
       })
     } else {
-      // Create new subscription (no existing subscription) - uses updateSubscription
       updateSubscription({
         variables: {
           input: {
-            planId: id,
-            paymentMethodId: paymentMethodId || undefined
+            planId: newPlanId,
+            paymentType: 'wallet',
           }
         }
       })
@@ -456,8 +456,8 @@ const billingsSubscription = () => {
                       {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : '-'}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs ${invoice.status === 'paid' ? 'bg-green-500' :
-                        invoice.status === 'pending' ? 'bg-yellow-500' :
+                      <span className={`inline-block px-4 py-1 rounded-[5px] text-white text-xs ${invoice.status.toLowerCase() === 'paid' ? 'bg-[#27AE60]' :
+                        invoice.status.toLowerCase() === 'pending' ? 'bg-yellow-500' :
                           'bg-red-500'
                         }`}>
                         {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
@@ -531,85 +531,120 @@ const billingsSubscription = () => {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={upgrade || renewPlan} onOpenChange={() => { setUpgrade(false); setRenewPlan(false); setIsDowngrade(false) }}>
+        <Dialog open={upgrade || renewPlan} onOpenChange={() => { setUpgrade(false); setRenewPlan(false); setIsDowngrade(false); setSubscriptionPaymentType('card'); }}>
           <DialogContent size="lg" className="">
-            <div className="text-center mb-6">
-              <p className="font-semibold text-lg text-center mb-2">
+            <div className="text-center mb-4">
+              <p className="font-semibold text-lg mb-1">
                 {renewPlan ? "Renew Plan" : isDowngrade ? "Downgrade Plan" : "Upgrade Plan"}
               </p>
               <p className="text-sm text-gray-600">
-                Select a payment method to continue
+                Choose how you want to pay
               </p>
             </div>
 
-            <form className="space-y-4">
+            {/* Payment Type Selector */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <button
+                type="button"
+                onClick={() => setSubscriptionPaymentType('card')}
+                className={`p-3 rounded-lg border-2 text-sm text-left transition-colors ${
+                  subscriptionPaymentType === 'card'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-[#E4E7EC] hover:border-gray-300'
+                }`}
+              >
+                <p className="font-medium">Card Payment</p>
+                <p className="text-xs text-gray-500 mt-0.5">Pay with debit/credit card</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSubscriptionPaymentType('wallet')}
+                className={`p-3 rounded-lg border-2 text-sm text-left transition-colors ${
+                  subscriptionPaymentType === 'wallet'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-[#E4E7EC] hover:border-gray-300'
+                }`}
+              >
+                <p className="font-medium">Wallet</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Balance: {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(walletData?.businessWallet?.balance ?? 0)}
+                </p>
+              </button>
+            </div>
 
-              <div>
-                <label htmlFor="paymentMethodId" className="block text-sm font-medium mb-2">
-                  Select Payment Method *
-                </label>
-                {paymentMethodsData?.myPaymentMethods?.length ? (
-                  <select
-                    onChange={(e) => setPaymentMethodId(e.target.value)}
-                    value={paymentMethodId}
-                    className="w-full border border-[#E4E7EC] rounded-md p-3 text-sm"
-                    name="paymentMethodId"
-                    id="paymentMethodId"
-                  >
-                    <option value="">Select a payment method</option>
-                    {paymentMethodsData.myPaymentMethods.map((pm: any) => (
-                      <option key={pm.id} value={pm.id}>
-                        {pm.type === 'card' ? `${pm.cardBrand} ****${pm.cardLast4}` : pm.displayName}
-                        {pm.isDefault && ' (Default)'}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <div className="text-sm text-gray-500 p-3 bg-gray-50 rounded-md">
-                    No payment methods saved. Please add one first.
+            {/* Card Payment Form */}
+            {subscriptionPaymentType === 'card' && (
+              <AddPaymentMethodV4Form
+                isDefault={true}
+                planId={newPlanId}
+                planName={plansData?.plans?.find(p => p.id === newPlanId)?.name}
+                planPrice={plansData?.plans?.find(p => p.id === newPlanId)?.price}
+                subscriptionId={billingSummary?.billingSummary?.subscription?.id}
+                isRenewal={renewPlan}
+                onSuccess={() => {
+                  setUpgrade(false);
+                  setRenewPlan(false);
+                  setIsDowngrade(false);
+                  refetch();
+                }}
+                onClose={() => {
+                  setUpgrade(false);
+                  setRenewPlan(false);
+                  setIsDowngrade(false);
+                }}
+                showHeader={false}
+                showDefaultToggle={false}
+              />
+            )}
+
+            {/* Wallet Payment */}
+            {subscriptionPaymentType === 'wallet' && (
+              <div className="space-y-4">
+                <div className="rounded-lg bg-[#ECF3FF] border border-[#D1DAF4] p-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-xs text-gray-500 uppercase tracking-wide">Subscribing to</p>
+                      <p className="font-semibold text-base mt-0.5">{plansData?.plans?.find(p => p.id === newPlanId)?.name} Plan</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-lg">
+                        {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(plansData?.plans?.find(p => p.id === newPlanId)?.price ?? 0)}
+                      </p>
+                      <p className="text-xs text-gray-500">/month</p>
+                    </div>
                   </div>
+                </div>
+
+                <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Wallet Balance</span>
+                    <span className={`text-sm font-semibold ${
+                      Number(walletData?.businessWallet?.balance ?? 0) >= Number(plansData?.plans?.find(p => p.id === newPlanId)?.price ?? 0)
+                        ? 'text-green-600'
+                        : 'text-red-500'
+                    }`}>
+                      {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(walletData?.businessWallet?.balance ?? 0)}
+                    </span>
+                  </div>
+                </div>
+
+                {Number(walletData?.businessWallet?.balance ?? 0) < Number(plansData?.plans?.find(p => p.id === newPlanId)?.price ?? 0) && (
+                  <p className="text-xs text-red-500">Insufficient wallet balance. Please fund your wallet or pay with card.</p>
                 )}
-              </div>
 
-
-
-              {/* Submit Buttons */}
-              <div className="flex justify-end gap-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => {
-                    if (!paymentMethodId) {
-                      messageApi.open({
-                        type: 'error',
-                        content: 'Please select a payment method.',
-                      });
-                      return;
-                    }
-                    if (typeof handleUpgradePlan === 'function' && newPlanId) {
-                      handleUpgradePlan(newPlanId, paymentMethodId);
-                    } else {
-                      messageApi.open({
-                        type: 'error',
-                        content: 'No plan selected for upgrade.',
-                      });
-                    }
-                  }}
-                  className="px-6 w-full py-3 bg-primary text-white rounded-md text-sm hover:bg-primary/90 transition-colors"
+                  onClick={handleWalletSubscription}
+                  disabled={
+                    updatingSubscription || renewingSubscription ||
+                    Number(walletData?.businessWallet?.balance ?? 0) < Number(plansData?.plans?.find(p => p.id === newPlanId)?.price ?? 0)
+                  }
+                  className="px-6 w-full py-3 bg-primary text-white rounded-md text-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {renewPlan ? (
-                    renewingSubscription ? "Renewing..." : "Renew Plan"
-                  ) : billingSummary?.billingSummary?.subscription ? (
-                    isDowngrade ? (
-                      updatingSubscription ? "Downgrading..." : "Downgrade Plan"
-                    ) : (
-                      updatingSubscription ? "Upgrading..." : "Upgrade Plan"
-                    )
-                  ) : (
-                    updatingSubscription ? "Creating Subscription..." : "Subscribe to Plan"
-                  )}
+                  {updatingSubscription || renewingSubscription ? "Processing..." : "Pay from Wallet"}
                 </button>
               </div>
-            </form>
+            )}
           </DialogContent>
         </Dialog>
 

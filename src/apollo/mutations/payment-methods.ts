@@ -1,21 +1,6 @@
 import { gql } from '@apollo/client';
 
 /**
- * v4 API Mutation - Direct payment method creation with encrypted card data
- * Returns: paymentMethodId immediately (no checkout URL)
- */
-export const ADD_PAYMENT_METHOD_V4 = gql`
-  mutation AddPaymentMethodV4($input: PaymentMethodInput!) {
-    addPaymentMethodV4(input: $input) {
-      success
-      message
-      paymentMethodId
-      errors
-    }
-  }
-`;
-
-/**
  * v4 API Mutation - Add bank account payment method
  * Returns: paymentMethodId immediately
  */
@@ -65,6 +50,64 @@ export const VERIFY_PAYMENT_METHOD = gql`
     verifyPaymentMethod(paymentMethodId: $paymentMethodId) {
       success
       message
+      errors
+    }
+  }
+`;
+
+/**
+ * Orchestrator: Initiate adding a payment method via single-step charge
+ * Handles customer creation + payment method creation + charge in one call
+ */
+export const INITIATE_ADD_PAYMENT_METHOD = gql`
+  mutation InitiateAddPaymentMethod($input: OrchestratorCardInput!) {
+    initiateAddPaymentMethod(input: $input) {
+      success
+      message
+      chargeId
+      nextActionType
+      redirectUrl
+      paymentInstruction
+      paymentMethodId
+      errors
+    }
+  }
+`;
+
+/**
+ * Orchestrator: Authorize a pending charge (PIN, OTP, AVS)
+ */
+export const AUTHORIZE_CARD_CHARGE = gql`
+  mutation AuthorizeCardCharge($input: AuthorizeChargeInput!) {
+    authorizeCardCharge(input: $input) {
+      success
+      message
+      chargeId
+      nextActionType
+      redirectUrl
+      status
+      paymentMethodId
+      subscriptionId
+      errors
+    }
+  }
+`;
+
+/**
+ * Orchestrator: Initiate a subscription with inline card payment
+ * Same flow as add payment method but charges plan price and creates subscription
+ */
+export const INITIATE_SUBSCRIPTION_WITH_CARD = gql`
+  mutation InitiateSubscriptionWithCard($input: SubscriptionCardInput!) {
+    initiateSubscriptionWithCard(input: $input) {
+      success
+      message
+      chargeId
+      nextActionType
+      redirectUrl
+      paymentInstruction
+      paymentMethodId
+      subscriptionId
       errors
     }
   }
