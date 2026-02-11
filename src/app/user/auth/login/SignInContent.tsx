@@ -114,8 +114,7 @@ export default function SignInContent() {
 
         const redirect = searchParams.get("redirect");
         if (redirect) {
-          // Navigate to dashboard with redirect param to auto-open external site
-          router.push(`/user/dashboard?redirect=${encodeURIComponent(redirect)}`);
+          window.location.href = redirect;
         } else if (userData.userType === "ADMIN") {
           router.push("/admin/dashboard");
         } else if (userData.userType === "VIEWER") {
