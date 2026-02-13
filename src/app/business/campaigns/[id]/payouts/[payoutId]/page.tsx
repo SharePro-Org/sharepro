@@ -136,6 +136,7 @@ const PayoutDetails = () => {
                                     ${data?.reward?.status === 'PAID' ? 'bg-blue-500'
                                 : data?.reward?.status === 'APPROVED' ? 'bg-green-500'
                                 : data?.reward?.status === 'PENDING' ? 'bg-yellow-500 text-black'
+                                : data?.reward?.status === 'PROOF_SUBMITTED' ? 'bg-orange-500'
                                 : data?.reward?.status === 'REJECTED' ? 'bg-red-500'
                                     : 'bg-gray-500'}
                                      `}>

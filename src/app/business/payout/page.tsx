@@ -123,6 +123,8 @@ const Payout = () => {
                                                 ? 'bg-green-500 text-white'
                                                 : reward.status === 'PENDING'
                                                   ? 'bg-yellow-500 text-white'
+                                                  : reward.status === 'PROOF_SUBMITTED'
+                                                  ? 'bg-orange-500 text-white'
                                                   : 'bg-red-500 text-white'
                                             }`}>
                                               {reward.status}

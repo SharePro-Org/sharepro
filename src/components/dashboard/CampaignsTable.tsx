@@ -226,6 +226,7 @@ const CampaignsTable = ({ type, num }: { type?: string; num?: number }) => {
                       ${campaign.status === 'PAID' ? 'bg-blue-500'
                         : campaign.status === 'APPROVED' ? 'bg-green-500'
                         : campaign.status === 'PENDING' ? 'bg-yellow-500 text-black'
+                        : campaign.status === 'PROOF_SUBMITTED' ? 'bg-orange-500'
                           : 'bg-red-500'}
                     `}
                   >
