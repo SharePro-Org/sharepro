@@ -7,15 +7,22 @@ import InvitedCampaign from "@/components/dashboard/InvitedCampaign";
 import UserDashboardTable from "@/components/dashboard/UserDashboardTable";
 import { useQuery } from "@apollo/client/react";
 import { RefreshCwIcon, SearchIcon } from "lucide-react";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, Suspense } from "react";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/User";
+import { useSearchParams } from "next/navigation";
 
-const userCampaigns = () => {
+const UserCampaignsContent = () => {
   const [user] = useAtom(userAtom);
+  const searchParams = useSearchParams();
   type InvitedCampaignsData = { userInvitedCampaigns: any[] | null };
   type SummaryData = { userDashboardSummary: { totalRewardsEarned: number } };
-  const [activeTab, setActiveTab] = useState<'my' | 'discover' | 'invite'>('my');
+
+  // Get tab from URL parameter, default to 'my'
+  const tabParam = searchParams.get('tab') as 'my' | 'discover' | 'invite' | null;
+  const initialTab = (tabParam === 'my' || tabParam === 'discover' || tabParam === 'invite') ? tabParam : 'my';
+
+  const [activeTab, setActiveTab] = useState<'my' | 'discover' | 'invite'>(initialTab);
   const { data: invitedData, loading: invitedLoading, error: invitedError } = useQuery<InvitedCampaignsData>(USER_INVITED_CAMPAIGNS);
 
   // Check if user has any rewards from any campaigns
@@ -27,6 +34,13 @@ const userCampaigns = () => {
   const hasRewards = useMemo(() => {
     return (summaryData?.userDashboardSummary?.totalRewardsEarned ?? 0) > 0;
   }, [summaryData]);
+
+  // Update active tab when URL parameter changes
+  useEffect(() => {
+    if (tabParam && (tabParam === 'my' || tabParam === 'discover' || tabParam === 'invite')) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
 
   // If Discover tab should be hidden and it's currently active, fall back to 'my'
   useEffect(() => {
@@ -101,6 +115,14 @@ const userCampaigns = () => {
         </div>
       </section>
     </DashboardLayout>
+  );
+};
+
+const userCampaigns = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <UserCampaignsContent />
+    </Suspense>
   );
 };
 

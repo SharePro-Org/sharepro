@@ -3,6 +3,7 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import DiscoverCampaign from "@/components/dashboard/DiscoverCampaign";
 import UserDashboardTable from "@/components/dashboard/UserDashboardTable";
+import InvitedCampaignsCarousel from "@/components/dashboard/InvitedCampaignsCarousel";
 import { USER_DASHBOARD_SUMMARY, USER_INVITED_CAMPAIGNS } from "@/apollo/queries/user";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { REQUEST_PAYOUT, GET_USER } from "@/apollo/mutations/account";
@@ -79,6 +80,14 @@ const userDashboard = () => {
   const hasRewards = useMemo(() => {
     return (data?.userDashboardSummary?.totalRewardsEarned ?? 0) > 0;
   }, [data]);
+
+  // Check if user has invited campaigns to show the sidebar
+  const hasInvitedCampaigns = useMemo(() => {
+    return invitedData?.userInvitedCampaigns && invitedData.userInvitedCampaigns.length > 0;
+  }, [invitedData]);
+
+  // Show sidebar if user has rewards OR has invited campaigns
+  const showSidebar = hasRewards || hasInvitedCampaigns;
 
 
   const [requestPayout, { loading: payoutLoading }] = useMutation(REQUEST_PAYOUT, {
@@ -277,8 +286,8 @@ const userDashboard = () => {
             </div>
           </div>
 
-          <div className={`grid ${hasRewards ? 'md:grid-cols-3' : 'grid-cols-1'} grid-cols-1 gap-6`}>
-            <div className={`${hasRewards ? 'col-span-2' : 'col-span-1'} p-4 bg-white rounded-md`}>
+          <div className={`grid ${showSidebar ? 'md:grid-cols-3' : 'grid-cols-1'} grid-cols-1 gap-6`}>
+            <div className={`${showSidebar ? 'col-span-2' : 'col-span-1'} p-4 bg-white rounded-md`}>
               <div className="flex justify-between">
                 <div>
                   <p className="font-medium">Joined Campaigns</p>
@@ -292,12 +301,25 @@ const userDashboard = () => {
               </div>
               <UserDashboardTable type="campaigns" max={6} />
             </div>
-            {hasRewards && (
-              <div className="row-span-2 p-4 bg-white rounded-md">
-                <DiscoverCampaign />
+            {showSidebar && (
+              <div className="row-span-2 space-y-4">
+                {/* Invited Campaigns Carousel */}
+                {hasInvitedCampaigns && (
+                  <InvitedCampaignsCarousel
+                    campaigns={invitedData?.userInvitedCampaigns!}
+                    loading={invitedLoading}
+                  />
+                )}
+
+                {/* Discover Campaigns - only show if user has rewards */}
+                {hasRewards && (
+                  <div className="p-4 bg-white rounded-md">
+                    <DiscoverCampaign max={3} />
+                  </div>
+                )}
               </div>
             )}
-            <div className={`${hasRewards ? 'col-span-2' : 'col-span-1'} p-4 bg-white rounded-md`}>
+            <div className={`${showSidebar ? 'col-span-2' : 'col-span-1'} p-4 bg-white rounded-md`}>
               <div className="flex justify-between">
                 <div>
                   <p className="font-medium">Rewards</p>

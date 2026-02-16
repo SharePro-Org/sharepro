@@ -270,7 +270,23 @@ const DiscoverCampaign = ({
 
   return (
     <div>
-      <p className="text-lg font-medium">Discover Campaigns</p>
+      {/* Header */}
+      <div className="flex justify-between items-start gap-3 mb-4 md:mb-6">
+        <div className="flex-1">
+          <h2 className="text-base md:text-xl font-semibold text-gray-900">
+            Discover Campaigns
+          </h2>
+          <p className="text-gray-600 text-xs md:text-sm hidden sm:block">
+            Join available campaigns and start earning rewards
+          </p>
+        </div>
+        <Link href="/user/campaigns?tab=discover" className="shrink-0">
+          <button className="px-2 py-1 md:px-3 md:py-1.5 bg-primary hover:bg-primary/90 text-white rounded-md transition-colors text-xs font-medium whitespace-nowrap">
+            View All
+          </button>
+        </Link>
+      </div>
+
       <div className={` ${grid ? "grid md:grid-cols-2 grid-cols-1" : "flex flex-col"} gap-3`}>
         {loading ? (
           <div className="text-center py-4">Loading available campaigns...</div>
