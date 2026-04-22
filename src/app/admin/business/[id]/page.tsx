@@ -42,12 +42,39 @@ const statusColors: Record<string, string> = {
     failed: "bg-red-500 text-white",
 };
 
+const PAGE_SIZE = 10;
+
+function Pagination({ page, totalPages, onChange }: { page: number; totalPages: number; onChange: (p: number) => void }) {
+    if (totalPages <= 1) return null;
+    return (
+        <div className="flex items-center justify-end gap-2 mt-4 text-sm">
+            <button
+                className="px-3 py-1 rounded border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                disabled={page <= 1}
+                onClick={() => onChange(page - 1)}
+            >
+                Previous
+            </button>
+            <span className="px-2">Page {page} of {totalPages}</span>
+            <button
+                className="px-3 py-1 rounded border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                disabled={page >= totalPages}
+                onClick={() => onChange(page + 1)}
+            >
+                Next
+            </button>
+        </div>
+    );
+}
+
 export default function BusinessProfilePage() {
     const router = useRouter();
     const params = useParams();
     const businessId = typeof params?.id === 'string' ? params.id : '';
     const [searchCampaign, setSearchCampaign] = React.useState('');
     const [searchCustomer, setSearchCustomer] = React.useState('');
+    const [campaignPage, setCampaignPage] = React.useState(1);
+    const [customerPage, setCustomerPage] = React.useState(1);
 
     const filterCampaigns = (campaigns: Business['campaigns']) => {
         if (!searchCampaign) return campaigns;
@@ -79,6 +106,15 @@ export default function BusinessProfilePage() {
 
     const business = data?.business;
     const members = membersData?.businessMembers || [];
+
+    const filteredCampaigns = filterCampaigns(business?.campaigns || []);
+    const filteredMembers = filterMembers(members);
+    const campaignTotalPages = Math.max(1, Math.ceil(filteredCampaigns.length / PAGE_SIZE));
+    const customerTotalPages = Math.max(1, Math.ceil(filteredMembers.length / PAGE_SIZE));
+    const paginatedCampaigns = filteredCampaigns.slice((campaignPage - 1) * PAGE_SIZE, campaignPage * PAGE_SIZE);
+    const paginatedMembers = filteredMembers.slice((customerPage - 1) * PAGE_SIZE, customerPage * PAGE_SIZE);
+    const totalRewardsPaid = (business?.campaigns || []).reduce((sum, c) => sum + (c.totalRewardsGiven || 0), 0);
+    const activeCampaignCount = (business?.campaigns || []).filter(c => c.status?.toUpperCase() === "ACTIVE").length;
 
     return (
         <DashboardLayout>
@@ -128,21 +164,15 @@ export default function BusinessProfilePage() {
                         </div>
                         <div className="m-3">
                             <h2 className="text-xs mb-2">Active Campaigns</h2>
-                            <p className="text-sm">
-                                <p className="text-sm">{business?.campaigns.filter(campaign => campaign.status === "Active").length || "-"}</p>
-                            </p>
+                            <p className="text-sm">{business ? activeCampaignCount : "-"}</p>
                         </div>
                         <div className="m-3">
                             <h2 className="text-xs mb-2">Customers</h2>
-                            <p className="text-sm">
-                                {/* {campaignAnalytics?.campaign?.status || "-"} */}
-                            </p>
+                            <p className="text-sm">{membersLoading ? "-" : members.length}</p>
                         </div>
                         <div className="m-3">
                             <h2 className="text-xs mb-2">Rewards Paid</h2>
-                            <p className="text-sm">
-                                {/* {campaignAnalytics?.campaign?.status || "-"} */}
-                            </p>
+                            <p className="text-sm">{business ? totalRewardsPaid : "-"}</p>
                         </div>
                     </div>
                 </div>
@@ -155,7 +185,7 @@ export default function BusinessProfilePage() {
                             <input
                                 type="text"
                                 value={searchCampaign}
-                                onChange={e => setSearchCampaign(e.target.value)}
+                                onChange={e => { setSearchCampaign(e.target.value); setCampaignPage(1); }}
                                 className="bg-[#F9FAFB] md:w-[400px] w-full border border-[#E4E7EC] p-3 rounded-sm pl-8 text-sm"
                                 placeholder="Search by campaign name or type"
                             />
@@ -189,7 +219,7 @@ export default function BusinessProfilePage() {
                                     <tr>
                                         <td colSpan={9} className="px-4 py-3 text-center text-red-500">Error loading campaigns</td>
                                     </tr>
-                                ) : business === null || business?.campaigns?.length === 0 ? (
+                                ) : filteredCampaigns.length === 0 ? (
                                     <tr>
                                         <td colSpan={9} className="px-4 py-12 text-center">
                                             <div className="flex flex-col items-center justify-center">
@@ -197,12 +227,11 @@ export default function BusinessProfilePage() {
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                 </svg>
                                                 <h3 className="mt-2 text-lg font-medium text-gray-900">No campaigns found</h3>
-                                                {/* <p className="mt-1 text-sm text-gray-500">Start a campaign to see it listed here.</p> */}
                                             </div>
                                         </td>
                                     </tr>
                                 ) : (
-                                    filterCampaigns(business?.campaigns || [])?.map((campaign, i) => (
+                                    paginatedCampaigns.map((campaign, i) => (
                                         <tr key={campaign.id || i} className="border-b border-[#E2E8F0] py-2 last:border-0">
                                             <td className="px-4 py-3">{campaign.name}</td>
                                             {/* <td className="px-4 py-3">{campaign.id}</td> */}
@@ -244,6 +273,7 @@ export default function BusinessProfilePage() {
                             </tbody>
                         </table>
                     </div>
+                    <Pagination page={campaignPage} totalPages={campaignTotalPages} onChange={setCampaignPage} />
                 </div>
 
                 {/* Customers Section */}
@@ -258,7 +288,7 @@ export default function BusinessProfilePage() {
                             <input
                                 type="text"
                                 value={searchCustomer}
-                                onChange={e => setSearchCustomer(e.target.value)}
+                                onChange={e => { setSearchCustomer(e.target.value); setCustomerPage(1); }}
                                 className="bg-[#F9FAFB] md:w-[400px] w-full border border-[#E4E7EC] p-3 rounded-sm pl-8 text-sm"
                                 placeholder="Search by customer name or email"
                             />
@@ -287,13 +317,18 @@ export default function BusinessProfilePage() {
                                     <tr><td colSpan={7} className="px-4 py-3 text-center">Loading...</td></tr>
                                 ) : membersError ? (
                                     <tr><td colSpan={7} className="px-4 py-3 text-center text-red-500">Error loading members</td></tr>
-                                ) : members.length === 0 ? (
+                                ) : filteredMembers.length === 0 ? (
                                     <tr><td colSpan={7} className="px-4 py-3 text-center">No customers found</td></tr>
                                 ) : (
-                                    filterMembers(members).map((m: any, i: number) => (
+                                    paginatedMembers.map((m: any, i: number) => {
+                                        const first = m.user?.userProfile?.firstName || '';
+                                        const last = m.user?.userProfile?.lastName || '';
+                                        const fullName = `${first} ${last}`.trim();
+                                        const displayName = fullName || m.user?.userProfile?.email || '—';
+                                        return (
                                         <tr key={i} className="border-b border-[#E2E8F0] py-2 last:border-0 hover:bg-gray-50">
-                                            <td className="px-4 py-3">{i + 1}</td>
-                                            <td className="px-4 py-3">{m.user?.userProfile?.firstName} {m.user?.userProfile?.lastName}</td>
+                                            <td className="px-4 py-3">{(customerPage - 1) * PAGE_SIZE + i + 1}</td>
+                                            <td className="px-4 py-3">{displayName}</td>
                                             <td className="px-4 py-3">{m.user?.totalRewards || 0}</td>
                                             <td className="px-4 py-3">{m.user?.totalCampaignsJoined || 0}</td>
                                             <td className="px-4 py-3">₦{m.user?.totalRewardsEarned?.toLocaleString() || '0'}</td>
@@ -338,11 +373,13 @@ export default function BusinessProfilePage() {
                                                 </Dropdown>
                                             </td>
                                         </tr>
-                                    ))
+                                        );
+                                    })
                                 )}
                             </tbody>
                         </table>
                     </div>
+                    <Pagination page={customerPage} totalPages={customerTotalPages} onChange={setCustomerPage} />
                 </div>
 
                 {/* Recent Payouts Section */}
