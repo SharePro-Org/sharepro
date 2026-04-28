@@ -49,6 +49,10 @@ import { ReactNode, useEffect, useState } from "react";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 import { usePathname } from "next/navigation";
+import { useQuery } from "@apollo/client/react";
+import { useAtom } from "jotai";
+import { userAtom } from "@/store/User";
+import { GET_BUSINESS } from "@/apollo/mutations/account";
 
 export default function DashboardLayout({
   children,
@@ -60,6 +64,13 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const pathname = usePathname();
+  const [currentUser] = useAtom(userAtom);
+
+  // Prefetch business so Navbar/Sidebar can render the logo from cache.
+  useQuery(GET_BUSINESS, {
+    variables: { id: currentUser?.businessId },
+    skip: !currentUser?.businessId,
+  });
 
   // Function to redirect user if visiting subroute out of their role
   function redirectIfUnauthorized(userType: string, pathname: string) {

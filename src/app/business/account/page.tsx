@@ -2,7 +2,7 @@
 
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Camera, Edit, Plus } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { Country, City } from "country-state-city";
@@ -94,6 +94,7 @@ const account = () => {
       email?: string;
       website?: string;
       tagline?: string;
+      logo?: string | null;
       // Add other fields as needed
     };
   };
@@ -107,6 +108,58 @@ const account = () => {
     variables: { id: businessId },
     skip: !businessId,
   });
+
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
+
+  const fileToBase64 = (file: Blob): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (err) => reject(err);
+    });
+
+  const handleLogoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setLogoError("Please select an image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setLogoError("Logo must be 5MB or smaller.");
+      return;
+    }
+
+    setLogoError(null);
+    setLogoUploading(true);
+    try {
+      const base64 = await fileToBase64(file);
+      await updateBusiness({ variables: { input: { logo: base64 } } });
+      await refetchUser();
+    } catch (err: any) {
+      setLogoError(err?.message || "Failed to upload logo.");
+    } finally {
+      setLogoUploading(false);
+    }
+  };
+
+  const handleLogoRemove = async () => {
+    setLogoError(null);
+    setLogoUploading(true);
+    try {
+      await updateBusiness({ variables: { input: { logo: "" } } });
+      await refetchUser();
+    } catch (err: any) {
+      setLogoError(err?.message || "Failed to remove logo.");
+    } finally {
+      setLogoUploading(false);
+    }
+  };
 
   useEffect(() => {
     if (user?.businessId) {
@@ -279,16 +332,50 @@ const account = () => {
             {active === "profile" && (
               <div>
                 <p className="mb-4 font-medium">Business Profile</p>
-                <div className="border border-[#E5E5EA] rounded-sm p-4 flex gap-4">
-                  <div className="border flex items-center border-[#E5E5EA] rounded-full w-20 h-20">
-                    <Camera size={16} className="my-auto mx-auto" />
+                <div className="border border-[#E5E5EA] rounded-sm p-4 flex gap-4 items-center flex-wrap">
+                  <div className="border flex items-center justify-center border-[#E5E5EA] rounded-full w-20 h-20 overflow-hidden bg-white">
+                    {userData?.business?.logo ? (
+                      <img
+                        src={userData.business.logo}
+                        alt="Business logo"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Camera size={16} />
+                    )}
                   </div>
-                  <button className="text-sm text-primary bg-[#ECF3FF] my-auto px-6 p-2 rounded-full">
-                    Add Logo
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleLogoFileChange}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => logoInputRef.current?.click()}
+                    disabled={logoUploading}
+                    className="text-sm text-primary bg-[#ECF3FF] my-auto px-6 p-2 rounded-full disabled:opacity-50"
+                  >
+                    {logoUploading
+                      ? "Saving..."
+                      : userData?.business?.logo
+                        ? "Change Logo"
+                        : "Add Logo"}
                   </button>
-                  <button className="text-[#FC3833] text-sm my-auto">
-                    Remove
-                  </button>
+                  {userData?.business?.logo && (
+                    <button
+                      type="button"
+                      onClick={handleLogoRemove}
+                      disabled={logoUploading}
+                      className="text-[#FC3833] text-sm my-auto disabled:opacity-50"
+                    >
+                      Remove
+                    </button>
+                  )}
+                  {logoError && (
+                    <p className="text-[#FC3833] text-xs w-full">{logoError}</p>
+                  )}
                 </div>
                 <div className="border border-[#E5E5EA] rounded-sm p-4 my-4">
                   <div className="border-b border-b-[#E5E5EA] flex py-3 mb-3 justify-between">

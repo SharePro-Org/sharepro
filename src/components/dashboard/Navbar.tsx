@@ -1,11 +1,15 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Logo from "../../../public/assets/logo-white.svg";
 import { Bell, Sun, Moon, Search } from "lucide-react";
 import Avatar from "../../../public/assets/Avatar.svg";
 import { RiMenu2Line } from "react-icons/ri";
 import { userAtom } from "@/store/User";
 import { useAtom } from "jotai";
+import { useQuery } from "@apollo/client/react";
+import { GET_BUSINESS } from "@/apollo/mutations/account";
 
 interface NavbarProps {
   onToggleSidebar: () => void;
@@ -13,12 +17,30 @@ interface NavbarProps {
   toggleDark: () => void;
 }
 
+type BusinessLogoQueryResult = {
+  business?: {
+    id?: string;
+    logo?: string | null;
+  };
+};
+
 export default function Navbar({
   onToggleSidebar,
   darkMode,
   toggleDark,
 }: NavbarProps) {
   const [user] = useAtom(userAtom);
+  const pathname = usePathname();
+  const { data: businessData } = useQuery<BusinessLogoQueryResult>(GET_BUSINESS, {
+    variables: { id: user?.businessId },
+    skip: !user?.businessId,
+  });
+  const businessLogo = businessData?.business?.logo || null;
+  const accountHref = pathname?.startsWith("/user")
+    ? "/user/account"
+    : pathname?.startsWith("/admin")
+    ? "/admin/account"
+    : "/business/account";
 
   return (
     <header className="fixed top-0 left-0 right-0 w-full bg-white border-b border-gray-200 shadow-sm z-40 h-[72px] flex items-center px-2 sm:px-4">
@@ -81,21 +103,32 @@ export default function Navbar({
         </button> : null}
 
         {/* Profile section (could be replaced by Image/avatar) */}
-        <div className="flex items-center gap-2 ml-3">
-          <Image
-            src={Avatar}
-            width={32}
-            height={32}
-            alt="avatar"
-            className="rounded-full border border-gray-200"
-          />
+        <Link
+          href={accountHref}
+          aria-label="Go to account"
+          className="flex items-center gap-2 ml-3 rounded-full hover:bg-gray-50 transition px-1 py-1"
+        >
+          {businessLogo ? (
+            <img
+              src={businessLogo}
+              width={32}
+              height={32}
+              alt="Business logo"
+              className="w-8 h-8 rounded-full border border-gray-200 object-cover"
+            />
+          ) : (
+            <Image
+              src={Avatar}
+              width={32}
+              height={32}
+              alt="avatar"
+              className="rounded-full border border-gray-200"
+            />
+          )}
           <span className="text-sm font-medium text-[#233E97]">
             {user?.businessName || user?.firstName || user?.lastName || 'User'}
           </span>
-          {/* <svg width="14" height="8" fill="none" viewBox="0 0 14 8" className="ml-1">
-            <path d="M1 1l6 6 6-6" stroke="#83859C" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg> */}
-        </div>
+        </Link>
       </div>
       {/* Mobile profile/actions */}
       <div className="flex md:hidden items-center gap-2 px-2">
@@ -119,13 +152,25 @@ export default function Navbar({
             <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#F89C1F]"></span>
           </button> : null
         }
-        <Image
-          src={Avatar}
-          width={28}
-          height={28}
-          alt="avatar"
-          className="rounded-full border border-gray-200"
-        />
+        <Link href={accountHref} aria-label="Go to account" className="flex items-center">
+          {businessLogo ? (
+            <img
+              src={businessLogo}
+              width={28}
+              height={28}
+              alt="Business logo"
+              className="w-7 h-7 rounded-full border border-gray-200 object-cover"
+            />
+          ) : (
+            <Image
+              src={Avatar}
+              width={28}
+              height={28}
+              alt="avatar"
+              className="rounded-full border border-gray-200"
+            />
+          )}
+        </Link>
       </div>
     </header>
   );
