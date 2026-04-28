@@ -13,8 +13,22 @@ type Business = {
     name: string;
     subscriptionStatus: string;
     businessType: string;
+    businessCategory: string;
     description: string;
     phone: string;
+    email: string;
+    website: string;
+    tagline: string;
+    logo: string | null;
+    addressLine1: string;
+    addressLine2: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+    createdAt: string;
+    onBoardingComplete: boolean;
+    isKycVerified: boolean;
     campaigns: Array<{
         id: string;
         name: string;
@@ -43,6 +57,29 @@ const statusColors: Record<string, string> = {
 };
 
 const PAGE_SIZE = 10;
+
+function InfoRow({
+    label,
+    value,
+    multiline,
+}: {
+    label: string;
+    value: React.ReactNode;
+    multiline?: boolean;
+}) {
+    const isEmpty =
+        value === null ||
+        value === undefined ||
+        (typeof value === 'string' && value.trim() === '');
+    return (
+        <div className="flex flex-col gap-1">
+            <dt className="text-xs text-gray-500">{label}</dt>
+            <dd className={`text-sm text-gray-900 ${multiline ? 'whitespace-pre-wrap' : 'break-words'}`}>
+                {isEmpty ? <span className="text-gray-400">—</span> : value}
+            </dd>
+        </div>
+    );
+}
 
 function Pagination({ page, totalPages, onChange }: { page: number; totalPages: number; onChange: (p: number) => void }) {
     if (totalPages <= 1) return null;
@@ -175,6 +212,86 @@ export default function BusinessProfilePage() {
                             <p className="text-sm">{business ? totalRewardsPaid : "-"}</p>
                         </div>
                     </div>
+                </div>
+
+                {/* Business Information Section */}
+                <div className="bg-white rounded-md p-4 my-6">
+                    <div className="flex items-start justify-between gap-4 mb-4">
+                        <div className="flex items-center gap-4">
+                            {business?.logo ? (
+                                <img
+                                    src={business.logo}
+                                    alt={`${business.name} logo`}
+                                    className="w-16 h-16 rounded-md object-cover border border-gray-200"
+                                />
+                            ) : (
+                                <div className="w-16 h-16 rounded-md border border-dashed border-gray-300 flex items-center justify-center text-xs text-gray-400">
+                                    No logo
+                                </div>
+                            )}
+                            <div>
+                                <div className="font-semibold text-base">Business Information</div>
+                                {business?.tagline ? (
+                                    <p className="text-sm text-gray-500 mt-1">{business.tagline}</p>
+                                ) : null}
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1 text-xs">
+                            <span className={`inline-block px-2 py-1 rounded-full ${business?.onBoardingComplete ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                {business?.onBoardingComplete ? 'Onboarding complete' : 'Onboarding pending'}
+                            </span>
+                            <span className={`inline-block px-2 py-1 rounded-full ${business?.isKycVerified ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}`}>
+                                {business?.isKycVerified ? 'KYC verified' : 'KYC not verified'}
+                            </span>
+                        </div>
+                    </div>
+
+                    {loading ? (
+                        <div className="text-sm text-gray-500">Loading business information...</div>
+                    ) : error ? (
+                        <div className="text-sm text-red-500">Error loading business information</div>
+                    ) : !business ? (
+                        <div className="text-sm text-gray-500">Business not found</div>
+                    ) : (
+                        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+                            <InfoRow label="Email" value={business.email} />
+                            <InfoRow label="Phone" value={business.phone} />
+                            <InfoRow
+                                label="Website"
+                                value={
+                                    business.website ? (
+                                        <a
+                                            href={business.website.startsWith('http') ? business.website : `https://${business.website}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="text-primary underline break-all"
+                                        >
+                                            {business.website}
+                                        </a>
+                                    ) : null
+                                }
+                            />
+                            <InfoRow label="Business Category" value={business.businessCategory} />
+                            <InfoRow label="Business Type" value={business.businessType} />
+                            <InfoRow label="Country" value={business.country} />
+                            <InfoRow
+                                label="Address"
+                                value={[business.addressLine1, business.addressLine2].filter(Boolean).join(', ')}
+                            />
+                            <InfoRow
+                                label="City / State / Postal"
+                                value={[business.city, business.state, business.postalCode].filter(Boolean).join(', ')}
+                            />
+                            <InfoRow
+                                label="Date Joined"
+                                value={business.createdAt ? new Date(business.createdAt).toLocaleDateString() : null}
+                            />
+                            <InfoRow label="Plan" value={business.subscriptionStatus} />
+                            <div className="sm:col-span-2">
+                                <InfoRow label="Description" value={business.description} multiline />
+                            </div>
+                        </dl>
+                    )}
                 </div>
 
                 {/* Campaigns Section */}

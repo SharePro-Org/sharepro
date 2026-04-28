@@ -87,6 +87,19 @@ export const BUSINESS = gql`
       description
       id
       phone
+      email
+      website
+      tagline
+      logo
+      addressLine1
+      addressLine2
+      city
+      state
+      postalCode
+      country
+      createdAt
+      onBoardingComplete
+      isKycVerified
       owner {
         business {
           name
