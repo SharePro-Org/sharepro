@@ -276,11 +276,13 @@ export default function BusinessProfilePage() {
                             <InfoRow label="Country" value={business.country} />
                             <InfoRow
                                 label="Address"
-                                value={[business.addressLine1, business.addressLine2].filter(Boolean).join(', ')}
-                            />
-                            <InfoRow
-                                label="City / State / Postal"
-                                value={[business.city, business.state, business.postalCode].filter(Boolean).join(', ')}
+                                value={[
+                                    business.addressLine1,
+                                    business.addressLine2,
+                                    business.city,
+                                    business.state,
+                                    business.postalCode,
+                                ].filter(Boolean).join(', ')}
                             />
                             <InfoRow
                                 label="Date Joined"
